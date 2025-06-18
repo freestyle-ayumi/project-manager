@@ -9,7 +9,7 @@ use App\Http\Controllers\DeliveryController; // 納品
 use App\Http\Controllers\InvoiceController; // 請求
 use App\Http\Controllers\ExpenseController; // 経費
 use App\Http\Controllers\ClientController; // クライアント
-use App\Http\Controllers\UserController; // ユーザー
+use App\Http\Controllers\UserController; // ユーザーphp artisan migrate
 use App\Http\Controllers\RoleController; // ロール
 use App\Http\Controllers\ExpenseStatusController; // 経費ステータス
 

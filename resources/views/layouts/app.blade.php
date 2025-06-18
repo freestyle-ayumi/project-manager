@@ -29,7 +29,8 @@
 
             <!-- Page Content -->
             <main>
-                {{ $slot }}
+                {{ $slot ?? '' }} {{-- $slotがあれば表示、なければ空文字列（エラー回避） --}}
+                @yield('content') {{-- contentセクションがあれば表示 --}}
             </main>
         </div>
     </body>
