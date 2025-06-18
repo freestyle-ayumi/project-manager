@@ -30,10 +30,16 @@ class QuoteController extends Controller
     public function create()
     {
         // フォームで選択肢として使用するプロジェクトと顧客のデータを取得
-        $projects = Project::all();
+        // プロジェクトに関連する顧客も一緒にロード
+        $projects = Project::with('client')->get();
         $clients = Client::all();
 
-        return view('quotes.create', compact('projects', 'clients'));
+        // JavaScriptで使用するために、プロジェクトIDと顧客IDのマップを作成
+        $projectClientMap = $projects->mapWithKeys(function ($project) {
+            return [$project->id => $project->client_id];
+        })->toArray();
+
+        return view('quotes.create', compact('projects', 'clients', 'projectClientMap'));
     }
 
     /**
@@ -47,8 +53,8 @@ class QuoteController extends Controller
             'client_id' => 'required|exists:clients,id',
             'quote_number' => 'required|string|max:255|unique:quotes,quote_number', // 見積番号はユニーク
             'issue_date' => 'required|date',
-            'valid_until' => 'required|date|after_or_equal:issue_date',
-            'subject' => 'required|string|max:255',
+            'expiry_date' => 'required|string|max:255', // ★修正済み: string に変更
+            'subject' => 'required|string|max:255',     // ★修正済み
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1', // 明細は必須で配列
             'items.*.item_name' => 'required|string|max:255',
@@ -59,8 +65,8 @@ class QuoteController extends Controller
             'items.*.memo' => 'nullable|string',
         ]);
 
-        // トランザクションを開始
-        // DB::beginTransaction(); // トランザクションは不要な場合もありますが、複雑な処理では推奨
+        // トランザクションを開始 (オプション)
+        // DB::beginTransaction();
 
         try {
             // 見積書本体を作成
@@ -70,10 +76,11 @@ class QuoteController extends Controller
             $quote->user_id = Auth::id(); // ログインユーザーIDを設定
             $quote->quote_number = $validated['quote_number'];
             $quote->issue_date = $validated['issue_date'];
-            $quote->valid_until = $validated['valid_until'];
-            $quote->subject = $validated['subject'];
+            $quote->expiry_date = $validated['expiry_date']; // ★修正済み
+            $quote->subject = $validated['subject'];     // ★修正済み
             $quote->notes = $validated['notes'];
             $quote->total_amount = 0; // 仮の初期値
+            $quote->status = '登録済み'; // ★追加: 初期ステータスを「登録済み」に設定
             $quote->save();
 
             $totalAmount = 0;
@@ -92,15 +99,15 @@ class QuoteController extends Controller
                     'quantity' => $quantity,
                     'unit' => $itemData['unit'],
                     'tax_rate' => $taxRate,
-                    'subtotal' => round($subtotal, 2), // 小数点以下2桁に丸める
-                    'tax' => round($taxAmount, 2),     // 小数点以下2桁に丸める
+                    'subtotal' => round($subtotal, 0), // 小数点以下を四捨五入
+                    'tax' => round($taxAmount, 0),     // 小数点以下を四捨五入
                     'memo' => $itemData['memo'],
                 ]);
-                $totalAmount += ($subtotal + $taxAmount);
+                $totalAmount += (round($subtotal, 0) + round($taxAmount, 0)); // 加算時も四捨五入した値を使用
             }
 
             // 合計金額を更新
-            $quote->total_amount = round($totalAmount, 2);
+            $quote->total_amount = round($totalAmount, 0); // 合計も四捨五入
             $quote->save();
 
             // DB::commit(); // トランザクションをコミット
@@ -132,10 +139,15 @@ class QuoteController extends Controller
     {
         $quote->load('items'); // 編集フォームに明細も渡すためにロード
 
-        $projects = Project::all();
+        $projects = Project::with('client')->get(); // プロジェクトに関連する顧客もロード
         $clients = Client::all();
 
-        return view('quotes.edit', compact('quote', 'projects', 'clients'));
+        // JavaScriptで使用するために、プロジェクトIDと顧客IDのマップを作成
+        $projectClientMap = $projects->mapWithKeys(function ($project) {
+            return [$project->id => $project->client_id];
+        })->toArray();
+
+        return view('quotes.edit', compact('quote', 'projects', 'clients', 'projectClientMap'));
     }
 
     /**
@@ -148,8 +160,8 @@ class QuoteController extends Controller
             'client_id' => 'required|exists:clients,id',
             'quote_number' => 'required|string|max:255|unique:quotes,quote_number,' . $quote->id, // 更新時は自身のIDを除く
             'issue_date' => 'required|date',
-            'expiry_date' => 'required|date|after_or_equal:issue_date',
-            'subject' => 'required|string|max:255',
+            'expiry_date' => 'required|string|max:255', // ★修正済み: string に変更
+            'subject' => 'required|string|max:255',     // ★修正済み
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.id' => 'nullable|exists:quote_items,id', // 既存明細のID
@@ -161,7 +173,7 @@ class QuoteController extends Controller
             'items.*.memo' => 'nullable|string',
         ]);
 
-        // DB::beginTransaction(); // トランザクションは不要な場合もありますが、複雑な処理では推奨
+        // DB::beginTransaction(); // トランザクションはオプション
 
         try {
             // 見積書本体を更新
@@ -197,8 +209,8 @@ class QuoteController extends Controller
                             'quantity' => $quantity,
                             'unit' => $itemData['unit'],
                             'tax_rate' => $taxRate,
-                            'subtotal' => round($subtotal, 2),
-                            'tax' => round($taxAmount, 2),
+                            'subtotal' => round($subtotal, 0), // 小数点以下を四捨五入
+                            'tax' => round($taxAmount, 0),     // 小数点以下を四捨五入
                             'memo' => $itemData['memo'],
                         ]);
                         $itemsToKeep[] = $item->id;
@@ -211,13 +223,13 @@ class QuoteController extends Controller
                         'quantity' => $quantity,
                         'unit' => $itemData['unit'],
                         'tax_rate' => $taxRate,
-                        'subtotal' => round($subtotal, 2),
-                        'tax' => round($taxAmount, 2),
+                        'subtotal' => round($subtotal, 0), // 小数点以下を四捨五入
+                        'tax' => round($taxAmount, 0),     // 小数点以下を四捨五入
                         'memo' => $itemData['memo'],
                     ]);
                     $itemsToKeep[] = $newItem->id;
                 }
-                $totalAmount += ($subtotal + $taxAmount);
+                $totalAmount += (round($subtotal, 0) + round($taxAmount, 0)); // 加算時も四捨五入した値を使用
             }
 
             // 削除された明細を処理 (リクエストに含まれない既存の明細を削除)
@@ -228,7 +240,7 @@ class QuoteController extends Controller
             }
 
             // 見積書合計金額を最終的に更新
-            $quote->total_amount = round($totalAmount, 2);
+            $quote->total_amount = round($totalAmount, 0); // 合計も四捨五入
             $quote->save();
 
             // DB::commit(); // トランザクションをコミット

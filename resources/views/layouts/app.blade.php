@@ -33,5 +33,8 @@
                 @yield('content') {{-- contentセクションがあれば表示 --}}
             </main>
         </div>
+
+        {{-- ここにJavaScriptを挿入するためのスタックを配置 --}}
+        @stack('scripts')
     </body>
 </html>
