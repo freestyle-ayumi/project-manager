@@ -16,9 +16,13 @@ class Quote extends Model
         'quote_number',
         'issue_date',
         'expiry_date',
+        'delivery_date', // 追加
+        'delivery_location', // 追加
+        'payment_terms', // 追加
+        'subject',
+        'notes',
         'total_amount',
         'status',
-        'notes',
     ];
 
     public function project()
@@ -36,7 +40,6 @@ class Quote extends Model
         return $this->belongsTo(User::class);
     }
 
-    // 追加: この見積書に紐づく明細を取得
     public function items()
     {
         return $this->hasMany(QuoteItem::class);
