@@ -176,7 +176,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md mb-6">
+                        <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-1 text-sm rounded-md mb-6">
                             ＋行
                         </button>
 
@@ -187,10 +187,10 @@
                         </div>
 
                         <div class="flex justify-end space-x-2">
-                            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md">
+                            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">
                                 作成
                             </button>
-                            <a href="{{ route('quotes.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md">
+                            <a href="{{ route('quotes.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">
                                 キャンセル
                             </a>
                         </div>

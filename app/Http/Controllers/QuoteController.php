@@ -3,21 +3,61 @@
 namespace App\Http\Controllers;
 
 use App\Models\Quote;
-use App\Models\QuoteItem; // 修正: App->Models を App\Models に変更
+use App\Models\QuoteItem;
 use App\Models\Project;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // トランザクションのために追加
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf; // DomPDFファサードをインポート
 
 class QuoteController extends Controller
 {
     /**
      * 見積書一覧を表示する
      */
-    public function index()
+    public function index(Request $request)
     {
-        $quotes = Quote::with('project', 'client', 'user')->get();
+        // Eloquentクエリを開始し、必要なリレーションをEagerロード
+        $quotes = Quote::with(['project', 'client', 'user']);
+
+        // キーワード検索
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $quotes->where(function ($query) use ($search) {
+                $query->where('quote_number', 'like', '%' . $search . '%')
+                      ->orWhere('subject', 'like', '%' . $search . '%')
+                      ->orWhereHas('client', function ($q) use ($search) {
+                          $q->where('name', 'like', '%' . $search . '%');
+                      })
+                      ->orWhereHas('project', function ($q) use ($search) {
+                          $q->where('name', 'like', '%' . $search . '%');
+                      });
+            });
+        }
+
+        // プロジェクトタイプフィルター
+        $projectFilter = $request->input('project_filter', 'current'); // デフォルトは 'current'
+
+        if ($projectFilter === 'current') {
+            $today = Carbon::today();
+            // 開催中とこれから開催するプロジェクト (終了日が今日以降)
+            $quotes->whereHas('project', function ($q) use ($today) {
+                $q->where('end_date', '>=', $today);
+            });
+        } elseif ($projectFilter === 'past') {
+            $today = Carbon::today();
+            // 過去のプロジェクト (終了日が今日より前)
+            $quotes->whereHas('project', function ($q) use ($today) {
+                $q->where('end_date', '<', $today);
+            });
+        }
+        // 'all' の場合は、プロジェクトに関するフィルタリングは行わない
+
+        // ページネーションを適用
+        $quotes = $quotes->orderBy('issue_date', 'desc')->paginate(10);
+
         return view('quotes.index', compact('quotes'));
     }
 
@@ -26,19 +66,15 @@ class QuoteController extends Controller
      */
     public function create()
     {
-        $projects = Project::with('client')->get(); // プロジェクトに関連する顧客もロード
+        $projects = Project::with('client')->get();
         $clients = Client::all();
 
-        // JavaScriptで使用するために、プロジェクトIDと顧客IDのマップを作成
         $projectClientMap = $projects->mapWithKeys(function ($project) {
             return [$project->id => $project->client_id];
         })->toArray();
 
-        // JavaScriptで使用するために、全顧客のIDと名前のマップを作成
         $allClientsMap = $clients->pluck('name', 'id')->toArray();
 
-        // 見積番号のデフォルト値を自動生成 (例: quoYYMMDDXX)
-        // YMD (6桁) + ランダム2桁の数字
         $defaultQuoteNumber = 'quo' . date('ymd') . str_pad(mt_rand(0, 99), 2, '0', STR_PAD_LEFT);
 
         return view('quotes.create', compact('projects', 'clients', 'projectClientMap', 'allClientsMap', 'defaultQuoteNumber'));
@@ -51,10 +87,10 @@ class QuoteController extends Controller
     {
         $validated = $request->validate([
             'project_id' => 'required|exists:projects,id',
-            'client_id' => 'nullable|exists:clients,id', // 顧客は必須ではないためnullable
+            'client_id' => 'nullable|exists:clients,id',
             'quote_number' => 'required|string|max:255|unique:quotes,quote_number',
             'issue_date' => 'required|date',
-            'expiry_date' => 'nullable|string|max:255', // 必須ではないためnullableに変更
+            'expiry_date' => 'nullable|string|max:255',
             'delivery_date' => 'nullable|date',
             'delivery_location' => 'nullable|string|max:255',
             'payment_terms' => 'nullable|string|max:255',
@@ -68,23 +104,14 @@ class QuoteController extends Controller
             'items.*.tax_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        DB::beginTransaction(); // トランザクションを開始
+        DB::beginTransaction();
 
         try {
             $quote = new Quote();
-            $quote->project_id = $validated['project_id'];
-            $quote->client_id = $validated['client_id'] ?? null; // null許容
+            $quote->fill($validated); // fillメソッドでバリデート済みのデータを一括設定
             $quote->user_id = Auth::id();
-            $quote->quote_number = $validated['quote_number'];
-            $quote->issue_date = $validated['issue_date'];
-            $quote->expiry_date = $validated['expiry_date'] ?? null; // null許容
-            $quote->delivery_date = $validated['delivery_date'] ?? null;
-            $quote->delivery_location = $validated['delivery_location'] ?? ''; // nullの代わりに空文字列を使用
-            $quote->payment_terms = $validated['payment_terms'] ?? ''; // nullの代わりに空文字列を使用
-            $quote->subject = $validated['subject'];
-            $quote->notes = $validated['notes'];
-            $quote->total_amount = 0; // 仮の初期値
             $quote->status = '登録済み';
+            $quote->total_amount = 0; // 仮の初期値
             $quote->save();
 
             $totalAmount = 0;
@@ -102,22 +129,22 @@ class QuoteController extends Controller
                     'quantity' => $quantity,
                     'unit' => $itemData['unit'],
                     'tax_rate' => $taxRate,
-                    'subtotal' => round($subtotal, 0), // 小数点以下を四捨五入
-                    'tax' => round($taxAmount, 0),     // 小数点以下を四捨五入
+                    'subtotal' => round($subtotal, 0),
+                    'tax' => round($taxAmount, 0),
                 ]);
-                $totalAmount += (round($subtotal, 0) + round($taxAmount, 0)); // 加算時も四捨五入した値を使用
+                $totalAmount += (round($subtotal, 0) + round($taxAmount, 0));
             }
 
-            $quote->total_amount = round($totalAmount, 0); // 合計も四捨五入
+            $quote->total_amount = round($totalAmount, 0);
             $quote->save();
 
-            DB::commit(); // トランザクションをコミット
+            DB::commit();
 
             return redirect()->route('quotes.index')
                              ->with('success', '見積書が正常に登録されました。');
 
         } catch (\Exception $e) {
-            DB::rollBack(); // エラーが発生した場合はロールバック
+            DB::rollBack();
             return back()->withInput()->withErrors(['error' => '見積書の登録中にエラーが発生しました: ' . $e->getMessage()]);
         }
     }
@@ -145,7 +172,6 @@ class QuoteController extends Controller
             return [$project->id => $project->client_id];
         })->toArray();
         
-        // JavaScriptで使用するために、全顧客のIDと名前のマップを作成
         $allClientsMap = $clients->pluck('name', 'id')->toArray();
 
         return view('quotes.edit', compact('quote', 'projects', 'clients', 'projectClientMap', 'allClientsMap'));
@@ -158,10 +184,10 @@ class QuoteController extends Controller
     {
         $validated = $request->validate([
             'project_id' => 'required|exists:projects,id',
-            'client_id' => 'nullable|exists:clients,id', // 顧客は必須ではないためnullable
+            'client_id' => 'nullable|exists:clients,id',
             'quote_number' => 'required|string|max:255|unique:quotes,quote_number,' . $quote->id,
             'issue_date' => 'required|date',
-            'expiry_date' => 'nullable|string|max:255', // 必須ではないためnullableに変更
+            'expiry_date' => 'nullable|string|max:255',
             'delivery_date' => 'nullable|date',
             'delivery_location' => 'nullable|string|max:255',
             'payment_terms' => 'nullable|string|max:255',
@@ -179,17 +205,7 @@ class QuoteController extends Controller
         DB::beginTransaction();
 
         try {
-            $quote->project_id = $validated['project_id'];
-            $quote->client_id = $validated['client_id'] ?? null; // null許容
-            $quote->user_id = Auth::id();
-            $quote->quote_number = $validated['quote_number'];
-            $quote->issue_date = $validated['issue_date'];
-            $quote->expiry_date = $validated['expiry_date'] ?? null; // null許容
-            $quote->delivery_date = $validated['delivery_date'] ?? null;
-            $quote->delivery_location = $validated['delivery_location'] ?? ''; // nullの代わりに空文字列を使用
-            $quote->payment_terms = $validated['payment_terms'] ?? ''; // nullの代わりに空文字列を使用
-            $quote->subject = $validated['subject'];
-            $quote->notes = $validated['notes'];
+            $quote->fill($validated); // fillメソッドでバリデート済みのデータを一括設定
             $quote->save();
 
             $totalAmount = 0;
@@ -261,5 +277,23 @@ class QuoteController extends Controller
 
         return redirect()->route('quotes.index')
                          ->with('success', '見積書が正常に削除されました。');
+    }
+
+    /**
+     * 見積書をPDFとして生成してダウンロードする
+     */
+    public function generatePdf(Quote $quote)
+    {
+        // 見積書とその関連データをロード
+        $quote->load('project', 'client', 'user', 'items');
+
+        // ビューからPDFを生成
+        $pdf = Pdf::loadView('quotes.show_pdf', compact('quote'))->setOptions(['defaultFont' => 'ipaexgothic']);
+
+        // ファイル名を生成
+        $filename = '見積書_' . $quote->quote_number . '.pdf';
+
+        // PDFをダウンロード
+        return $pdf->download($filename);
     }
 }
