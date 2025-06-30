@@ -4,36 +4,49 @@
     <meta charset="UTF-8">
     <title>見積書</title>
     <style>
-        body, h1, h2, h3, h4, h5, h6, table, th, td, p, span, div, strong {
-            font-family: 'ipaexgothic', sans-serif !important;
+        @font-face {
+            font-family: 'ipaexg';
+            src: url('{{ storage_path("fonts/ipaexg.ttf") }}') format('truetype');
         }
 
-        body {
+        html, body {
+            font-family: "ipaexg", sans-serif;
+            color: #1f2937; /* text-gray-800 */
             font-size: 12px;
-            color: #333;
             margin: 40px;
         }
 
-        .title {
+        h1 {
             text-align: center;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .section {
-            margin-bottom: 25px;
+            margin-bottom: 24px;
+        }
+
+        .company-info {
+            text-align: right;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .logo {
+            float: right;
+            margin-bottom: 10px;
         }
 
         table {
-            border-collapse: collapse;
             width: 100%;
-            margin-top: 10px;
+            border-collapse: collapse;
+            margin-top: 12px;
         }
 
         th, td {
-            border: 1px solid #999;
-            padding: 8px 6px;
+            border: 1px solid #ccc;
+            padding: 6px;
         }
 
         .text-right {
@@ -45,25 +58,17 @@
         }
 
         .no-border {
-            border: none !important;
-        }
-
-        .company-info {
-            text-align: right;
-            line-height: 1.6;
-        }
-
-        .logo {
-            float: right;
-            margin-left: 10px;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div class="title">御見積書</div>
+    <p style="font-family: 'ipaexg', sans-serif;">日本語テスト：これは表示される？</p>
+    <div class="text-lime-200"></div>
+    <h1>御見積書</h1>
 
     <div class="section">
-        <div class="text-right">
+        <div style="text-align: right;">
             {{ $quote->client->name ?? 'N/A' }} 御中
         </div>
         <div class="company-info">
@@ -112,7 +117,7 @@
                         $totalTax += $itemTax;
                     @endphp
                     <tr>
-                        <td class="text-left">{{ $item->item_name }}</td>
+                        <td>{{ $item->item_name }}</td>
                         <td class="text-right">¥{{ number_format($item->price) }}</td>
                         <td class="text-right">{{ number_format($item->quantity) }}</td>
                         <td class="text-right">{{ $item->unit ?: '-' }}</td>

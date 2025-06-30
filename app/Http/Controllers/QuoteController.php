@@ -288,7 +288,8 @@ class QuoteController extends Controller
         $quote->load('project', 'client', 'user', 'items');
 
         // ビューからPDFを生成
-        $pdf = Pdf::loadView('quotes.show_pdf', compact('quote'))->setOptions(['defaultFont' => 'ipaexgothic']);
+        $pdf = Pdf::loadView('quotes.show_pdf', compact('quote'))
+            ->setOptions(['defaultFont' => 'ipaexg']);
 
         // ファイル名を生成
         $filename = '見積書_' . $quote->quote_number . '.pdf';

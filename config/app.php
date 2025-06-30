@@ -232,6 +232,6 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Vite' => Illuminate\Support\Facades\Vite::class,
-        'Pdf' => Barryvdh\DomPDF\Facade\Pdf::class, // ★この行を追記または確認
+        'PDF' => Barryvdh\DomPDF\Facade::class,
     ],
 ];
