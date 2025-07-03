@@ -68,6 +68,10 @@ Route::middleware('auth')->group(function () {
 
     // ロール関連のルート
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+
+    // pdf
+    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'generatePdfWithMpdf']);
+
 });
 
 require __DIR__.'/auth.php';

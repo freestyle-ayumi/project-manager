@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf; // DomPDFファサードをインポート
+use Mpdf\Mpdf;
 
 class QuoteController extends Controller
 {
@@ -282,19 +282,39 @@ class QuoteController extends Controller
     /**
      * 見積書をPDFとして生成してダウンロードする
      */
-    public function generatePdf(Quote $quote)
+    public function generatePdfWithMpdf(Quote $quote)
     {
-        // 見積書とその関連データをロード
-        $quote->load('project', 'client', 'user', 'items');
+        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+        $fontDirs = $defaultConfig['fontDir'];
 
-        // ビューからPDFを生成
-        $pdf = Pdf::loadView('quotes.show_pdf', compact('quote'))
-            ->setOptions(['defaultFont' => 'ipaexg']);
+        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+        $fontData = $defaultFontConfig['fontdata'];
 
-        // ファイル名を生成
-        $filename = '見積書_' . $quote->quote_number . '.pdf';
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'default_font' => 'ipaexgothic',
+            'fontDir' => array_merge($fontDirs, [storage_path('fonts')]),
+            'fontdata' => $fontData + [
+                'ipaexgothic' => [
+                    'R' => 'ipaexg.ttf',
+                    'B' => 'ipaexg.ttf',
+                ]
+            ],
+        ]);
 
-        // PDFをダウンロード
-        return $pdf->download($filename);
+        // CSS読み込み（存在していれば）
+        $cssPath = public_path('css/pdf.css');
+        if (file_exists($cssPath)) {
+            $stylesheet = file_get_contents($cssPath);
+            $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+        }
+
+        // BladeテンプレートをHTMLに変換
+        $html = view('quotes.show_pdf_mpdf', compact('quote'))->render();
+        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+
+        return response($mpdf->Output('', 'S'), 200)
+            ->header('Content-Type', 'application/pdf');
     }
 }

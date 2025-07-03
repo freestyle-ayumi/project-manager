@@ -166,16 +166,16 @@ return [
         /*
          * Package Service Providers...
          */
-        Barryvdh\DomPDF\ServiceProvider::class, // ★この行を追記または確認
 
         /*
          * Application Service Providers...
+         * お客様の環境に合わせて、存在するApp\Providersのクラスのみを記述します。
+         * もしAppServiceProvider.phpしか存在しない場合は、それ以外の行はコメントアウトまたは削除してください。
          */
         App\Providers\AppServiceProvider::class,
-        // App\Providers\AuthServiceProvider::class, // 必要ない場合はコメントアウトまたは削除
-        // App\Providers\BroadcastServiceProvider::class,
-        // App\Providers\EventServiceProvider::class, // 必要ない場合はコメントアウトまたは削除
-        // App\Providers\RouteServiceProvider::class, // ★この行をコメントアウト
+        // App\Providers\AuthServiceProvider::class,
+        // App\Providers\EventServiceProvider::class,
+        // App\Providers\RouteServiceProvider::class, // ルーティングが機能するために必要ですが、ファイルが存在しない場合はコメントアウトを推奨
 
     ],
 
@@ -232,6 +232,9 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Vite' => Illuminate\Support\Facades\Vite::class,
-        'PDF' => Barryvdh\DomPDF\Facade::class,
+
+        'PDF' => Mccarlosen\LaravelMpdf\Facades\LaravelMpdf::class,
+        
     ],
+
 ];
