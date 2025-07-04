@@ -140,6 +140,9 @@
             border-collapse: collapse;
         }
 
+        .items-table th{
+            background: #f0fdf4;
+        }
         .items-table th, .items-table td { /* px-3 py-3 text-left text-xs font-medium uppercase tracking-wider に相当 */
             padding: 0.75rem;
             text-align: left;
@@ -178,10 +181,10 @@
             text-align: right !important;
         }
         .lbl-bg { /* total-label-bg */
-            background-color: #f0fdf4; /* 薄い緑色 */
+            background: #f0fdf4; /* 薄い緑色 */
         }
         .val-bg-w { /* total-value-bg-white を val-bg-w に変更 */
-            background-color: #ffffff; /* 金額部分の背景を白に */
+            background: #ffffff; /* 金額部分の背景を白に */
         }
 
         /* 備考 */

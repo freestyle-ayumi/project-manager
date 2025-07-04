@@ -94,11 +94,11 @@
                         <thead>
                             <tr>
                                 <th style="width: 45%;">商品名</th>
-                                <th style="width: 15%; text-align: right;">単価</th>
-                                <th style="width: 5%; text-align: right;">数量</th>
-                                <th style="width: 5%; text-align: right;">単位</th>
-                                <th style="width: 15%; text-align: right;">小計 (税抜)</th>
-                                <th style="width: 15%; text-align: right;">合計 (税込)</th>
+                                <th style="width: 15%;" class="text-right">単価</th>
+                                <th style="width: 5%;" class="text-right">数量</th>
+                                <th style="width: 5%;" class="text-right">単位</th>
+                                <th style="width: 15%;" class="text-right">小計 (税抜)</th>
+                                <th style="width: 15%;" class="text-right">合計 (税込)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,17 +129,17 @@
                             <tr>
                                 <td colspan="4" class="ftr-cell"></td> {{-- 空のセルで右寄せを調整 --}}
                                 <td class="ftr-cell ftr-lbl-txt lbl-bg">小計 (税抜)</td>
-                                <td class="ftr-cell ftr-val-txt val-bg-w">¥{{ number_format(round($totalSubtotal, 0)) }}</td>
+                                <td class="ftr-cell ftr-val-txt val-bg-w text-right">¥{{ number_format(round($totalSubtotal, 0)) }}</td>
                             </tr>
                             <tr>
                                 <td colspan="4" class="ftr-cell"></td> {{-- 空のセルで右寄せを調整 --}}
                                 <td class="ftr-cell ftr-lbl-txt lbl-bg">消費税</td>
-                                <td class="ftr-cell ftr-val-txt val-bg-w">¥{{ number_format(round($totalTax, 0)) }}</td>
+                                <td class="ftr-cell ftr-val-txt val-bg-w text-right">¥{{ number_format(round($totalTax, 0)) }}</td>
                             </tr>
                             <tr>
                                 <td colspan="4" class="ftr-cell"></td> {{-- 空のセルで右寄せを調整 --}}
                                 <td class="ftr-cell ftr-lbl-txt lbl-bg">合計金額 (税込)</td>
-                                <td class="ftr-cell ftr-grnd-total-txt val-bg-w">¥{{ number_format($quote->total_amount) }}</td>
+                                <td class="ftr-cell ftr-grnd-total-txt val-bg-w text-right">¥{{ number_format($quote->total_amount) }}</td>
                             </tr>
                         </tfoot>
                     </table>

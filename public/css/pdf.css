@@ -8,7 +8,7 @@
         /* 基本的なスタイルリセットとフォント設定 */
         body, h1, h2, h3, h4, h5, h6, table, th, td, p, span, div, strong {
             font-family: 'ipaexgothic', sans-serif !important;
-            font-size: 10pt; /* 基本フォントサイズ */
+            font-size: 9pt; /* 基本フォントサイズ */
             line-height: 1.5;
             color: #4b5563;
             margin: 0;
@@ -136,7 +136,9 @@
             min-width: 100%;
             border-collapse: collapse;
         }
-
+        .items-table th{
+            background: #f0fdf4;
+        }
         .items-table th, .items-table td { /* px-3 py-3 text-left text-xs font-medium uppercase tracking-wider に相当 */
             padding: 0.75rem;
             text-align: left;
@@ -162,17 +164,14 @@
         .ftr-lbl-txt {
             font-size: 0.875rem; /* text-sm */
             font-weight: 700; /* font-bold */
-            text-align: right !important;
         }
         .ftr-val-txt {
             font-size: 1.125rem; /* text-lg */
             font-weight: 700; /* font-bold */
-            text-align: right !important;
         }
         .ftr-grnd-total-txt {
             font-size: 1.25rem; /* text-xl */
             font-weight: 800; /* font-extrabold */
-            text-align: right !important;
         }
         .lbl-bg { /* total-label-bg */
             background-color: #f0fdf4; /* 薄い緑色 */
