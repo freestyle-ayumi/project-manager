@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers; // ここは App\Http\Controllers であるべきです
+namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Client;
@@ -8,9 +8,9 @@ use App\Models\User;
 use App\Models\ProjectStatus;
 use App\Models\ExpenseStatus;
 use Illuminate\Http\Request;
-use App\Models\Quote;
+use App\Models\Quote; // Quoteモデルをインポート
 use App\Models\Invoice;
-use App\Models\Expense; // この行は必要です。Expenseモデルを使用することを宣言しています。
+use App\Models\Expense;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,14 +25,14 @@ class ProjectController extends Controller
         $projects = Project::with([
             'client',
             'user',
-            'status', // Projectモデルにstatusリレーションがない場合は、Project.phpのリレーション名に合わせてください
+            'status',
             'tasks',
             'quotes',
             'invoices',
             'expenses' => function ($query) {
                 $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
                 if ($approvedStatus) {
-                    $query->where('expense_status_id', $approvedStatus->id); // ★ここを修正しました
+                    $query->where('expense_status_id', $approvedStatus->id);
                 }
             }
         ])->get();
@@ -65,7 +65,6 @@ class ProjectController extends Controller
             'client_id' => 'required|exists:clients,id',
         ]);
 
-        // 現在ログインしているユーザーのIDを取得
         $userId = Auth::id();
 
         Project::create([
@@ -75,7 +74,7 @@ class ProjectController extends Controller
             'end_date' => $request->end_date,
             'project_status_id' => $request->project_status_id,
             'client_id' => $request->client_id,
-            'user_id' => $userId, // ユーザーIDを保存
+            'user_id' => $userId,
         ]);
 
         return redirect()->route('projects.index')
@@ -135,11 +134,32 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $project->load(['client', 'user', 'status', 'tasks', 'quotes.items', 'invoices.items', 'expenses.items']);
-        // 'status'リレーションがProjectモデルにない場合、
-        // ProjectStatusモデルとのリレーション名をProject.phpで確認し、
-        // 例えば 'projectStatus' になっている場合は $project->load(['projectStatus', ...]) のように修正が必要です。
+        $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
 
-        return view('projects.show', compact('project'));
+        $project = Project::with([
+            'client',
+            'user',
+            'status',
+            'tasks',
+            // 'quotes.items', // 個別の見積書詳細に飛ばす場合、これらのリレーションは直接は必要ないかもしれません
+            // 'invoices.items',
+            // 'expenses.items'
+        ])
+        ->withSum('quotes', 'total_amount')
+        ->withSum('invoices', 'total_amount')
+        ->withSum(['expenses as total_approved_expenses_sum' => function ($query) use ($approvedStatus) {
+            if ($approvedStatus) {
+                $query->where('expense_status_id', $approvedStatus->id);
+            }
+        }], 'approved_amount')
+        ->findOrFail($project->id);
+
+        // ★追加: 該当プロジェクトの最新の見積書を取得
+        $latestQuote = $project->quotes()->latest('issue_date')->first();
+        // ★追加: 該当プロジェクトの最新の請求書を取得 (同様に必要であれば)
+        $latestInvoice = $project->invoices()->latest('issue_date')->first();
+
+
+        return view('projects.show', compact('project', 'latestQuote', 'latestInvoice'));
     }
 }

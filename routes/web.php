@@ -4,25 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\QuoteController; // 見積
-use App\Http\Controllers\DeliveryController; // 納品
-use App\Http\Controllers\InvoiceController; // 請求
-use App\Http\Controllers\ExpenseController; // 経費
-use App\Http\Controllers\ClientController; // クライアント
-use App\Http\Controllers\UserController; // ユーザー
-use App\Http\Controllers\RoleController; // ロール
-use App\Http\Controllers\ExpenseStatusController; // 経費ステータス
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ExpenseStatusController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the ServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
 
 Route::get('/', function () {
     return view('welcome');
@@ -47,6 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('quotes', QuoteController::class);
     // 見積書PDF生成ルートをここに追加
     Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'generatePdf'])->name('quotes.generatePdf');
+    // 見積書PDFダウンロードルート
+    Route::get('/quotes/{quote}/download-pdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
+
 
     // 納品関連のルート
     Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
@@ -70,7 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 
     // pdf
-    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'generatePdfWithMpdf']);
+    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])
+    ->name('quotes.generatePdf');
+
+
 
 });
 

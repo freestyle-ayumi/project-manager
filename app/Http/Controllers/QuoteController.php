@@ -6,11 +6,14 @@ use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Project;
 use App\Models\Client;
+use App\Models\QuoteLog; // QuoteLogモデルをインポート
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Mpdf\Mpdf;
+use Mpdf\Mpdf; // mPDFをインポート
+use Illuminate\Support\Facades\Storage; // Storageファサードをインポート
+use Illuminate\Validation\Rule; // Ruleクラスをインポート
 
 class QuoteController extends Controller
 {
@@ -86,7 +89,11 @@ class QuoteController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => [
+                'required',
+                'exists:projects,id',
+                Rule::unique('quotes', 'project_id'), // 新規作成時はこの形式が正しい
+            ],
             'client_id' => 'nullable|exists:clients,id',
             'quote_number' => 'required|string|max:255|unique:quotes,quote_number',
             'issue_date' => 'required|date',
@@ -138,6 +145,13 @@ class QuoteController extends Controller
             $quote->total_amount = round($totalAmount, 0);
             $quote->save();
 
+            // ログに保存
+            QuoteLog::create([
+                'quote_id' => $quote->id,
+                'user_id' => Auth::id(),
+                'action' => '見積書が新規作成されました。',
+            ]);
+
             DB::commit();
 
             return redirect()->route('quotes.index')
@@ -154,7 +168,7 @@ class QuoteController extends Controller
      */
     public function show(Quote $quote)
     {
-        $quote->load('project', 'client', 'user', 'items');
+        $quote->load('project', 'client', 'user', 'items', 'logs.user'); // ログとユーザーリレーションをロード
         return view('quotes.show', compact('quote'));
     }
 
@@ -183,9 +197,18 @@ class QuoteController extends Controller
     public function update(Request $request, Quote $quote)
     {
         $validated = $request->validate([
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => [
+                'required',
+                'exists:projects,id',
+                Rule::unique('quotes', 'project_id')->ignore($quote->id), // 重複を許さず、自分だけ許す
+            ],
             'client_id' => 'nullable|exists:clients,id',
-            'quote_number' => 'required|string|max:255|unique:quotes,quote_number,' . $quote->id,
+            'quote_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('quotes', 'quote_number')->ignore($quote->id), // こちらも同様にignoreが必要
+            ],
             'issue_date' => 'required|date',
             'expiry_date' => 'nullable|string|max:255',
             'delivery_date' => 'nullable|date',
@@ -194,7 +217,6 @@ class QuoteController extends Controller
             'subject' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|exists:quote_items,id',
             'items.*.item_name' => 'required|string|max:255',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.quantity' => 'required|integer|min:1',
@@ -256,6 +278,13 @@ class QuoteController extends Controller
             $quote->total_amount = round($totalAmount, 0);
             $quote->save();
 
+            // ログに保存
+            QuoteLog::create([
+                'quote_id' => $quote->id,
+                'user_id' => Auth::id(),
+                'action' => '見積書が更新されました。',
+            ]);
+
             DB::commit();
 
             return redirect()->route('quotes.index')
@@ -272,18 +301,36 @@ class QuoteController extends Controller
      */
     public function destroy(Quote $quote)
     {
-        $quote->items()->delete();
-        $quote->delete();
+        DB::beginTransaction();
+        try {
+            $quote->items()->delete();
+            $quote->delete();
 
-        return redirect()->route('quotes.index')
-                         ->with('success', '見積書が正常に削除されました。');
+            // ログに保存
+            QuoteLog::create([
+                'quote_id' => $quote->id, // 削除された見積書のID
+                'user_id' => Auth::id(),
+                'action' => '見積書が削除されました。見積番号: ' . $quote->quote_number,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('quotes.index')
+                             ->with('success', '見積書が正常に削除されました。');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => '見積書の削除中にエラーが発生しました: ' . $e->getMessage()]);
+        }
     }
 
     /**
-     * 見積書をPDFとして生成してダウンロードする
+     * 見積書をPDFとして生成し、保存してダウンロードする
+     * generatePdf と generatePdfWithMpdf を統合し、pdf_pathを保存する
      */
-    public function generatePdfWithMpdf(Quote $quote)
+    public function downloadPdf($id)
     {
+        $quote = Quote::with(['client', 'items', 'project'])->findOrFail($id);
+
         $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
         $fontDirs = $defaultConfig['fontDir'];
 
@@ -293,12 +340,12 @@ class QuoteController extends Controller
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4',
-            'default_font' => 'ipaexgothic',
+            'default_font' => 'notosansjp', 
             'fontDir' => array_merge($fontDirs, [storage_path('fonts')]),
             'fontdata' => $fontData + [
-                'ipaexgothic' => [
-                    'R' => 'ipaexg.ttf',
-                    'B' => 'ipaexg.ttf',
+                'notosansjp' => [
+                    'R' => 'NotoSansJP-Regular.ttf', 
+                    'B' => 'NotoSansJP-Bold.ttf',
                 ]
             ],
         ]);
@@ -310,11 +357,36 @@ class QuoteController extends Controller
             $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
         }
 
-        // BladeテンプレートをHTMLに変換
+        // BladeビューをHTMLとして取得
         $html = view('quotes.show_pdf_mpdf', compact('quote'))->render();
         $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
 
-        return response($mpdf->Output('', 'S'), 200)
-            ->header('Content-Type', 'application/pdf');
+        // ファイル名を「見積番号-発行日.pdf」の形式で作成（日本語なしで安全）
+        $quoteNumber = $quote->quote_number;
+        $issueDate = \Carbon\Carbon::parse($quote->issue_date)->format('Ymd');
+        $filename = $quoteNumber . '-' . $issueDate . '.pdf';
+
+        // 保存先パス（publicディスク）
+        $savePath = 'quotes/' . $filename;
+
+        // PDF保存（ディスクはstorage/app/public）
+        Storage::disk('public')->put($savePath, $mpdf->Output('', 'S'));
+
+        // 公開URL取得
+        $fullUrl = url(Storage::url($savePath));
+
+        // Quoteモデルのpdf_pathを更新
+        $quote->pdf_path = $fullUrl;
+        $quote->save(); // データベースに保存
+
+        // ログに保存
+        QuoteLog::create([
+            'quote_id' => $quote->id,
+            'user_id' => Auth::id(),
+            'action' => '<a href="' . $fullUrl . '" target="_blank" class="text-blue-500 hover:underline">PDF出力</a>',
+        ]);
+
+        // PDFをダウンロード
+        return $mpdf->Output($filename, 'D'); // I = ブラウザ表示, D = ダウンロード
     }
 }
