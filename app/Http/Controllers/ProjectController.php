@@ -22,6 +22,8 @@ class ProjectController extends Controller
      */
     public function index()
     {
+        $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
+
         $projects = Project::with([
             'client',
             'user',
@@ -29,15 +31,28 @@ class ProjectController extends Controller
             'tasks',
             'quotes',
             'invoices',
-            'expenses' => function ($query) {
-                $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
+            'expenses' => function ($query) use ($approvedStatus) {
                 if ($approvedStatus) {
                     $query->where('expense_status_id', $approvedStatus->id);
                 }
             }
-        ])->get();
+        ])
+        ->withSum('quotes', 'total_amount')    // 見積額の合計
+        ->withSum('invoices', 'total_amount')  // 請求額の合計
+        ->withSum(['expenses as total_approved_expenses_sum' => function ($query) use ($approvedStatus) {
+            if ($approvedStatus) {
+                $query->where('expense_status_id', $approvedStatus->id);
+            }
+        }], 'approved_amount')
+        ->get();
 
-        return view('projects.index', compact('projects'));
+        // 各プロジェクトの最新見積書を配列で渡す
+        $latestQuotes = [];
+        foreach ($projects as $project) {
+            $latestQuotes[$project->id] = $project->quotes->sortByDesc('issue_date')->first();
+        }
+
+        return view('projects.index', compact('projects', 'latestQuotes'));
     }
 
     /**

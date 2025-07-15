@@ -143,30 +143,30 @@
                                 <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md relative">
                                     {{-- hidden input for item ID (新規作成では不要だが、更新と共通化のため残す) --}}
                                     <input type="hidden" name="items[{{ $index }}][id]" value="">
-                                    <div class="md:col-span-5"> {{-- 項目名: 幅5 --}}
+                                    <div class="md:col-span-5"> {{-- 項目名 --}}
                                         <label for="item_name_{{ $index }}" class="block text-sm font-medium text-gray-700">項目名<span class="text-red-500">*</span></label>
                                         <input type="text" name="items[{{ $index }}][item_name]" id="item_name_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-name" value="{{ $item['item_name'] ?? '' }}" required>
                                     </div>
-                                    <div class="md:col-span-2"> {{-- 単価: 幅2 --}}
-                                        <label for="price_{{ $index }}" class="block text-sm font-medium text-gray-700">単価<span class="text-red-500">*</span></label>
-                                        <input type="number" step="1" name="items[{{ $index }}][price]" id="price_${{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="{{ $item['price'] ?? '' }}" required>
+                                    <div class="md:col-span-2"> {{-- 単価 --}}
+                                        <label for="price_{{ $index }}" class="block text-sm font-medium text-gray-700">単価</label>
+                                        <input type="number" step="1" name="items[{{ $index }}][price]" id="price_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="{{ $item['price'] ?? '' }}">
                                     </div>
-                                    <div class="md:col-span-1"> {{-- 数量: 幅1 --}}
-                                        <label for="quantity_{{ $index }}" class="block text-sm font-medium text-gray-700">数量<span class="text-red-500">*</span></label>
-                                        <input type="number" name="items[{{ $index }}][quantity]" id="quantity_${{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="{{ $item['quantity'] ?? '1' }}" required>
+                                    <div class="md:col-span-1"> {{-- 数量 --}}
+                                        <label for="quantity_{{ $index }}" class="block text-sm font-medium text-gray-700">数量</label>
+                                        <input type="number" name="items[{{ $index }}][quantity]" id="quantity_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="{{ $item['quantity'] ?? '1' }}">
                                     </div>
-                                    <div class="md:col-span-1"> {{-- 単位: 幅1 --}}
-                                        <label for="unit_${{ $index }}" class="block text-sm font-medium text-gray-700">単位</label>
-                                        <input type="text" name="items[{{ $index }}][unit]" id="unit_${{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ $item['unit'] ?? '' }}">
+                                    <div class="md:col-span-1"> {{-- 単位 --}}
+                                        <label for="unit_{{ $index }}" class="block text-sm font-medium text-gray-700">単位</label>
+                                        <input type="text" name="items[{{ $index }}][unit]" id="unit_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ $item['unit'] ?? '' }}">
                                     </div>
-                                    <div class="md:col-span-1"> {{-- 税率: 幅1 --}}
-                                        <label for="tax_rate_${{ $index }}" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
-                                        <input type="number" step="1" name="items[{{ $index }}][tax_rate]" id="tax_rate_${{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="{{ $item['tax_rate'] ?? '10' }}" required>
+                                    <div class="md:col-span-1"> {{-- 税率 --}}
+                                        <label for="tax_rate_{{ $index }}" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
+                                        <input type="number" step="1" name="items[{{ $index }}][tax_rate]" id="tax_rate_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="{{ $item['tax_rate'] ?? '10' }}" required>
                                     </div>
-                                    <div class="md:col-span-2"> {{-- 小計: 幅2 --}}
-                                        <label for="subtotal_${{ $index }}" class="block text-sm font-medium text-gray-700">小計</label>
+                                    <div class="md:col-span-2"> {{-- 小計 --}}
+                                        <label for="subtotal_{{ $index }}" class="block text-sm font-medium text-gray-700">小計</label>
                                         {{-- JavaScriptで計算するため、valueは初期値0または計算結果で更新 --}}
-                                        <input type="text" id="subtotal_${{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed item-subtotal" value="0" readonly>
+                                        <input type="text" id="subtotal_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed item-subtotal" value="0" readonly>
                                     </div>
                                     <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-item-row">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -348,16 +348,16 @@
                     newRow.innerHTML = `
                         <input type="hidden" name="items[${itemIndex}][id]" value="${itemData.id || ''}">
                         <div class="md:col-span-5">
-                            <label for="item_name_${itemIndex}" class="block text-sm font-medium text-gray-700">項目名<span class="text-red-500">*</span></label>
+                            <label for="item_name_${itemIndex}" class="block text-sm font-medium text-gray-700">項目名</label>
                             <input type="text" name="items[${itemIndex}][item_name]" id="item_name_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-name" value="${itemData.item_name || ''}" required>
                         </div>
                         <div class="md:col-span-2">
-                            <label for="price_${itemIndex}" class="block text-sm font-medium text-gray-700">単価<span class="text-red-500">*</span></label>
-                            <input type="number" step="1" name="items[${itemIndex}][price]" id="price_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="${itemData.price || ''}" required>
+                            <label for="price_${itemIndex}" class="block text-sm font-medium text-gray-700">単価</label>
+                            <input type="number" step="1" name="items[${itemIndex}][price]" id="price_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="${itemData.price || ''}">
                         </div>
                         <div class="md:col-span-1">
-                            <label for="quantity_${itemIndex}" class="block text-sm font-medium text-gray-700">数量<span class="text-red-500">*</span></label>
-                            <input type="number" name="items[${itemIndex}][quantity]" id="quantity_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="${itemData.quantity || '1'}" required>
+                            <label for="quantity_${itemIndex}" class="block text-sm font-medium text-gray-700">数量</label>
+                            <input type="number" name="items[${itemIndex}][quantity]" id="quantity_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="${itemData.quantity || '1'}">
                         </div>
                         <div class="md:col-span-1">
                             <label for="unit_${itemIndex}" class="block text-sm font-medium text-gray-700">単位</label>
@@ -365,7 +365,7 @@
                         </div>
                         <div class="md:col-span-1">
                             <label for="tax_rate_${itemIndex}" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
-                            <input type="number" step="1" name="items[${itemIndex}][tax_rate]" id="tax_rate_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="${itemData.tax_rate || '10'}" required>
+                            <input type="number" step="1" name="items[${itemIndex}][tax_rate]" id="tax_rate_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="${itemData.tax_rate || '10'}">
                         </div>
                         <div class="md:col-span-2">
                             <label for="subtotal_${itemIndex}" class="block text-sm font-medium text-gray-700">小計</label>

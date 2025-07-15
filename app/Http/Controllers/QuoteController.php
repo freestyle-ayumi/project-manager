@@ -78,7 +78,7 @@ class QuoteController extends Controller
 
         $allClientsMap = $clients->pluck('name', 'id')->toArray();
 
-        $defaultQuoteNumber = 'quo' . date('ymd') . str_pad(mt_rand(0, 99), 2, '0', STR_PAD_LEFT);
+        $defaultQuoteNumber = date('ymd') . str_pad(mt_rand(0, 99), 2, '0', STR_PAD_LEFT);
 
         return view('quotes.create', compact('projects', 'clients', 'projectClientMap', 'allClientsMap', 'defaultQuoteNumber'));
     }
