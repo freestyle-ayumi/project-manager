@@ -49,6 +49,26 @@
                             <x-text-input id="start_date" class="block mt-1 w-full" type="date" name="start_date" :value="old('start_date')" required />
                             <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                         </div>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const startDateInput = document.getElementById('start_date');
+                            const endDateInput = document.getElementById('end_date');
+
+                            // ページロード時に、もし終了日が空なら開始日をコピーする（編集画面でも有効）
+                            if (endDateInput.value === '') {
+                                endDateInput.value = startDateInput.value;
+                            }
+
+                            // 開始日の値が変わったら、終了日が空または開始日以前の場合にコピー
+                            startDateInput.addEventListener('change', function() {
+                                // 終了日が空または開始日より前なら更新
+                                if (endDateInput.value === '' || endDateInput.value < startDateInput.value) {
+                                    endDateInput.value = startDateInput.value;
+                                }
+                            });
+                        });
+                        </script>
+
 
                         <div class="mb-4">
                             <x-input-label for="end_date" :value="__('終了日 (任意)')" />
