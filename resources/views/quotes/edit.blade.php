@@ -144,8 +144,8 @@
                                 @endphp
                                 <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md relative">
                                     <input type="hidden" name="items[{{ $index }}][id]" value="{{ $itemId }}">
-                                    <div class="md:col-span-5"> {{-- 項目名 --}}
-                                        <label for="item_name_{{ $index }}" class="block text-sm font-medium text-gray-700">項目名<span class="text-red-500">*</span></label>
+                                    <div class="md:col-span-5"> {{-- 品名 --}}
+                                        <label for="item_name_{{ $index }}" class="block text-sm font-medium text-gray-700">品名<span class="text-red-500">*</span></label>
                                         <input type="text" name="items[{{ $index }}][item_name]" id="item_name_{{ $index }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-name" value="{{ $itemName }}" required>
                                     </div>
                                     <div class="md:col-span-2"> {{-- 単価 --}}

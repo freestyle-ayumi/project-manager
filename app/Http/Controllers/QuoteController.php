@@ -17,9 +17,7 @@ use Illuminate\Validation\Rule; // Ruleクラスをインポート
 
 class QuoteController extends Controller
 {
-    /**
-     * 見積書一覧を表示する
-     */
+    // 見積書一覧を表示する
     public function index(Request $request)
     {
         // Eloquentクエリを開始し、必要なリレーションをEagerロード
@@ -64,9 +62,7 @@ class QuoteController extends Controller
         return view('quotes.index', compact('quotes'));
     }
 
-    /**
-     * 新規見積書作成フォームを表示する
-     */
+    // 新規見積書作成フォームを表示する
     public function create()
     {
         $projects = Project::with('client')->get();
@@ -83,9 +79,7 @@ class QuoteController extends Controller
         return view('quotes.create', compact('projects', 'clients', 'projectClientMap', 'allClientsMap', 'defaultQuoteNumber'));
     }
 
-    /**
-     * 新規見積書をデータベースに保存する
-     */
+    // 新規見積書をデータベースに保存する
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -149,7 +143,7 @@ class QuoteController extends Controller
             QuoteLog::create([
                 'quote_id' => $quote->id,
                 'user_id' => Auth::id(),
-                'action' => '見積書が新規作成されました。',
+                'action' => '作成',
             ]);
 
             DB::commit();
@@ -163,18 +157,17 @@ class QuoteController extends Controller
         }
     }
 
-    /**
-     * 特定の見積書詳細を表示する
-     */
+    // 特定の見積書詳細を表示する
     public function show(Quote $quote)
     {
-        $quote->load('project', 'client', 'user', 'items', 'logs.user'); // ログとユーザーリレーションをロード
+        $quote->load(['project', 'client', 'user', 'items', 'logs' => function ($query) {
+        $query->orderBy('created_at', 'desc');
+        }, 'logs.user']);
+
         return view('quotes.show', compact('quote'));
     }
 
-    /**
-     * 見積書編集フォームを表示する
-     */
+    // 見積書編集フォームを表示する
     public function edit(Quote $quote)
     {
         $quote->load('items');
@@ -191,9 +184,7 @@ class QuoteController extends Controller
         return view('quotes.edit', compact('quote', 'projects', 'clients', 'projectClientMap', 'allClientsMap'));
     }
 
-    /**
-     * 見積書をデータベースで更新する
-     */
+    // 見積書をデータベースで更新する
     public function update(Request $request, Quote $quote)
     {
         $validated = $request->validate([
@@ -282,7 +273,7 @@ class QuoteController extends Controller
             QuoteLog::create([
                 'quote_id' => $quote->id,
                 'user_id' => Auth::id(),
-                'action' => '見積書が更新されました。',
+                'action' => '更新',
             ]);
 
             DB::commit();
@@ -296,22 +287,19 @@ class QuoteController extends Controller
         }
     }
 
-    /**
-     * 特定の見積書をデータベースから削除する
-     */
+    // 特定の見積書をデータベースから削除する
     public function destroy(Quote $quote)
     {
         DB::beginTransaction();
         try {
-            $quote->items()->delete();
-            $quote->delete();
-
             // ログに保存
             QuoteLog::create([
                 'quote_id' => $quote->id, // 削除された見積書のID
                 'user_id' => Auth::id(),
-                'action' => '見積書が削除されました。見積番号: ' . $quote->quote_number,
+                'action' => '削除-見積番号: ' . $quote->quote_number,
             ]);
+            $quote->items()->delete();
+            $quote->delete();
 
             DB::commit();
 
@@ -323,70 +311,81 @@ class QuoteController extends Controller
         }
     }
 
-    /**
-     * 見積書をPDFとして生成し、保存してダウンロードする
-     * generatePdf と generatePdfWithMpdf を統合し、pdf_pathを保存する
-     */
+    // 見積書をPDFとして生成し、保存してダウンロードする
+    // generatePdf と generatePdfWithMpdf を統合し、pdf_pathを保存する
     public function downloadPdf($id)
     {
-        $quote = Quote::with(['client', 'items', 'project'])->findOrFail($id);
+        try {
+            // 対象の見積データ取得（関連も一括で）
+            $quote = Quote::with(['client', 'items', 'project'])->findOrFail($id);
 
-        $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
-        $fontDirs = $defaultConfig['fontDir'];
+            // mPDF 用フォント設定
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
 
-        $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
-        $fontData = $defaultFontConfig['fontdata'];
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
 
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4',
-            'default_font' => 'notosansjp', 
-            'fontDir' => array_merge($fontDirs, [storage_path('fonts')]),
-            'fontdata' => $fontData + [
-                'notosansjp' => [
-                    'R' => 'NotoSansJP-Regular.ttf', 
-                    'B' => 'NotoSansJP-Bold.ttf',
-                ]
-            ],
-        ]);
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'default_font' => 'notosansjp',
+                'fontDir' => array_merge($fontDirs, [storage_path('fonts')]),
+                'fontdata' => [
+                    'notosansjp' => [
+                        'R' => 'NotoSansJP-Regular.ttf',
+                        'B' => 'NotoSansJP-Bold.ttf',
+                    ],
+                ],
+            ]);
 
-        // CSS読み込み（存在していれば）
-        $cssPath = public_path('css/pdf.css');
-        if (file_exists($cssPath)) {
-            $stylesheet = file_get_contents($cssPath);
-            $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+            // CSS 読み込み（存在する場合のみ）
+            $cssPath = public_path('css/pdf.css');
+            if (file_exists($cssPath)) {
+                $stylesheet = file_get_contents($cssPath);
+                $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
+            }
+
+            // Blade ビューを HTML にレンダリング
+            $html = view('quotes.show_pdf_mpdf', compact('quote'))->render();
+            $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+
+            // ファイル名生成（日本語文字は避ける）
+            $quoteNumber = $quote->quote_number;
+            $issueDate = \Carbon\Carbon::parse($quote->issue_date)->format('Ymd');
+            $filename = $quoteNumber . '-' . $issueDate . '.pdf';
+
+            // 保存先パス
+            $savePath = 'quotes/' . $filename;
+
+            // PDF をストレージに保存（public ディスク）
+            Storage::disk('public')->put($savePath, $mpdf->Output('', 'S'));
+
+            // 公開 URL を生成
+            $fullUrl = url(Storage::url($savePath));
+
+            // 見積書の pdf_path を更新
+            $quote->pdf_path = $fullUrl;
+            $quote->save();
+
+            // 操作ログを残す
+            QuoteLog::create([
+                'quote_id' => $quote->id,
+                'user_id' => Auth::id(),
+                'action' => '<a href="' . $fullUrl . '" target="_blank" class="text-blue-500 hover:underline">PDF出力</a>',
+            ]);
+
+            // PDF をダウンロードさせる
+            return $mpdf->Output($filename, 'D');
+
+        } catch (\Throwable $e) {
+            // 例外を Laravel のログに残す
+            \Log::error('PDF生成エラー: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+
+            // ユーザーに戻す
+            return back()->withErrors(['error' => 'PDF生成中にエラーが発生しました。']);
         }
-
-        // BladeビューをHTMLとして取得
-        $html = view('quotes.show_pdf_mpdf', compact('quote'))->render();
-        $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
-
-        // ファイル名を「見積番号-発行日.pdf」の形式で作成（日本語なしで安全）
-        $quoteNumber = $quote->quote_number;
-        $issueDate = \Carbon\Carbon::parse($quote->issue_date)->format('Ymd');
-        $filename = $quoteNumber . '-' . $issueDate . '.pdf';
-
-        // 保存先パス（publicディスク）
-        $savePath = 'quotes/' . $filename;
-
-        // PDF保存（ディスクはstorage/app/public）
-        Storage::disk('public')->put($savePath, $mpdf->Output('', 'S'));
-
-        // 公開URL取得
-        $fullUrl = url(Storage::url($savePath));
-
-        // Quoteモデルのpdf_pathを更新
-        $quote->pdf_path = $fullUrl;
-        $quote->save(); // データベースに保存
-
-        // ログに保存
-        QuoteLog::create([
-            'quote_id' => $quote->id,
-            'user_id' => Auth::id(),
-            'action' => '<a href="' . $fullUrl . '" target="_blank" class="text-blue-500 hover:underline">PDF出力</a>',
-        ]);
-
-        // PDFをダウンロード
-        return $mpdf->Output($filename, 'D'); // I = ブラウザ表示, D = ダウンロード
     }
+
 }

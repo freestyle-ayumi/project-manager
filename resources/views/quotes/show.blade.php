@@ -323,7 +323,7 @@
                     <table class="items-table">
                         <thead>
                             <tr>
-                                <th style="width: 45%; text-align: left;" class="font-s">商品名</th>
+                                <th style="width: 45%; text-align: left;" class="font-s">品名</th>
                                 <th style="width: 15%;" class="font-s">単価</th>
                                 <th style="width: 5%;" class="font-s">数量</th>
                                 <th style="width: 5%;" class="font-s">単位</th>
@@ -399,28 +399,38 @@
                 </div>
             </div>
             {{-- ログデータ --}}
-            <hr class="border-t border-gray-300">
-            <div class="overflow-x-auto min-w-fit bg-white pt-2 pb-8 px-20">
-                <h3 id="quote-log-section" class=" mb-1">log</h3>
-                <table class="min-w-full text-sm bg-white mx-20">
-                    <thead class="text-gray-700 bg-white">
+            <hr class="border-t border-gray-300 my-6">
+            <div class="overflow-x-auto bg-white rounded-md shadow-sm p-6 pt-4 max-w-4xl mx-auto">
+                <h3 id="quote-log-section" class="text-lg font-semibold text-gray-800 pl-1 pb-1">
+                    log
+                </h3>
+
+                <table class="min-w-full text-sm text-left text-gray-700">
+                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
                         <tr>
-                            <th class="px-4 py-2">do</th>
-                            <th class="px-4 py-2">user</th>
-                            <th class="px-4 py-2">date</th>
+                            <th class="px-6 py-2">操作内容</th>
+                            <th class="px-6 py-2">ユーザー</th>
+                            <th class="px-6 py-2">日時</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach ($quote->logs as $log)
-                            <tr class="px-20">
-                                <td class="px-4 py-2">{!! $log->action !!}</td>
-                                <td class="px-4 py-2">{{ $log->user->name ?? '不明' }}</td>
-                                <td class="px-4 py-2">{{ $log->created_at->format('Y年m月d日 H:i') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
                 </table>
+
+                <div class="overflow-y-auto" style="max-height: calc(1.75rem * 5 + 2rem);"> 
+                    {{-- 1行の高さ×5行 + ヘッダーや余白分 --}}
+                    <table class="min-w-full text-sm text-left text-gray-700">
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach ($quote->logs as $log)
+                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="px-6 py-2">{!! $log->action !!}</td>
+                                    <td class="px-6 py-2">{{ $log->user->name ?? '不明' }}</td>
+                                    <td class="px-6 py-2 whitespace-nowrap">{{ $log->created_at->format('Y年m月d日 H:i') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>

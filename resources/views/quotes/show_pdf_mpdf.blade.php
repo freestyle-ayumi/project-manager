@@ -91,7 +91,7 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 45%;" class="font-s">商品名</th>
+                        <th style="width: 45%;" class="font-s">品名</th>
                         <th style="width: 15%;" class="text-right font-s">単価</th>
                         <th style="width: 5%;" class="text-right font-s">数量</th>
                         <th style="width: 5%;" class="text-right font-s">単位</th>

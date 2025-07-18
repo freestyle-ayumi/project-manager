@@ -34,12 +34,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 
     // 見積書関連のルート
-    Route::resource('quotes', QuoteController::class);
-    // 見積書PDF生成ルートをここに追加
+  
+    // PDF系の個別ルート
     Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'generatePdf'])->name('quotes.generatePdf');
-    // 見積書PDFダウンロードルート
     Route::get('/quotes/{quote}/download-pdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
+    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
 
+    // 必ず一番最後に書く
+    Route::resource('quotes', QuoteController::class);
 
     // 納品関連のルート
     Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
@@ -62,9 +64,7 @@ Route::middleware('auth')->group(function () {
     // ロール関連のルート
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 
-    // pdf
-    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])
-    ->name('quotes.generatePdf');
+
 
 
 

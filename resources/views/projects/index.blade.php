@@ -103,14 +103,20 @@
                                                 @endforelse
                                             </td>
                                             <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
-                                                @if (($project->quotes_sum_total_amount ?? 0) > 0 && isset($latestQuotes[$project->id]))
+                                                @if (isset($latestQuotes[$project->id]))
                                                     <span class="flex items-center">
                                                         <a href="{{ route('quotes.show', $latestQuotes[$project->id]->id) }}" class="text-blue-500 hover:text-blue-700">
                                                             ¥{{ number_format($project->quotes_sum_total_amount) }}
                                                         </a>
+
                                                         @if ($latestQuotes[$project->id]->pdf_path)
-                                                            <a href="{{ route('quotes.downloadPdf', $latestQuotes[$project->id]->id) }}" target="_blank" class="ml-2 text-red-600 hover:text-red-800" title="PDFをダウンロード">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
+                                                            <a href="{{ route('quotes.downloadPdf', $latestQuotes[$project->id]->id) }}"
+                                                            target="_blank"
+                                                            class="ml-2 text-red-600 hover:text-red-800"
+                                                            title="PDFをダウンロード">
+                                                                <!-- PDFアイコン -->
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                                    class="inline-block" viewBox="0 0 16 16">
                                                                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
                                                                     <path d="M4.603 12.087a.84.84 0 0 1-.438-.799c.075-.4.293-.678.623-.872l.06-.038c.28-.171.564-.4.96-.92.33-.414.68-1.133 1.02-1.968c.054-.13.128-.295.266-.445a.733.733 0 0 1 .793-.161c.07.053.175.148.243.27.146.23.308.535.49.875.217.412.438.828.596 1.257q.427.972 1.053 2.504c.28.705.326 1.007.065 1.187-.074.055-.118.065-.25.059q-.4-.027-.9-.166a2.72 2.72 0 0 1-.443-.24c-.109-.083-.25-.19-.363-.284l-.01-.007a.486.486 0 0 0-.083-.061c-.058-.042-.132-.118-.195-.178a.7.7 0 0 1-.153-.234c-.017-.065-.035-.12-.063-.193-.075-.197-.202-.456-.375-.76c-.147-.243-.3-.482-.464-.724a.5.5 0 0 0-.6-.096l-.007.004-.007.004-.005.002-.002.001a.5.5 0 0 0-.1.22z"/>
                                                                 </svg>
@@ -118,9 +124,18 @@
                                                         @endif
                                                     </span>
                                                 @else
-                                                    ¥0
+                                                    <a href="{{ route('quotes.create', ['project_id' => $project->id]) }}"
+                                                    class="text-green-600 hover:text-green-800"
+                                                    title="見積書を新規作成">
+                                                        <!-- プラスアイコン -->
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                            class="inline-block" viewBox="0 0 16 16">
+                                                            <path d="M8 4a.5.5 0 0 1 .5.5V7.5H11.5a.5.5 0 0 1 0 1H8.5V11.5a.5.5 0 0 1-1 0V8.5H4.5a.5.5 0 0 1 0-1H7.5V4.5A.5.5 0 0 1 8 4z"/>
+                                                        </svg>
+                                                    </a>
                                                 @endif
                                             </td>
+
                                             <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500">
                                                 @if ($project->invoices_sum_total_amount)
                                                     <a href="{{ route('invoices.index', ['project_id' => $project->id]) }}" class="text-blue-500 hover:text-blue-700">
