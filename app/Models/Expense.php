@@ -9,34 +9,38 @@ class Expense extends Model
 {
     use HasFactory;
 
+    // 経費のメイン情報として保存されるフィールド
     protected $fillable = [
-        'project_id',
-        'user_id', // 経費を登録したユーザー
-        'expense_status_id', // ★ここが重要：DBのカラム名と一致させる
-        'date',
-        'category',
-        'description',
-        'amount', // ★ここが重要：DBのカラム名と一致させる (total_amount ではない)
-        'notes',
+        'user_id',
+        'expense_status_id', // 承認ステータスなど
+        'application_date',  // 申請日
+        'department',        // 部門
+        'overall_reason',    // 申請理由全体
+        'total_amount',      // 合計金額
     ];
 
-    public function project()
-    {
-        return $this->belongsTo(Project::class);
-    }
-
+    /**
+     * この経費を申請したユーザーを取得
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * この経費のステータスを取得
+     */
     public function status()
     {
-        return $this->belongsTo(ExpenseStatus::class, 'expense_status_id'); // ★ここが重要：リレーションの外部キー名をDBと一致させる
+        return $this->belongsTo(ExpenseStatus::class, 'expense_status_id');
     }
 
+    /**
+     * この経費に関連する複数の経費項目を取得
+     */
     public function items()
     {
         return $this->hasMany(ExpenseItem::class);
     }
 }
+

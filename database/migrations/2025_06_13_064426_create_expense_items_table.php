@@ -8,7 +8,7 @@ return new class extends Migration
     {
         Schema::create('expense_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('expense_id')->constrained('expenses')->onDelete('cascade'); // 関連する経費ID
+            $table->foreignId('expense_id')->constrained('expenses')->onDelete('cascade')->comment('申請ID');
             $table->string('description')->comment('項目説明');
             $table->decimal('amount', 10, 2)->comment('金額');
             $table->timestamps();
