@@ -40,3 +40,23 @@ npm run dev
 .status-no-status { 
     @apply bg-gray-600; /* gray-600 */
 }
+
+/* Flatpickr のstyle */
+/* 今月の土日 */
+.flatpickr-calendar .flatpickr-day:nth-child(7n+1):not(.prevMonthDay):not(.nextMonthDay) {
+    color: red;
+}
+.flatpickr-calendar .flatpickr-day:nth-child(7n):not(.prevMonthDay):not(.nextMonthDay) {
+    color: blue;
+}
+
+/* 前月・次月の土日 */
+.flatpickr-calendar .flatpickr-day.prevMonthDay:nth-child(7n+1),
+.flatpickr-calendar .flatpickr-day.nextMonthDay:nth-child(7n+1) {
+    color: #fca;
+}
+
+.flatpickr-calendar .flatpickr-day.prevMonthDay:nth-child(7n),
+.flatpickr-calendar .flatpickr-day.nextMonthDay:nth-child(7n) {
+    color: #acf;
+}

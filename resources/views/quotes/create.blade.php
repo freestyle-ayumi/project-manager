@@ -37,12 +37,11 @@
                             {{-- 関連プロジェクト: 幅6 (必須項目) --}}
                             <div class="md:col-span-6">
                                 <label for="project_id" class="block text-sm font-medium text-gray-700">関連プロジェクト<span class="text-red-500">*</span></label>
-                                <select name="project_id" id="project_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                    data-project-client-map='@json($projectClientMap)'
-                                    data-all-clients-map='@json($allClientsMap)' required>
-                                    <option value="">プロジェクトを選択</option>
+                                <select id="project_id" name="project_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <option value="">プロジェクトを選択してください</option>
                                     @foreach($projects as $project)
-                                        <option value="{{ $project->id }}" data-client-id="{{ $project->client_id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                        <option value="{{ $project->id }}"
+                                            {{ (old('project_id', $selectedProjectId ?? '') == $project->id) ? 'selected' : '' }}>
                                             {{ $project->name }}
                                         </option>
                                     @endforeach
@@ -202,197 +201,158 @@
 
     {{-- JavaScriptセクション --}}
     @push('scripts')
-        <script>
-            console.log("create.blade.php JavaScript loaded.");
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('quotes.create: JS loaded');
 
-            // 各行の小計を計算し、全体の合計を更新する関数
-            const calculateRowTotal = (row) => {
-                const priceInput = row.querySelector('.item-price');
-                const quantityInput = row.querySelector('.item-quantity');
-                const taxRateInput = row.querySelector('.item-tax-rate');
-                const subtotalInput = row.querySelector('.item-subtotal');
+        // ----- project -> client の自動表示 -----
+        const projectSelect = document.getElementById('project_id');
+        const clientNameDisplay = document.getElementById('client_name_display');
+        const clientIdHidden = document.getElementById('client_id_hidden');
 
-                if (!priceInput || !quantityInput || !taxRateInput || !subtotalInput) {
-                    console.error("Missing input elements in row:", row);
-                    return;
-                }
+        // コントローラから渡されたマップ（存在しなければ空オブジェクト）
+        const projectClientMap = @json($projectClientMap ?? []);
+        const allClientsMap = @json($allClientsMap ?? []);
 
-                const price = parseFloat(priceInput.value) || 0;
-                const quantity = parseInt(quantityInput.value) || 0;
-                const taxRate = parseFloat(taxRateInput.value) || 0;
+        function updateClientField() {
+            if (!projectSelect) return;
+            const selectedProjectId = projectSelect.value;
+            if (selectedProjectId && projectClientMap[selectedProjectId]) {
+                const clientId = String(projectClientMap[selectedProjectId]);
+                clientNameDisplay.value = allClientsMap[clientId] ?? '';
+                clientIdHidden.value = clientId;
+            } else {
+                clientNameDisplay.value = '';
+                clientIdHidden.value = '';
+            }
+        }
 
+        if (projectSelect) {
+            projectSelect.addEventListener('change', updateClientField);
+
+            // 初期選択（old() -> request('project_id') -> $selectedProjectId の順）
+            const initialProjectId = "{{ old('project_id', request('project_id', $selectedProjectId ?? '')) }}";
+            if (initialProjectId) {
+                projectSelect.value = initialProjectId;
+            }
+            // 画面ロード時に反映
+            updateClientField();
+        }
+
+        // ----- 明細行・小計・合計の処理（元のロジックを安全に統合） -----
+        const itemsContainer = document.getElementById('items-container');
+        const addItemButton = document.getElementById('add-item-button');
+
+        let itemIndex = {{ old('items') ? count(old('items')) : (isset($quote) && !$quote->items->isEmpty() ? count($quote->items) : 1) }};
+        console.log('Initial itemIndex:', itemIndex);
+
+        function calculateRowTotal(row) {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const taxRateInput = row.querySelector('.item-tax-rate');
+            const subtotalInput = row.querySelector('.item-subtotal');
+
+            if (!priceInput || !quantityInput || !taxRateInput || !subtotalInput) return;
+
+            const price = parseFloat(priceInput.value) || 0;
+            const quantity = parseInt(quantityInput.value) || 0;
+            const taxRate = parseFloat(taxRateInput.value) || 0;
+
+            const subtotal = price * quantity;
+            const tax = subtotal * (taxRate / 100);
+            const rowTotal = Math.round(subtotal + tax);
+
+            subtotalInput.value = rowTotal.toLocaleString();
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            let grandTotal = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const quantity = parseInt(row.querySelector('.item-quantity').value) || 0;
+                const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
                 const subtotal = price * quantity;
                 const tax = subtotal * (taxRate / 100);
-                let rowTotal = subtotal + tax;
+                grandTotal += subtotal + tax;
+            });
+            grandTotal = Math.round(grandTotal);
+            const disp = document.getElementById('display-total-amount');
+            const hiddenTotal = document.getElementById('total_amount_input');
+            if (disp) disp.textContent = '¥' + grandTotal.toLocaleString();
+            if (hiddenTotal) hiddenTotal.value = grandTotal;
+        }
 
-                rowTotal = Math.round(rowTotal); 
+        function attachEventListenersToRow(row) {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const taxRateInput = row.querySelector('.item-tax-rate');
+            const removeButton = row.querySelector('.remove-item-row');
 
-                subtotalInput.value = rowTotal.toLocaleString(); 
-                calculateTotals(); 
-            };
-
-            // 全体の合計金額を計算する関数
-            function calculateTotals() {
-                let grandTotal = 0;
-                document.querySelectorAll('.item-row').forEach(row => {
-                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
-                    const quantity = parseInt(row.querySelector('.item-quantity').value) || 0;
-                    const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
-
-                    const subtotal = price * quantity;
-                    const tax = subtotal * (taxRate / 100);
-                    grandTotal += (subtotal + tax);
-                });
-
-                grandTotal = Math.round(grandTotal);
-
-                document.getElementById('display-total-amount').textContent = '¥' + grandTotal.toLocaleString(); 
-                document.getElementById('total_amount_input').value = grandTotal; 
-            }
-
-
-            document.addEventListener('DOMContentLoaded', function () {
-                const projectSelect = document.getElementById('project_id');
-                const clientNameDisplay = document.getElementById('client_name_display'); // テキスト表示用input
-                const clientIdHidden = document.getElementById('client_id_hidden'); // 隠しフィールド
-
-                const projectClientMap = JSON.parse(projectSelect.dataset.projectClientMap || '{}');
-                const allClientsMap = JSON.parse(projectSelect.dataset.allClientsMap || '{}'); // 全顧客名マップ
-
-                console.log("projectClientMap:", projectClientMap); // デバッグログ
-                console.log("allClientsMap:", allClientsMap); // デバッグログ
-
-                function updateClientField() {
-                    const selectedProjectId = projectSelect.value;
-                    console.log("updateClientField called. selectedProjectId:", selectedProjectId); // デバッグログ
-
-                    if (selectedProjectId) {
-                        const associatedClientId = projectClientMap[selectedProjectId];
-                        if (associatedClientId) {
-                            const clientName = allClientsMap[associatedClientId];
-                            if (clientName) {
-                                clientNameDisplay.value = clientName; // inputに顧客名を設定
-                                clientIdHidden.value = associatedClientId; // 隠しフィールドに顧客IDを設定
-                                // 顧客は必須ではないため required は削除
-                                // clientIdHidden.required = true; 
-                                console.log("Client auto-selected and displayed as text:", clientName); // デバッグログ
-                            } else {
-                                console.warn("Client name not found in allClientsMap for ID:", associatedClientId); // デバッグログ
-                                clientNameDisplay.value = "顧客名が見つかりません"; // エラーメッセージ
-                                clientIdHidden.value = ""; // 隠しフィールドをクリア
-                                // clientIdHidden.required = true; 
-                            }
-                        } else {
-                            console.log("No associated client found in map for project ID:", selectedProjectId); // デバッグログ
-                            clientNameDisplay.value = "プロジェクトに顧客が紐付いていません"; // メッセージ
-                            clientIdHidden.value = ""; // 隠しフィールドをクリア
-                            // clientIdHidden.required = true; 
-                        }
-                    } else {
-                        // プロジェクトが選択されていない場合
-                        clientNameDisplay.value = ""; // テキスト表示をクリア
-                        clientNameDisplay.placeholder = "プロジェクトを選択してください"; // プレースホルダーを設定
-                        clientIdHidden.value = ""; // 隠しフィールドをクリア
-                        // clientIdHidden.required = true; 
-                        console.log("No project selected, client field cleared."); // デバッグログ
-                    }
-                }
-
-                // 初期ロード時とプロジェクト選択時のイベントリスナー
-                projectSelect.addEventListener('change', updateClientField);
-
-                // ページロード時の初期設定
-                // old('project_id')が存在する場合も考慮してupdateClientFieldを呼び出す
-                const oldProjectId = "{{ old('project_id') }}";
-                if (oldProjectId) {
-                    projectSelect.value = oldProjectId;
-                }
-                updateClientField(); // ページロード時に一度実行して初期値を設定
-
-
-                const itemsContainer = document.getElementById('items-container');
-                const addItemButton = document.getElementById('add-item-button');
-                let itemIndex = {{ old('items') ? count(old('items')) : (isset($quote) && !$quote->items->isEmpty() ? count($quote->items) : 1) }}; // 編集画面でのitemIndex初期値調整
-                console.log("Initial itemIndex for items:", itemIndex); // デバッグログ
-
-
-                function attachEventListenersToRow(row) {
-                    const priceInput = row.querySelector('.item-price');
-                    const quantityInput = row.querySelector('.item-quantity');
-                    const taxRateInput = row.querySelector('.item-tax-rate');
-                    const subtotalInput = row.querySelector('.item-subtotal'); 
-
-                    if (!priceInput || !quantityInput || !taxRateInput || !subtotalInput) {
-                        console.error("Missing input elements in row:", row);
-                        return;
-                    }
-
-                    if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(row));
-                    if (quantityInput) quantityInput.addEventListener('input', () => calculateRowTotal(row));
-                    if (taxRateInput) taxRateInput.addEventListener('input', () => calculateRowTotal(row));
-                    
-                    const removeButton = row.querySelector('.remove-item-row');
-                    if (removeButton) {
-                        removeButton.addEventListener('click', () => {
-                            row.remove();
-                            calculateTotals(); 
-                        });
-                    }
-
-                    calculateRowTotal(row); 
-                }
-
-                function createItemRow(itemData = {}) {
-                    const newRow = document.createElement('div');
-                    newRow.classList.add('item-row', 'grid', 'grid-cols-1', 'md:grid-cols-12', 'gap-4', 'items-end', 'border', 'p-4', 'rounded-md', 'relative');
-                    newRow.innerHTML = `
-                        <input type="hidden" name="items[${itemIndex}][id]" value="${itemData.id || ''}">
-                        <div class="md:col-span-5">
-                            <label for="item_name_${itemIndex}" class="block text-sm font-medium text-gray-700">項目名</label>
-                            <input type="text" name="items[${itemIndex}][item_name]" id="item_name_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-name" value="${itemData.item_name || ''}" required>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label for="price_${itemIndex}" class="block text-sm font-medium text-gray-700">単価</label>
-                            <input type="number" step="1" name="items[${itemIndex}][price]" id="price_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="${itemData.price || ''}">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label for="quantity_${itemIndex}" class="block text-sm font-medium text-gray-700">数量</label>
-                            <input type="number" name="items[${itemIndex}][quantity]" id="quantity_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="${itemData.quantity || '1'}">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label for="unit_${itemIndex}" class="block text-sm font-medium text-gray-700">単位</label>
-                            <input type="text" name="items[${itemIndex}][unit]" id="unit_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${itemData.unit || ''}">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label for="tax_rate_${itemIndex}" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
-                            <input type="number" step="1" name="items[${itemIndex}][tax_rate]" id="tax_rate_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="${itemData.tax_rate || '10'}">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label for="subtotal_${itemIndex}" class="block text-sm font-medium text-gray-700">小計</label>
-                            <input type="text" id="subtotal_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed item-subtotal" value="0" readonly>
-                        </div>
-                        <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-item-row">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    `;
-                    itemIndex++;
-                    return newRow;
-                }
-
-                addItemButton.addEventListener('click', () => {
-                    const newRow = createItemRow();
-                    itemsContainer.appendChild(newRow);
-                    attachEventListenersToRow(newRow);
-                });
-
-                document.querySelectorAll('.item-row').forEach(row => {
-                    attachEventListenersToRow(row);
-                });
-
+            if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(row));
+            if (quantityInput) quantityInput.addEventListener('input', () => calculateRowTotal(row));
+            if (taxRateInput) taxRateInput.addEventListener('input', () => calculateRowTotal(row));
+            if (removeButton) removeButton.addEventListener('click', () => {
+                row.remove();
                 calculateTotals();
             });
-        </script>
+
+            // 初期計算
+            calculateRowTotal(row);
+        }
+
+        function createItemRow(itemData = {}) {
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md relative';
+            newRow.innerHTML = `
+                <input type="hidden" name="items[${itemIndex}][id]" value="${itemData.id || ''}">
+                <div class="md:col-span-5">
+                    <label for="item_name_${itemIndex}" class="block text-sm font-medium text-gray-700">項目名</label>
+                    <input type="text" name="items[${itemIndex}][item_name]" id="item_name_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-name" value="${itemData.item_name || ''}" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="price_${itemIndex}" class="block text-sm font-medium text-gray-700">単価</label>
+                    <input type="number" step="1" name="items[${itemIndex}][price]" id="price_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-price" value="${itemData.price || ''}">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="quantity_${itemIndex}" class="block text-sm font-medium text-gray-700">数量</label>
+                    <input type="number" name="items[${itemIndex}][quantity]" id="quantity_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="${itemData.quantity ?? '1'}">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="unit_${itemIndex}" class="block text-sm font-medium text-gray-700">単位</label>
+                    <input type="text" name="items[${itemIndex}][unit]" id="unit_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="${itemData.unit || ''}">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="tax_rate_${itemIndex}" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
+                    <input type="number" step="1" name="items[${itemIndex}][tax_rate]" id="tax_rate_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="${itemData.tax_rate || '10'}">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="subtotal_${itemIndex}" class="block text-sm font-medium text-gray-700">小計</label>
+                    <input type="text" id="subtotal_${itemIndex}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed item-subtotal" value="0" readonly>
+                </div>
+                <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-item-row">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            `;
+            itemIndex++;
+            return newRow;
+        }
+
+        if (addItemButton) {
+            addItemButton.addEventListener('click', () => {
+                const newRow = createItemRow();
+                itemsContainer.appendChild(newRow);
+                attachEventListenersToRow(newRow);
+            });
+        }
+
+        document.querySelectorAll('.item-row').forEach(row => attachEventListenersToRow(row));
+        calculateTotals();
+
+    });
+    </script>
     @endpush
+
 </x-app-layout>

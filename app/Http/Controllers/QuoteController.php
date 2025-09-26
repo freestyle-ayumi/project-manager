@@ -63,7 +63,7 @@ class QuoteController extends Controller
     }
 
     // 新規見積書作成フォームを表示する
-    public function create()
+    public function create(Request $request)
     {
         $projects = Project::with('client')->get();
         $clients = Client::all();
@@ -76,8 +76,29 @@ class QuoteController extends Controller
 
         $defaultQuoteNumber = date('ymd') . str_pad(mt_rand(0, 99), 2, '0', STR_PAD_LEFT);
 
-        return view('quotes.create', compact('projects', 'clients', 'projectClientMap', 'allClientsMap', 'defaultQuoteNumber'));
+        // URL から project_id を取得
+        $selectedProjectId = $request->input('project_id');
+
+        // もし project_id が指定されていれば、対応する client_id もセット
+        $selectedClientId = null;
+        if ($selectedProjectId) {
+            $project = Project::with('client')->find($selectedProjectId);
+            if ($project) {
+                $selectedClientId = $project->client_id;
+            }
+        }
+
+        return view('quotes.create', compact(
+            'projects',
+            'clients',
+            'projectClientMap',
+            'allClientsMap',
+            'defaultQuoteNumber',
+            'selectedProjectId',
+            'selectedClientId'
+        ));
     }
+
 
     // 新規見積書をデータベースに保存する
     public function store(Request $request)
