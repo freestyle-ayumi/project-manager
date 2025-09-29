@@ -83,7 +83,7 @@
                             {{-- 発行日: 幅2 --}}
                             <div class="md:col-span-2">
                                 <label for="issue_date" class="block text-sm font-medium text-gray-700">発行日<span class="text-red-500">*</span></label>
-                                <input type="date" name="issue_date" id="issue_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('issue_date', $quote->issue_date) }}" required>
+                                <input type="text" name="issue_date" id="issue_date" class="flatpickr mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('issue_date', $quote->issue_date) }}" required>
                                 @error('issue_date')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -94,7 +94,7 @@
                                 {{-- 納品予定日 (日付): 幅2 --}}
                                 <div class="md:col-span-2">
                                     <label for="delivery_date" class="block text-sm font-medium text-gray-700">納品予定日</label>
-                                    <input type="date" name="delivery_date" id="delivery_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('delivery_date', $quote->delivery_date) }}">
+                                    <input type="text" name="delivery_date" id="delivery_date" class="flatpickr mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('delivery_date', $quote->delivery_date) }}">
                                     @error('delivery_date')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
@@ -238,6 +238,13 @@
     {{-- JavaScriptセクション --}}
     @push('scripts')
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('.flatpickr', {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+            });
+        });
+
         // console.logは本番環境で無効化済みの前提です
 
         // 指定した行の小計を計算し表示する関数

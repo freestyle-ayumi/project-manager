@@ -235,8 +235,7 @@
                     class="bg-green-600 hover:bg-green-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                         一覧に戻る
                     </a>
-                    <a href="{{ url('/quotes/' . $quote->id . '/pdf-mpdf') }}"
-                    class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
+                    <a href="{{ route('quotes.downloadPdfMpdf', $quote) }}" class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                         PDF出力
                     </a>
                 </div>

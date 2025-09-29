@@ -49,11 +49,8 @@ Route::middleware('auth')->group(function () {
 
     // 見積書関連のルート
     // PDF系の個別ルート
-    Route::get('/quotes/{quote}/pdf', [QuoteController::class, 'generatePdf'])->name('quotes.generatePdf');
-    Route::get('/quotes/{quote}/download-pdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
-    // 注意: 以前のdownloadPdfとgeneratePdfが同じメソッドを指している場合、重複を避けるか、用途を明確にしてください。
-    // 例: Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
-    // こちらは既存のdownloadPdfルートと重複するため、コメントアウトまたは削除を検討してください。
+    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdfMpdf');
+
 
     // 見積書リソースルート (必ず一番最後に書く)
     Route::resource('quotes', QuoteController::class);

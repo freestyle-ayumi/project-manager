@@ -73,7 +73,7 @@
 
                 {{-- 右側 --}}
                 <td style="width: 40%; vertical-align: top;" class="p-xy" class="company-txt">
-                    <img src="{{ asset('img/fse-logo.png') }}" alt="株式会社フリースタイルエンターテイメント" class="comp-logo">
+                    <img src="{{ public_path('img/fse-logo.png') }}" alt="株式会社フリースタイルエンターテイメント" class="comp-logo">
                     <p>株式会社フリースタイルエンターテイメント</p>
                     <p>〒710-0038</p>
                     <p>岡山県倉敷市新田2554</p>

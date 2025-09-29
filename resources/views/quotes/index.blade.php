@@ -17,24 +17,33 @@
 
                     {{-- 検索・フィルターフォーム --}}
                     <form action="{{ route('quotes.index') }}" method="GET" class="mb-6 p-4 rounded-md shadow-sm bg-white">
-                        <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-                            <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="見積番号・件名・顧客名・イベント名" class="flex-grow border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <div class="grid grid-cols-12 gap-2">
+                            <!-- 検索入力欄: 8カラム -->
+                            <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="見積番号・件名・顧客名・イベント名"
+                                class="col-span-12 md:col-span-8 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
 
-                            <select name="project_filter" id="project_filter" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="current" {{ request('project_filter', 'current') == 'current' ? 'selected' : '' }}>現在開催中のプロジェクト</option>
-                                <option value="all" {{ request('project_filter') == 'all' ? 'selected' : '' }}>全てのプロジェクト</option>
-                                <option value="past" {{ request('project_filter') == 'past' ? 'selected' : '' }}>過去のプロジェクト</option>
+                            <!-- プロジェクトフィルター: 2カラム -->
+                            <select name="project_filter" id="project_filter"
+                                    class="col-span-12 md:col-span-2 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="current" {{ request('project_filter', 'current') == 'current' ? 'selected' : '' }}>現在開催中</option>
+                                <option value="all" {{ request('project_filter') == 'all' ? 'selected' : '' }}>全て</option>
+                                <option value="past" {{ request('project_filter') == 'past' ? 'selected' : '' }}>過去</option>
                             </select>
 
-                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-md px-4 py-2 transition">
+                            <!-- 検索ボタン: 1カラム -->
+                            <button type="submit"
+                                    class="col-span-12 md:col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-md px-4 py-2 transition">
                                 検索
                             </button>
 
-                            <a href="{{ route('quotes.index') }}" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold text-sm rounded-md px-4 py-2 text-center transition">
+                            <!-- クリアボタン: 1カラム -->
+                            <a href="{{ route('quotes.index') }}"
+                            class="col-span-12 md:col-span-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold text-sm rounded-md px-4 py-2 text-center transition">
                                 クリア
                             </a>
                         </div>
                     </form>
+
 
 
                     <div class="mb-4 text-right">

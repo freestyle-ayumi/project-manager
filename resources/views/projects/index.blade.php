@@ -113,10 +113,10 @@
                                                         </a>
 
                                                         @if ($latestQuotes[$project->id]->pdf_path)
-                                                            <a href="{{ route('quotes.downloadPdf', $latestQuotes[$project->id]->id) }}"
-                                                            target="_blank"
-                                                            class="ml-2 text-red-600 hover:text-red-800"
-                                                            title="PDFをダウンロード">
+                                                            <a href="{{ route('quotes.downloadPdfMpdf', $latestQuotes[$project->id]->id) }}"
+                                                                target="_blank"
+                                                                class="ml-2 text-red-600 hover:text-red-800"
+                                                                title="PDFをダウンロード">
                                                                 <!-- PDFアイコン -->
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                                                     class="inline-block" viewBox="0 0 16 16">
@@ -125,6 +125,7 @@
                                                                 </svg>
                                                             </a>
                                                         @endif
+
                                                     </span>
                                                 @else
                                                     <a href="{{ route('quotes.create', ['project_id' => $project->id]) }}"
