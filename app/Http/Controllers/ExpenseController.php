@@ -17,13 +17,31 @@ class ExpenseController extends Controller
     /**
      * 経費一覧を表示する
      */
-    public function index()
+    public function index(Request $request)
     {
-        // データベースから経費データを取得します
-        // 関連するプロジェクト、ユーザー、経費ステータス、および経費項目も一緒に取得
-        $expenses = Expense::with(['user', 'status', 'items.project'])->orderBy('application_date', 'desc')->get();
+        $query = Expense::with(['user', 'project', 'status']);
 
-        return view('expenses.index', compact('expenses'));
+        // 検索
+        if ($search = $request->input('search')) {
+            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('project', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('status', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+
+        // ステータスフィルター
+        if ($status = $request->input('status_filter')) {
+            if ($status !== 'all') {
+                $query->whereHas('status', fn($q) => $q->where('name', $status));
+            }
+        }
+
+        $expenses = $query->orderBy('date', 'desc')->paginate(20);
+
+        // Blade に渡す変数
+        $statuses = \App\Models\ExpenseStatus::all();
+        $canEdit = in_array(auth()->user()->role->name, ['master', 'developer', 'accounting']);
+
+        return view('expenses.index', compact('expenses', 'statuses', 'canEdit'));
     }
 
     /**
@@ -31,106 +49,97 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        // 経費の費目カテゴリのリスト
-        $expenseCategories = [
-            '交通費', '宿泊費', '会議費', '消耗品費', '通信費',
-            '交際費', '福利厚生費', '旅費交通費', '図書費', '研修費',
-            'その他'
-        ];
-
-        // 関連付け可能なプロジェクトのリスト
-        // 終了していないプロジェクトのみを取得
-        // プロジェクトのステータスが '完了' または '終了' でないものを取得すると仮定します。
-        // プロジェクトモデルに 'status' リレーションまたは 'status_name' カラムが存在することを前提としています。
         $projects = Project::whereDoesntHave('status', function ($query) {
             $query->whereIn('name', ['完了', '終了']); // '完了' または '終了' ステータスのプロジェクトを除外
         })->orderBy('name')->get();
 
-        // もしProjectモデルにstatusリレーションがない場合、以下のように直接statusカラムでフィルタリングすることも可能です。
-        // $projects = Project::whereNotIn('status_column_name', ['完了', '終了'])->orderBy('name')->get();
-        // または、is_completedのようなbooleanカラムがある場合
-        // $projects = Project::where('is_completed', false)->orderBy('name')->get();
-
-
         // デフォルトの申請日 (今日の日付)
         $defaultApplicationDate = Carbon::now()->format('Y-m-d');
 
-        return view('expenses.create', compact('expenseCategories', 'projects', 'defaultApplicationDate'));
+        return view('expenses.create', compact('projects', 'defaultApplicationDate'));
     }
 
     /**
      * 新規経費申請を保存する
      */
     public function store(Request $request)
-    {
-        // バリデーションルール
+{
         $request->validate([
-            'applicant_id' => 'required|exists:users,id',
-            'application_date' => 'required|date',
-            'expense_status_id' => 'required|exists:expense_statuses,id',
-            'project_id' => 'nullable|exists:projects,id', // 全体プロジェクトのバリデーションを追加
-            'overall_reason' => 'nullable|string|max:1000',
-            'items' => 'required|array|min:1',
-            'items.*.category' => 'required|string|max:255',
-            'items.*.amount' => 'required|numeric|min:0',
-            'items.*.date' => 'required|date',
-            'items.*.payee' => 'required|string|max:255',
-            'items.*.project_id' => 'nullable|exists:projects,id', // 項目別プロジェクトのバリデーション
-            'items.*.description' => 'nullable|string|max:1000',
-            'items.*.file' => 'nullable|file|mimes:jpeg,png,pdf|max:2048', // 2MBまで
+        'project_id' => 'required|exists:projects,id',
+        'application_date' => 'required|date',
+        'items.*.item_name' => 'required|string',
+        'items.*.price' => 'required|numeric|min:0',
+        'items.*.tax_rate' => 'required|numeric|min:0',
+    ]);
+
+    DB::transaction(function() use ($request) {
+        $expense = Expense::create([
+            'user_id' => $request->input('applicant_id'),
+            'date' => $request->input('application_date'),
+            'expense_status_id' => $request->input('expense_status_id'),
+            'project_id' => $request->input('project_id'),
+            'amount' => 0,
         ]);
 
-        DB::transaction(function () use ($request) {
-            // Expense レコードを作成
-            $expense = Expense::create([
-                'user_id' => $request->input('applicant_id'),
-                'application_date' => $request->input('application_date'),
-                'expense_status_id' => $request->input('expense_status_id'),
-                'project_id' => $request->input('project_id'), // 全体プロジェクトを保存
-                'overall_reason' => $request->input('overall_reason'),
-                'total_amount' => 0, // 後で計算して更新
+        $totalAmount = 0;
+
+        foreach ($request->input('items') as $itemData) {
+            $subtotal = $itemData['price'] * $itemData['quantity'] * (1 + $itemData['tax_rate']/100);
+            ExpenseItem::create([
+                'expense_id' => $expense->id,
+                'item_name' => $itemData['item_name'],
+                'price' => $itemData['price'],
+                'quantity' => $itemData['quantity'],
+                'unit' => $itemData['unit'],
+                'tax_rate' => $itemData['tax_rate'],
+                'subtotal' => $subtotal,
             ]);
+            $totalAmount += $subtotal;
+        }
 
-            $totalAmount = 0;
+        $expense->update(['amount' => $totalAmount]);
+    });
 
-            // 各経費項目を保存
-            foreach ($request->input('items') as $key => $itemData) {
-                $filePath = null;
-                // ファイルがアップロードされた場合
-                if ($request->hasFile("items.{$key}.file")) {
-                    $file = $request->file("items.{$key}.file");
-                    $fileName = time() . '_' . $file->getClientOriginalName();
-                    // publicディスクにファイルを保存
-                    $filePath = $file->storeAs('expense_files', $fileName, 'public');
-                }
-
-                ExpenseItem::create([
-                    'expense_id' => $expense->id,
-                    'category' => $itemData['category'],
-                    'amount' => $itemData['amount'],
-                    'date' => $itemData['date'],
-                    'payee' => $itemData['payee'],
-                    'description' => $itemData['description'],
-                    'project_id' => $itemData['project_id'] ?? null,
-                    'file_path' => $filePath,
-                ]);
-
-                $totalAmount += $itemData['amount'];
-            }
-
-            // Expenseの合計金額を更新
-            $expense->update(['total_amount' => $totalAmount]);
-
-            // ログに保存 (必要であれば)
-            // QuoteLog::create([
-            //     'expense_id' => $expense->id,
-            //     'user_id' => Auth::id(),
-            //     'action' => '新規経費申請が作成されました。',
-            // ]);
-        });
-
-        return redirect()->route('expenses.index')->with('success', '経費申請が正常に作成されました。');
+    return redirect()->route('expenses.index')->with('success','経費申請が正常に作成されました。');
+    }
+    
+    public function show(Expense $expense) {
+    $expense->load('items','user','status','project');
+    return view('expenses.show', compact('expense'));
     }
 
-    // 他のアクション (show, edit, update, destroy) は必要に応じて...
+public function edit(Expense $expense) {
+    // 編集用に必要なデータを渡す
+    $projects = Project::orderBy('name')->get();
+    return view('expenses.edit', compact('expense','projects'));
+}
+
+public function destroy(Expense $expense) {
+    $allowedRoles = ['master', 'developer', 'accounting'];
+    if (!in_array(auth()->user()->role->name, $allowedRoles)) {
+        abort(403, 'この操作を行う権限がありません。');
+    }
+
+    $expense->delete();
+    return redirect()->route('expenses.index')->with('success','削除しました。');
+}
+public function updateStatus(Request $request, Expense $expense)
+{
+    $allowedRoles = ['master', 'developer', 'accounting'];
+    if (!in_array(auth()->user()->role->name, $allowedRoles)) {
+        abort(403, 'この操作を行う権限がありません。');
+    }
+
+    $request->validate([
+        'expense_status_id' => 'required|exists:expense_statuses,id'
+    ]);
+
+    $expense->update([
+        'expense_status_id' => $request->input('expense_status_id')
+    ]);
+
+    return redirect()->route('expenses.index')->with('success','ステータスを更新しました。');
+}
+
+
 }

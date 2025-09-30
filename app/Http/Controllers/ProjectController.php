@@ -39,11 +39,16 @@ class ProjectController extends Controller
         ])
         ->withSum('quotes', 'total_amount')    // 見積額の合計
         ->withSum('invoices', 'total_amount')  // 請求額の合計
-        ->withSum(['expenses as total_approved_expenses_sum' => function ($query) use ($approvedStatus) {
-            if ($approvedStatus) {
-                $query->where('expense_status_id', $approvedStatus->id);
-            }
-        }], 'approved_amount')
+        ->withSum(['expenses as approved_expenses_sum' => function ($query) use ($approvedStatus) {
+        if ($approvedStatus) {
+            $query->where('expense_status_id', $approvedStatus->id);
+        }
+    }], 'amount')
+    ->withSum(['expenses as unapproved_expenses_sum' => function ($query) use ($approvedStatus) {
+        if ($approvedStatus) {
+            $query->where('expense_status_id', '<>', $approvedStatus->id);
+        }
+    }], 'amount')
         ->get();
 
         // 各プロジェクトの最新見積書を配列で渡す
@@ -150,6 +155,7 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
+        $pendingStatus = ExpenseStatus::where('name', '未承認')->first();
 
         $project = Project::with([
             'client',
@@ -162,19 +168,33 @@ class ProjectController extends Controller
         ])
         ->withSum('quotes', 'total_amount')
         ->withSum('invoices', 'total_amount')
-        ->withSum(['expenses as total_approved_expenses_sum' => function ($query) use ($approvedStatus) {
-            if ($approvedStatus) {
-                $query->where('expense_status_id', $approvedStatus->id);
-            }
-        }], 'approved_amount')
+        ->withSum(['expenses as total_approved_expenses_sum' => function($query) use ($approvedStatus) {
+            if ($approvedStatus) $query->where('expense_status_id', $approvedStatus->id);
+        }], 'amount')
+        ->withSum(['expenses as total_pending_expenses_sum' => function($query) use ($pendingStatus) {
+            if ($pendingStatus) $query->where('expense_status_id', $pendingStatus->id);
+        }], 'amount')
         ->findOrFail($project->id);
 
-        // ★追加: 該当プロジェクトの最新の見積書を取得
-        $latestQuote = $project->quotes()->latest('issue_date')->first();
-        // ★追加: 該当プロジェクトの最新の請求書を取得 (同様に必要であれば)
-        $latestInvoice = $project->invoices()->latest('issue_date')->first();
+        // 既存の処理（例: タスクや見積、請求などの取得）
+        $latestQuote = $project->quotes()->latest('created_at')->first();
+        $latestInvoice = $project->invoices()->latest('created_at')->first();
 
+        // 最新ログに紐づくPDF付きの見積書
+        $latestLogWithPdf = \App\Models\QuoteLog::whereHas('quote', function($q) use ($project) {
+            $q->where('project_id', $project->id);
+        })
+        ->whereHas('quote', fn($q) => $q->whereNotNull('pdf_path')) // PDFがある見積書
+        ->latest('created_at')
+        ->first();
 
-        return view('projects.show', compact('project', 'latestQuote', 'latestInvoice'));
+        $latestPdfQuoteId = $latestLogWithPdf ? $latestLogWithPdf->quote_id : null;
+
+        return view('projects.show', compact(
+            'project', 
+            'latestQuote', 
+            'latestInvoice', 
+            'latestPdfQuoteId'
+        ));
     }
 }

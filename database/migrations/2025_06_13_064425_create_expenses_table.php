@@ -12,8 +12,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('expense_status_id')->nullable()->constrained('expense_statuses')->onDelete('set null'); // 経費ステータスID
             $table->date('date')->comment('日付');
-            $table->string('category')->comment('カテゴリ（例：交通費、消耗品費）');
-            $table->text('description')->nullable()->comment('経費詳細');
             $table->decimal('amount', 10, 2)->comment('金額');
             $table->text('notes')->nullable()->comment('備考');
             $table->timestamps();

@@ -152,7 +152,6 @@
                                                 @endif
                                             </td>
                                             <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500 text-right">
-                                                {{-- total_approved_expenses_sum は withSum(['expenses as total_approved_expenses_sum' => ...]) で定義されたもの --}}
                                                 ¥{{ number_format($project->total_approved_expenses_sum ?? 0) }}
                                             </td>
                                             <td class="px-2 py-1 whitespace-nowrap text-sm text-gray-500 text-right">
@@ -163,13 +162,23 @@
                                             </td>
 
                                             <td class="px-2 py-1 whitespace-nowrap text-right text-sm font-medium">
-                                                {{-- Flexboxでアイコンを横並びに配置 --}}
-                                                <div class="flex items-center justify-end space-x-2"> {{-- ここを修正 --}}
+                                                <div class="flex items-center justify-end space-x-1">
+                                                    {{-- 詳細 --}}
+                                                    <a href="{{ route('projects.show', $project) }}" class="text-blue-600 hover:text-blue-400" title="詳細">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                                                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                                                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                                                        </svg>
+                                                    </a>
+
+                                                    {{-- 編集 --}}
                                                     <a href="{{ route('projects.edit', $project) }}" class="text-emerald-600 hover:text-emerald-400" title="編集">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
                                                             <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
                                                         </svg>
                                                     </a>
+
+                                                    {{-- 削除 --}}
                                                     <form action="{{ route('projects.destroy', $project) }}" method="POST" class="inline-block" onsubmit="return confirm('本当にこのプロジェクトを削除しますか？');">
                                                         @csrf
                                                         @method('DELETE')
@@ -182,6 +191,7 @@
                                                     </form>
                                                 </div>
                                             </td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>

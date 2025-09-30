@@ -88,8 +88,8 @@
                                                 ¥{{ number_format($project->quotes_sum_total_amount) }}
                                             </a>
                                             {{-- PDFダウンロードリンクアイコン --}}
-                                            @if ($latestQuote->pdf_path)
-                                                <a href="{{ route('quotes.downloadPdfMpdf', $latestQuote->id) }}" target="_blank" class="ml-2 text-red-600 hover:text-red-800" title="PDFをダウンロード">
+                                            @if ($latestPdfQuoteId)
+                                                <a href="{{ route('quotes.downloadPdfMpdf', $latestPdfQuoteId) }}" target="_blank" class="ml-2 text-red-600 hover:text-red-800" title="最新ログPDFをダウンロード">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                         <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
                                                         <path d="M4.603 12.087a.84.84 0 0 1-.438-.799c.075-.4.293-.678.623-.872l.06-.038c.28-.171.564-.4.96-.92.33-.414.68-1.133 1.02-1.968c.054-.13.128-.295.266-.445a.733.733 0 0 1 .793-.161c.07.053.175.148.243.27.146.23.308.535.49.875.217.412.438.828.596 1.257q.427.972 1.053 2.504c.28.705.326 1.007.065 1.187-.074.055-.118.065-.25.059q-.4-.027-.9-.166a2.72 2.72 0 0 1-.443-.24c-.109-.083-.25-.19-.363-.284l-.01-.007a.486.486 0 0 0-.083-.061c-.058-.042-.132-.118-.195-.178a.7.7 0 0 1-.153-.234c-.017-.065-.035-.12-.063-.193-.075-.197-.202-.456-.375-.76c-.147-.243-.3-.482-.464-.724a.5.5 0 0 0-.6-.096l-.007.004-.007.004-.005.002-.002.001a.5.5 0 0 0-.1.22z"/>
@@ -123,13 +123,33 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border border-gray-200">
-                                    ¥{{ number_format($project->total_approved_expenses_sum ?? 0) }}
+                                    <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">
+                                        認 ¥{{ $project->total_approved_expenses_sum ?? 0 }}
+                                    </span>
+                                    <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded">
+                                        未 ¥{{ $project->total_pending_expenses_sum ?? 0 }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border border-gray-200">
                                     @php
-                                        $netProfit = ($project->invoices_sum_total_amount ?? 0) - ($project->total_approved_expenses_sum ?? 0);
+                                        $approvedExpenses = $project->expenses()
+                                                                    ->whereHas('status', fn($q) => $q->where('name', '承認済み'))
+                                                                    ->sum('amount');
+
+                                        $allExpenses = $project->expenses()->sum('amount');
+
+                                        $invoicesTotal = $project->invoices_sum_total_amount ?? 0;
+
+                                        $netProfitApprovedOnly = $invoicesTotal - $approvedExpenses;
+                                        $netProfitAll = $invoicesTotal - $allExpenses;
                                     @endphp
-                                    ¥{{ number_format($netProfit) }}
+
+                                    <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">
+                                        認 ¥{{ number_format($netProfitApprovedOnly) }}
+                                    </span>
+                                    <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded">
+                                        未 ¥{{ number_format($netProfitAll) }}
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>

@@ -7,12 +7,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('expense_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('expense_id')->constrained('expenses')->onDelete('cascade')->comment('申請ID');
-            $table->string('description')->comment('項目説明');
-            $table->decimal('amount', 10, 2)->comment('金額');
-            $table->timestamps();
-        });
+        $table->id();
+        $table->foreignId('expense_id')->constrained()->onDelete('cascade');
+        $table->string('name');
+        $table->decimal('unit_price', 10, 2);
+        $table->integer('quantity')->default(1);
+        $table->string('unit')->nullable();
+        $table->decimal('tax_rate', 5, 2)->default(0);
+        $table->decimal('subtotal', 12, 2)->default(0);
+        $table->decimal('tax', 12, 2)->default(0);
+
+        $table->timestamps();
+});
     }
     public function down(): void
     {

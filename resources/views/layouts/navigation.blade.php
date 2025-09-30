@@ -17,11 +17,11 @@
                     </x-nav-link>
 
                     <x-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.index')">
-                        {{ __('プロジェクト一覧') }}
+                        {{ __('プロジェクト管理') }}
                     </x-nav-link>
 
                     <x-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.index')">
-                        {{ __('タスク一覧') }}
+                        {{ __('タスク管理') }}
                     </x-nav-link>
 
                     <x-nav-link :href="route('quotes.index')" :active="request()->routeIs('quotes.index')">
@@ -41,13 +41,16 @@
                     </x-nav-link>
 
                     <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.index')">
-                        {{ __('顧客一覧') }}
+                        {{ __('顧客管理') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                        {{ __('ユーザー一覧') }}
-                    </x-nav-link>
-                </div>
+                    @auth
+                        @if(in_array(Auth::user()->role->name, ['master', 'developer']))
+                            <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                                {{ __('ユーザー管理') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
 
             </div>
 
@@ -117,11 +120,11 @@
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('projects.index')" :active="request()->routeIs('projects.index')">
-                {{ __('プロジェクト一覧') }}
+                {{ __('プロジェクト管理') }}
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.index')">
-                {{ __('タスク一覧') }}
+                {{ __('タスク管理') }}
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('quotes.index')" :active="request()->routeIs('quotes.index')">
@@ -141,12 +144,18 @@
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.index')">
-                {{ __('顧客一覧') }}
+                {{ __('顧客管理') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                {{ __('ユーザー一覧') }}
-            </x-responsive-nav-link>
+            @auth
+                @if(in_array(Auth::user()->role->name, ['master', 'developer']))
+                    <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                        {{ __('ユーザー管理') }}
+                    </x-responsive-nav-link>
+                @endif
+            @endauth
+
+
             {{-- 他のリンクがここにあったら、適切な場所に移動してください --}}
         </div>
 

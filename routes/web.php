@@ -11,17 +11,12 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\ExpenseStatusController; // ExpenseStatusControllerをインポート
+use App\Http\Controllers\ExpenseStatusController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // トップページ
@@ -29,54 +24,60 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// 認証済みユーザーのみアクセス可能なルートグループ
+// 認証済みユーザーのみアクセス可能
 Route::middleware('auth')->group(function () {
-    // ダッシュボードルート
+
+    // ダッシュボード
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // プロフィール関連のルート
+    // プロフィール
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // プロジェクト関連のルート
+    // プロジェクト
     Route::resource('projects', ProjectController::class);
 
-    // タスク関連のルート
+    // タスク
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 
-    // 見積書関連のルート
-    // PDF系の個別ルート
+    // 見積書
     Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdfMpdf');
-
-
-    // 見積書リソースルート (必ず一番最後に書く)
     Route::resource('quotes', QuoteController::class);
 
-    // 納品関連のルート
+    // 納品書
     Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
 
-    // 請求書関連のルート
+    // 請求書
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
 
-    // 経費関連のルート
-    // ★ここをresourceルートに変更しました
+    // 経費
     Route::resource('expenses', ExpenseController::class);
 
-    // 経費ステータス関連のルート
-    Route::resource('expense-statuses', ExpenseStatusController::class); // resourceルートを追加
+    // 経費ステータス
+    Route::resource('expense-statuses', ExpenseStatusController::class);
+    Route::patch('/expenses/{expense}/status', [ExpenseController::class, 'updateStatus'])->name('expenses.updateStatus');
 
-    // クライアント関連のルート
+
+    // 顧客
     Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
 
-    // ユーザー関連のルート
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    // ユーザー管理（一覧・編集・更新・削除のみ）
+    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
 
-    // ロール関連のルート
-    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    // ロール管理
+    Route::prefix('roles')->name('roles.')->group(function () {
+    Route::get('/', [RoleController::class, 'index'])->name('index');
+    Route::get('/create', [RoleController::class, 'create'])->name('create'); // ←必要
+    Route::post('/', [RoleController::class, 'store'])->name('store');
+    Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
+    Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+    Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+    });
+
 });
 
-// Laravel Breezeなどの認証パッケージが提供する認証ルート
+// 認証ルート
 require __DIR__.'/auth.php';
