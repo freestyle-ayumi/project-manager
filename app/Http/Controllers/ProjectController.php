@@ -12,57 +12,83 @@ use App\Models\Quote; // Quoteモデルをインポート
 use App\Models\Invoice;
 use App\Models\Expense;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
-    /**
-     * プロジェクト一覧を表示する
-     */
-    public function index()
+    /* プロジェクト一覧を表示する */
+    public function index(Request $request)
     {
         $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
 
-        $projects = Project::with([
+        $query = Project::with([
             'client',
             'user',
             'status',
             'tasks',
             'quotes',
             'invoices',
-            'expenses' => function ($query) use ($approvedStatus) {
+            'expenses' => function ($q) use ($approvedStatus) {
                 if ($approvedStatus) {
-                    $query->where('expense_status_id', $approvedStatus->id);
+                    $q->where('expense_status_id', $approvedStatus->id);
                 }
             }
         ])
-        ->withSum('quotes', 'total_amount')    // 見積額の合計
-        ->withSum('invoices', 'total_amount')  // 請求額の合計
-        ->withSum(['expenses as approved_expenses_sum' => function ($query) use ($approvedStatus) {
-        if ($approvedStatus) {
-            $query->where('expense_status_id', $approvedStatus->id);
-        }
-    }], 'amount')
-    ->withSum(['expenses as unapproved_expenses_sum' => function ($query) use ($approvedStatus) {
-        if ($approvedStatus) {
-            $query->where('expense_status_id', '<>', $approvedStatus->id);
-        }
-    }], 'amount')
-        ->get();
+        ->withSum('quotes', 'total_amount')
+        ->withSum('invoices', 'total_amount')
+        ->withSum(['expenses as approved_expenses_sum' => function ($q) use ($approvedStatus) {
+            if ($approvedStatus) {
+                $q->where('expense_status_id', $approvedStatus->id);
+            }
+        }], 'amount')
+        ->withSum(['expenses as unapproved_expenses_sum' => function ($q) use ($approvedStatus) {
+            if ($approvedStatus) {
+                $q->where('expense_status_id', '<>', $approvedStatus->id);
+            }
+        }], 'amount');
 
-        // 各プロジェクトの最新見積書を配列で渡す
+        // デフォルトで「今日開催中 or これから開催予定」のプロジェクトだけ表示
+        if (!$request->has('search') && !$request->has('status_filter')) {
+            $query->where(function ($q) {
+                $today = \Carbon\Carbon::today(); // ← ここで直接宣言
+                $q->where(function($q2) use ($today) {
+                    $q2->where('start_date', '<=', $today)
+                    ->where('end_date', '>=', $today);
+                })
+                ->orWhere('start_date', '>', $today);
+            });
+        }
+
+
+        // 検索キーワード
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhereHas('client', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                ->orWhereHas('tasks', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        }
+
+        // ステータスフィルター
+        if ($statusId = $request->input('status_filter')) {
+            $query->where('project_status_id', $statusId);
+        }
+
+        $projects = $query->orderBy('start_date', 'asc')->get();
+
+        // 最新見積書を配列で取得
         $latestQuotes = [];
         foreach ($projects as $project) {
             $latestQuotes[$project->id] = $project->quotes->sortByDesc('issue_date')->first();
         }
 
-        return view('projects.index', compact('projects', 'latestQuotes'));
+        // ステータス一覧をビューに渡す
+        $projectStatuses = ProjectStatus::all();
+
+        return view('projects.index', compact('projects', 'latestQuotes', 'projectStatuses'));
     }
 
-    /**
-     * 新規プロジェクト作成フォームを表示する
-     */
+    /* 新規プロジェクト作成フォームを表示する */
     public function create()
     {
         $clients = Client::all();
@@ -71,9 +97,7 @@ class ProjectController extends Controller
         return view('projects.create', compact('clients', 'projectStatuses'));
     }
 
-    /**
-     * 新規プロジェクトをデータベースに保存する
-     */
+    /* 新規プロジェクトをデータベースに保存する */
     public function store(Request $request)
     {
         $request->validate([
@@ -83,6 +107,7 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'project_status_id' => 'required|exists:project_statuses,id',
             'client_id' => 'required|exists:clients,id',
+            'venue' => 'required|string|max:255',
         ]);
 
         $userId = Auth::id();
@@ -95,15 +120,14 @@ class ProjectController extends Controller
             'project_status_id' => $request->project_status_id,
             'client_id' => $request->client_id,
             'user_id' => $userId,
+            'venue' => $request->venue,
         ]);
 
         return redirect()->route('projects.index')
                          ->with('success', 'プロジェクトが正常に作成されました。');
     }
 
-    /**
-     * プロジェクト編集フォームを表示する
-     */
+    /* プロジェクト編集フォームを表示する */
     public function edit(Project $project)
     {
         $clients = Client::all();
@@ -111,9 +135,7 @@ class ProjectController extends Controller
         return view('projects.edit', compact('project', 'clients', 'projectStatuses'));
     }
 
-    /**
-     * プロジェクトをデータベースで更新する
-     */
+    /* プロジェクトをデータベースで更新する */
     public function update(Request $request, Project $project)
     {
         $request->validate([
@@ -123,6 +145,7 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'project_status_id' => 'required|exists:project_statuses,id',
             'client_id' => 'required|exists:clients,id',
+            'venue' => 'required|string|max:255',
         ]);
 
         $project->update([
@@ -132,15 +155,14 @@ class ProjectController extends Controller
             'end_date' => $request->end_date,
             'project_status_id' => $request->project_status_id,
             'client_id' => $request->client_id,
+            'venue' => $request->venue,
         ]);
 
         return redirect()->route('projects.index')
                          ->with('success', 'プロジェクトが正常に更新されました。');
     }
 
-    /**
-     * プロジェクトをデータベースから削除する
-     */
+    /* プロジェクトをデータベースから削除する */
     public function destroy(Project $project)
     {
         $project->delete();
@@ -149,9 +171,7 @@ class ProjectController extends Controller
                          ->with('success', 'プロジェクトが正常に削除されました。');
     }
 
-    /**
-     * プロジェクト詳細を表示する
-     */
+    /* プロジェクト詳細を表示する */
     public function show(Project $project)
     {
         $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();

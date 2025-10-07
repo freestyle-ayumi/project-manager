@@ -5,13 +5,13 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-4">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
                     <h3 class="font-bold text-xl mb-4">プロジェクト情報編集</h3>
 
-                    {{-- バリデーションエラーメッセージの表示 --}}
+                    {{-- バリデーションエラー --}}
                     @if ($errors->any())
                         <div class="mb-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
                             <ul class="list-disc list-inside">
@@ -22,62 +22,123 @@
                         </div>
                     @endif
 
-                    {{-- フォームのアクションを更新ルートに設定し、メソッドをPUT/PATCHにする --}}
                     <form method="POST" action="{{ route('projects.update', $project) }}">
                         @csrf
-                        @method('PUT') {{-- または @method('PATCH') --}}
+                        @method('PUT')
 
-                        <div class="mb-4">
-                            <x-input-label for="name" :value="__('プロジェクト名')" />
-                            {{-- old() ヘルパーは入力エラー時に前の値を保持、そうでない場合は $project->name を表示 --}}
-                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name', $project->name)" required autofocus />
-                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                        {{-- 3カラム: プロジェクト名・顧客・ステータス --}}
+                        <div class="grid grid-cols-12 gap-4 mb-4">
+                            {{-- プロジェクト名 --}}
+                            <div class="col-span-6">
+                                <x-input-label for="name">
+                                    プロジェクト名<span class="text-red-500">*</span>
+                                </x-input-label>
+                                <input id="name" name="name" type="text" value="{{ old('name', $project->name) }}"
+                                    class="block mt-1 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    required autofocus>
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                            </div>
+
+                            {{-- 顧客 --}}
+                            <div class="col-span-4">
+                                <x-input-label for="client_id">
+                                        顧客<span class="text-red-500">*</span>
+                                    </x-input-label>
+                                <select id="client_id" name="client_id" required
+                                    class="block mt-1 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <option value="">-- 顧客を選択してください --</option>
+                                    @foreach ($clients as $client)
+                                        <option value="{{ $client->id }}" {{ old('client_id', $project->client_id) == $client->id ? 'selected' : '' }}>
+                                            {{ $client->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('client_id')" class="mt-2" />
+                            </div>
+
+                            {{-- ステータス --}}
+                            <div class="col-span-2">
+                                <x-input-label for="project_status_id" :value="__('ステータス')" />
+                                <select id="project_status_id" name="project_status_id" required
+                                    class="block mt-1 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    @foreach ($projectStatuses as $status)
+                                        <option value="{{ $status->id }}" {{ old('project_status_id', $project->project_status_id) == $status->id ? 'selected' : '' }}>
+                                            {{ $status->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('project_status_id')" class="mt-2" />
+                            </div>
                         </div>
 
-                        <div class="mb-4">
-                            <x-input-label for="client_id" :value="__('顧客')" />
-                            <select id="client_id" name="client_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                <option value="">-- 顧客を選択してください --</option>
-                                @foreach ($clients as $client)
-                                    <option value="{{ $client->id }}" {{ old('client_id', $project->client_id) == $client->id ? 'selected' : '' }}>
-                                        {{ $client->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('client_id')" class="mt-2" />
+                        {{-- 3カラム: 催事場所・開始日・終了日 --}}
+                        <div class="flex gap-4 mb-4">
+
+                            {{-- 催事場所 --}}
+                            <div class="flex-1 min-w-[150px]">
+                                <label for="venue" class="block font-medium text-sm text-gray-700">
+                                    催事場所<span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    id="venue"
+                                    name="venue"
+                                    type="text"
+                                    value="{{ old('venue', $project->venue) }}"
+                                    class="block w-full mt-1 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    required
+                                />
+                                <x-input-error :messages="$errors->get('venue')" class="mt-2" />
+                            </div>
+
+                            {{-- 開始日 --}}
+                            <div class="flex-1 min-w-[150px] relative">
+                                <label for="start_date" class="block font-medium text-sm text-gray-700">
+                                    開始日<span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    id="start_date"
+                                    name="start_date"
+                                    type="text"
+                                    value="{{ old('start_date', $project->start_date) }}"
+                                    class="block w-full pr-10 mt-1 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                />
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 mt-5 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-10 4h10m-6 4h6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                    </svg>
+                                </div>
+                                <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
+                            </div>
+
+                            {{-- 終了日 --}}
+                            <div class="flex-1 min-w-[150px] relative">
+                                <label for="end_date" class="block font-medium text-sm text-gray-700">終了日 (任意)</label>
+                                <input
+                                    id="end_date"
+                                    name="end_date"
+                                    type="text"
+                                    value="{{ old('end_date', $project->end_date) }}"
+                                    class="block w-full pr-10 mt-1 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                />
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 mt-5 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-10 4h10m-6 4h6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                    </svg>
+                                </div>
+                                <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
+                            </div>
+
                         </div>
 
-                        <div class="mb-4">
-                            <x-input-label for="start_date" :value="__('開始日')" />
-                            <x-text-input id="start_date" class="block mt-1 w-full" type="date" name="start_date" :value="old('start_date', $project->start_date)" required />
-                            <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
-                        </div>
-
-                        <div class="mb-4">
-                            <x-input-label for="end_date" :value="__('終了日 (任意)')" />
-                            <x-text-input id="end_date" class="block mt-1 w-full" type="date" name="end_date" :value="old('end_date', $project->end_date)" />
-                            <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
-                        </div>
-
-                        <div class="mb-4">
-                            <x-input-label for="project_status_id" :value="__('ステータス')" />
-                            <select id="project_status_id" name="project_status_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                <option value="">-- ステータスを選択してください --</option>
-                                @foreach ($projectStatuses as $status)
-                                    <option value="{{ $status->id }}" {{ old('project_status_id', $project->project_status_id) == $status->id ? 'selected' : '' }}>
-                                        {{ $status->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <x-input-error :messages="$errors->get('project_status_id')" class="mt-2" />
-                        </div>
-
+                        {{-- 説明欄 --}}
                         <div class="mb-4">
                             <x-input-label for="description" :value="__('説明 (任意)')" />
-                            <textarea id="description" name="description" rows="4" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('description', $project->description) }}</textarea>
+                            <textarea id="description" name="description" rows="4"
+                                class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description', $project->description) }}</textarea>
                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                         </div>
 
+                        {{-- 保存ボタン --}}
                         <div class="flex items-center justify-end mt-4">
                             <x-primary-button class="ms-4">
                                 {{ __('プロジェクトを更新') }}
@@ -88,4 +149,24 @@
             </div>
         </div>
     </div>
+
+    {{-- Flatpickr --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+    <script>
+        flatpickr.localize(flatpickr.l10ns.ja);
+
+        flatpickr("#start_date", {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        flatpickr("#end_date", {
+            dateFormat: "Y-m-d",
+            allowInput: true,
+            defaultDate: document.getElementById('end_date').value || document.getElementById('start_date').value
+        });
+    </script>
+
 </x-app-layout>

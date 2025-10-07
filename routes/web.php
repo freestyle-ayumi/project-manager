@@ -62,7 +62,10 @@ Route::middleware('auth')->group(function () {
 
 
     // 顧客
-    Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::resource('clients', ClientController::class);
+    Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
+    Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+
 
     // ユーザー管理（一覧・編集・更新・削除のみ）
     Route::resource('users', UserController::class)->except(['create', 'store', 'show']);

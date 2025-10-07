@@ -5,10 +5,10 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-4">
         <div class="flex justify-center px-4 sm:px-0">
             <div class="w-full max-w-md bg-white shadow rounded-lg">
-                <div class="p-6">
+                <div class="p-6" style="@media (max-width: 400px) {padding: 0.5rem;}">
                     <form action="{{ route('roles.store') }}" method="POST">
                         @csrf
                         <div class="mb-4">

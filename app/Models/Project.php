@@ -19,45 +19,40 @@ class Project extends Model
         'total_expenses',
         'net_profit',
         'user_id',
-        'project_status_id', 
+        'project_status_id',
+        'venue', // ← ここを追加
     ];
 
-    // このプロジェクトが属するクライアントを取得
     public function client()
     {
         return $this->belongsTo(Client::class);
     }
 
-    // このプロジェクトの担当者（ユーザー）を取得
     public function user()
     {
-        return $this->belongsTo(User::class); // デフォルトでは user_id カラムを使用
+        return $this->belongsTo(User::class);
     }
 
-    // このプロジェクトのステータスを取得
     public function status()
     {
         return $this->belongsTo(ProjectStatus::class, 'project_status_id'); 
     }
-    // このプロジェクトに関連するタスクを取得
+
     public function tasks()
     {
         return $this->hasMany(Task::class);
     }
 
-    // このプロジェクトに関連する見積書を取得
     public function quotes()
     {
         return $this->hasMany(Quote::class);
     }
 
-    // このプロジェクトに関連する請求書を取得
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
 
-    // このプロジェクトに関連する経費を取得
     public function expenses()
     {
         return $this->hasMany(Expense::class);

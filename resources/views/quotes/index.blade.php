@@ -5,10 +5,10 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-4">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
                     @if (session('success'))
                     <div class="mb-4 p-4 bg-emerald-100 border border-emerald-400 text-emerald-700 rounded">
                         {{ session('success') }}
@@ -94,7 +94,7 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200 text-xs text-gray-500">
                                 @foreach ($quotes as $quote)
                                 <tr>
                                     <td class="px-2 py-3 whitespace-nowrap text-xs font-medium">
@@ -102,7 +102,7 @@
                                             {{ $quote->quote_number }}
                                         </a>
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->project->name ?? 'N/A' }}
                                         @if ($quote->project)
                                         <a href="{{ route('projects.show', $quote->project) }}" class="text-blue-600 hover:text-fuchsia-600 ml-1 inline-block align-middle" title="プロジェクト詳細へ">
@@ -113,34 +113,34 @@
                                         </a>
                                         @endif
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->client->name ?? 'N/A' }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->subject }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->user->name ?? 'N/A' }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm">
                                         {{ \Carbon\Carbon::parse($quote->issue_date)->format('Y/m/d') }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm">
                                         {{ $quote->delivery_date ? \Carbon\Carbon::parse($quote->delivery_date)->format('Y/m/d') : '未設定' }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->delivery_location ?? '未設定' }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->payment_terms ?? '未設定' }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap text-sm">
                                         ¥{{ number_format($quote->total_amount) }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-xs text-gray-500">
+                                    <td class="px-2 py-3 whitespace-nowrap">
                                         {{ $quote->status }}
                                     </td>
-                                    <td class="px-2 py-3 whitespace-nowrap text-right text-xs font-medium">
+                                    <td class="px-2 py-3 whitespace-nowrap font-medium">
                                         {{-- Flexboxでアイコンを横並びに配置 --}}
                                         <div class="flex items-center justify-end space-x-1">
                                             <a href="{{ route('quotes.show', $quote) }}" class="text-blue-600 hover:text-blue-400" title="詳細">

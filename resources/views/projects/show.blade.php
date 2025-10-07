@@ -5,40 +5,64 @@
         </h2>
     </x-slot>
 
-    <div class="py-12 text-gray-600">
+    <div class="py-4 text-gray-600">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white border border-slate-200 overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="bg-white border border-slate-200 overflow-hidden shadow-sm sm:rounded-lg p-6" style="@media (max-width: 400px) {padding: 0.5rem;}">
                 {{-- 主要情報をカード形式で表示 --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {{-- 左カラム --}}
                     <div class="bg-white border border-slate-200 p-6 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center mb-6 border-b pb-3">
-                            <h3 class="font-bold text-2xl">{{ $project->name }} の詳細</h3>
-                            @if ($project->status)
-                                <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100">
-                                    {{ $project->status->name }}
-                                </span>
-                            @else
-                                <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-100">ステータスなし</span>
-                            @endif
-                        </div>
-                        <dl class="space-y-4">
-                            <div>
-                                <dt class="font-medium">開催日程</dt>
-                                <dd class="ml-0">
-                                    {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y年m月d日') : 'N/A' }}
-                                    -
-                                    {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y年m月d日') : 'N/A' }}
-                                </dd>                            </div>
-                            <div>
-                                <dt class="font-medium">顧客名</dt>
+                        {{-- プロジェクト名・催事場所・ステータスを3カラムで表示 --}}
+                        <div class="grid grid-cols-12 gap-4 items-center mb-6 border-b pb-3">
+                            {{-- 左: プロジェクト名 --}}
+                            <h3 class="font-bold text-2xl col-span-6">{{ $project->name }}</h3>
+
+                            {{-- 中央: 顧客 --}}
+                            <div class="col-span-4">
+                                <dt class="font-medium">顧客</dt>
                                 <dd class="ml-0">{{ $project->client->name ?? 'N/A' }}</dd>
                             </div>
+
+                            {{-- 右: ステータス --}}
+                            <div class="col-span-2 text-right">
+                                @if ($project->status)
+                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 truncate">
+                                        {{ $project->status->name }}
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-100 truncate">
+                                        ステータスなし
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- 下に他の情報 --}}
+                        <dl class="space-y-4">
+                            <!-- 上段: 2カラム -->
+                            <div class="grid grid-cols-12 gap-6">
+                                <div class="col-span-7">
+                                    <dt class="font-medium">開催日程</dt>
+                                    <dd class="ml-0 text-sm">
+                                        {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y年m月d日') : 'N/A' }}
+                                        〜
+                                        {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('Y年m月d日') : 'N/A' }}
+                                    </dd>
+                                </div>
+
+                                <div class="col-span-5">
+                                    <dt class="font-medium">催事場所</dt>
+                                    <dd class="ml-0">{{ $project->venue ?? 'N/A' }}</dd>
+                                </div>
+                            </div>
+
+                            <!-- 下段: 説明は1カラム -->
                             <div>
                                 <dt class="font-medium">説明</dt>
                                 <dd class="ml-0 whitespace-pre-wrap">{{ $project->description ?? 'N/A' }}</dd>
                             </div>
                         </dl>
+
                     </div>
 
                     {{-- 右カラム --}}
@@ -124,10 +148,10 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border border-gray-200">
                                     <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">
-                                        認 ¥{{ $project->total_approved_expenses_sum ?? 0 }}
+                                        認 ¥{{ number_format($project->total_approved_expenses_sum ?? 0, 0) }}
                                     </span>
                                     <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded">
-                                        未 ¥{{ $project->total_pending_expenses_sum ?? 0 }}
+                                        未 ¥{{ number_format($project->total_pending_expenses_sum ?? 0, 0) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border border-gray-200">
@@ -145,10 +169,10 @@
                                     @endphp
 
                                     <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">
-                                        認 ¥{{ number_format($netProfitApprovedOnly) }}
+                                        認 ¥{{ number_format($netProfitApprovedOnly, 0) }}
                                     </span>
                                     <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-1 rounded">
-                                        未 ¥{{ number_format($netProfitAll) }}
+                                        未 ¥{{ number_format($netProfitAll, 0) }}
                                     </span>
                                 </td>
                             </tr>

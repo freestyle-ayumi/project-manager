@@ -8,11 +8,9 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    server: {
-        host: 'project-manager.local',
-        port: 5173,
-        hmr: {
-            host: 'project-manager.local',
-        },
+    build: {
+        outDir: 'public/build',
+        manifest: true,
+        emptyOutDir: true,
     },
 });

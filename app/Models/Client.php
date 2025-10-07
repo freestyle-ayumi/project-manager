@@ -11,9 +11,9 @@ class Client extends Model
     protected $fillable = [ 
         'name', 
         'email', 
-        'phone1', 
-        'phone2', 
-        'CL_MG',
+        'phone',
+        'address' , 
+        'notes',
     ];
 
     public function quotes()

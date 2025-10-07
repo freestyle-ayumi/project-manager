@@ -5,10 +5,10 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-4">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
 
                     {{-- 成功メッセージ --}}
                     @if (session('success'))
@@ -81,7 +81,9 @@
                                         </td>
                                         <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
                                             <div class="flex items-center space-x-2">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $expense->status->name === '承認済み' ? 'bg-green-100 text-green-800' : ($expense->status->name === '申請中' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                {{ $expense->status->name === '承認済み' ? 'bg-green-100 text-green-800' :
+                                                  ($expense->status->name === '申請中' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
                                                     {{ $expense->status->name ?? 'N/A' }}
                                                 </span>
                                                 @if($canEdit)

@@ -5,9 +5,9 @@
         </h2>
     </x-slot>
 
-    <div class="py-12 text-gray-600">
+    <div class="py-4 text-gray-600">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
+            <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-6" style="@media (max-width: 400px) {padding: 0.5rem;}">
 
                 {{-- 上部：申請者・日付・プロジェクト・ステータス --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

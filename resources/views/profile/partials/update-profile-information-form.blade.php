@@ -4,8 +4,8 @@
             {{ __('Profile Information') }}
         </h2>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
+        <p class="mt-1 text-sm text-gray-600" style="font-size:0.8rem;">
+            {{ __("アカウントのプロフィール情報とメールアドレスを更新します。") }}
         </p>
     </header>
 
@@ -48,7 +48,7 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>{{ __('保存') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
                 <p
