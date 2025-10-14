@@ -57,4 +57,8 @@ class Project extends Model
     {
         return $this->hasMany(Expense::class);
     }
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'project_id');
+    }
 }

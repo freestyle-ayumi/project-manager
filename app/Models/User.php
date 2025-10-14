@@ -23,7 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'role_id', // 追加: usersテーブルにrole_idがある場合
+        'role_id',
     ];
 
     /**
@@ -49,11 +49,15 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    // ★★★ ここから追加 ★★★
     // このユーザーが属するロールを取得
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
-    // ★★★ ここまで追加 ★★★
+
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user', 'user_id', 'task_id');
+    }
 }
+

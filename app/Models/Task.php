@@ -13,30 +13,28 @@ class Task extends Model
         'project_id',
         'name',
         'description',
-        'assigned_user_id', // タスクが割り当てられたユーザー
-        'created_user_id',  // タスクを作成したユーザー
+        'start_date',
         'due_date',
-        'status',           // タスクのステータス (例: '未着手', '進行中', '完了')
-        'priority',         // 優先度 (例: '低', '中', '高')
+        'status',      // ステータス
+        'priority',    // 優先度
+        'user_id',     // 作成者 or 登録者
     ];
 
-    // このタスクが関連するプロジェクトを取得
+    // 関連プロジェクト
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
 
-    // このタスクが割り当てられたユーザーを取得
-    public function assignedUser()
+    // このタスクに割り当てられているユーザー（担当者たち）
+    public function assignees()
     {
-        // 'assigned_user_id' が外部キー
-        return $this->belongsTo(User::class, 'assigned_user_id');
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
     }
 
-    // このタスクを作成したユーザーを取得
-    public function createdUser()
+    // このタスクを作成したユーザー
+    public function creator()
     {
-        // 'created_user_id' が外部キー
-        return $this->belongsTo(User::class, 'created_user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
