@@ -1,3 +1,36 @@
+@php
+    use Carbon\Carbon;
+
+    // 現在のオフセット（クエリパラメータ week_offset で週移動）
+    $weekOffset = (int) request()->query('week_offset', 0); // ← キャスト追加！
+
+    // 今日を基準に週オフセットを加算
+    $baseDate = Carbon::today()->copy()->addWeeks($weekOffset);
+
+    // 表示する7日間を生成
+    $days = [];
+    for ($i = 0; $i < 7; $i++) {
+        $days[] = $baseDate->copy()->addDays($i);
+    }
+
+    $headerDays = collect($days)->map(function($day) use ($holidays) {
+        $dayKey = $day->format('Y/m/d');
+        $isSunday = $day->dayOfWeek === 0;
+        $isSaturday = $day->dayOfWeek === 6;
+        $isHoliday = isset($holidays[$dayKey]);
+        $bgClass = $isSunday || $isHoliday ? 'bg-pink-200 text-red-600' : ($isSaturday ? 'bg-blue-100 text-blue-600' : '');
+        return [
+            'day' => $day,
+            'key' => $dayKey,
+            'bgClass' => $bgClass,
+            'isHoliday' => $isHoliday,
+            'holidayName' => $isHoliday ? $holidays[$dayKey] : null,
+        ];
+    });
+
+    $weekRangeText = $baseDate->format('Y/m/d') . ' 〜 ' . $baseDate->copy()->addDays(6)->format('Y/m/d');
+@endphp
+
 <style>
     .calendar-table {
         table-layout: fixed;
@@ -6,7 +39,7 @@
     }
     .calendar-table th,
     .calendar-table td {
-        width: 6rem; /* w-24相当 */
+        width: 6rem;
         text-align: center;
         vertical-align: middle;
         height: 2rem;
@@ -21,43 +54,47 @@
     </x-slot>
 
     <div class="py-4">
-
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6 mb-4 text-right">
-            <a href="{{ route('tasks.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                {{ __('＋新規') }}
+        {{-- ＋新規ボタン --}}
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 text-right mb-4">
+            <a href="{{ route('tasks.create') }}"
+                class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                ＋新規
             </a>
         </div>
 
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            {{-- 週表示カレンダー（日付ヘッダー生成） --}}
-            @php
-                $today = \Carbon\Carbon::today(); // 今日
-                $days = [];
-                for ($i = 0; $i < 7; $i++) {
-                    $days[] = $today->copy()->addDays($i);
-                }
-
-                $headerDays = collect($days)->map(function($day) use ($holidays) {
-                    $dayKey = $day->format('Y/m/d');
-                    $isSunday = $day->dayOfWeek === 0;
-                    $isSaturday = $day->dayOfWeek === 6;
-                    $isHoliday = isset($holidays[$dayKey]);
-                    $bgClass = $isSunday || $isHoliday ? 'bg-pink-200 text-red-600' : ($isSaturday ? 'bg-blue-100 text-blue-600' : '');
-                    return [
-                        'day' => $day,
-                        'key' => $dayKey,
-                        'bgClass' => $bgClass,
-                        'isHoliday' => $isHoliday,
-                        'holidayName' => $isHoliday ? $holidays[$dayKey] : null,
-                    ];
-                });
-            @endphp
-
             {{-- あなたのタスク --}}
             <div class="bg-white shadow-sm rounded-lg p-4">
                 <h3 class="font-semibold mb-2">あなたのタスク</h3>
 
+            {{-- 週送りナビゲーション --}}
+            <div class="flex flex-col items-center">
+                {{-- 期間表示 --}}
+                <div class="text-gray-700 mt-1 text-center text-sm">
+                    <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                </div>
+                <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                        今日
+                    </a>
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+
+                {{-- あなたのタスク表 --}}
                 <div class="overflow-x-auto">
                     <table class="calendar-table border text-sm text-gray-700">
                         <thead class="bg-gray-50">
@@ -73,7 +110,6 @@
                                 @endforeach
                             </tr>
                         </thead>
-
                         <tbody>
                             <tr class="border-b">
                                 <td class="px-2 py-1 border bg-gray-50">&nbsp;</td>
@@ -88,7 +124,6 @@
                                             $end = \Carbon\Carbon::parse($task->due_date ?? $task->start_date ?? now());
                                             return $hd['day']->between($start, $end);
                                         });
-
                                     @endphp
 
                                     <td class="px-2 py-1 border {{ $taskBgClass }}">
@@ -116,6 +151,32 @@
             <div class="bg-white shadow-sm rounded-lg p-4">
                 <h3 class="font-semibold mb-2">全ユーザーのタスク</h3>
 
+            {{-- 週送りナビゲーション --}}
+            <div class="flex flex-col items-center">
+                {{-- 期間表示 --}}
+                <div class="text-gray-700 mt-1 text-center text-sm">
+                    <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                </div>
+                <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                        今日
+                    </a>
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+                {{-- 全ユーザー表 --}}
                 <div class="overflow-x-auto">
                     <table class="calendar-table border text-sm text-gray-700">
                         <thead class="bg-gray-50">
@@ -136,7 +197,7 @@
                             @foreach ($users as $user)
                                 <tr class="border-b">
                                     <td class="px-2 py-1 border bg-gray-50 font-semibold">{{ $user->name }}</td>
-                                    @foreach ($headerDays as $hd)
+                                    @foreach($headerDays as $hd)
                                         @php
                                             $tasksForDay = $user->tasks->filter(function($task) use ($hd) {
                                                 $start = \Carbon\Carbon::parse($task->start_date ?? $task->due_date ?? now());
