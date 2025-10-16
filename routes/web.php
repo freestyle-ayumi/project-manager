@@ -88,3 +88,8 @@ Route::middleware('auth')->group(function () {
 
 // 認証ルート
 require __DIR__.'/auth.php';
+
+Route::get('/check-db', function() {
+    return "Laravel routing is working.";
+});
+

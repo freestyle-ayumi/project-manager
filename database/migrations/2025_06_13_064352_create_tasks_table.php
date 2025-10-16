@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('name')->comment('タスク名');
             $table->text('description')->nullable()->comment('タスク詳細');
             $table->date('start_date')->nullable()->comment('開始日');
+            $table->date('plans_date')->nullable()->comment('予定日');
             $table->date('due_date')->nullable()->comment('期日');
             $table->string('status')->default('未完了')->comment('ステータス（未完了 / 完了など）');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null')->comment('登録者ID');

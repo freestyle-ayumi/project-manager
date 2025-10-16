@@ -14,10 +14,11 @@ class Task extends Model
         'name',
         'description',
         'start_date',
+        'plans_date',
         'due_date',
-        'status',      // ステータス
-        'priority',    // 優先度
-        'user_id',     // 作成者 or 登録者
+        'status',
+        'priority',
+        'user_id',
     ];
 
     // 関連プロジェクト
@@ -37,4 +38,5 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    
 }

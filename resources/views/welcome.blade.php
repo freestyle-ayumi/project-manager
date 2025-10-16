@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>イベント管理ツール</title>
     <!-- Scripts -->
-    @if (app()->environment('local'))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        <link rel="stylesheet" href="{{ asset('build/assets/app-DT-9-5tP.css') }}">
-        <script type="module" src="{{ asset('build/assets/app-XXXXX.js') }}"></script>
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="antialiased bg-gray-100 flex items-center justify-center min-h-screen text-center px-4 sm:px-0">
     <div class="w-full max-w-md">

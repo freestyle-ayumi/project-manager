@@ -12,12 +12,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <!-- Scripts -->
-        @if (app()->environment('local'))
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @else
-            <link rel="stylesheet" href="{{ asset('build/assets/app-DT-9-5tP.css') }}">
-            <script type="module" src="{{ asset('build/assets/app-XXXXX.js') }}"></script>
-        @endif
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
         <!-- Flatpickr CSS -->
