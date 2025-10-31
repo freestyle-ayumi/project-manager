@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProjectStatus extends Model
+class Color extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name']; 
+    protected $fillable = ['name', 'hex_code'];
 
     public function projects()
     {
-        return $this->hasMany(Project::class, 'project_status_id');
+        return $this->hasMany(Project::class);
     }
 }

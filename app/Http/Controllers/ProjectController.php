@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Client;
-use App\Models\User;
-use App\Models\ProjectStatus;
-use App\Models\ExpenseStatus;
-use Illuminate\Http\Request;
-use App\Models\Quote; // Quoteモデルをインポート
-use App\Models\Invoice;
+use App\Models\Color;
 use App\Models\Expense;
+use App\Models\ExpenseStatus;
+use App\Models\Invoice;
+use App\Models\Quote;
+use App\Models\User;
 
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -23,10 +23,24 @@ class ProjectController extends Controller
     {
         $approvedStatus = ExpenseStatus::where('name', '承認済み')->first();
 
+        // カレンダー用（前後1年分）
+        $startRange = now()->subYear()->format('Y-m-d');
+        $endRange = now()->addYear()->format('Y-m-d');
+
+        $allProjects = Project::with(['client', 'user', 'color']) 
+            ->where(function ($q) use ($startRange, $endRange) {
+                $q->whereBetween('start_date', [$startRange, $endRange])
+                  ->orWhereBetween('end_date', [$startRange, $endRange]);
+            })
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        // リスト用（既存の検索・絞り込み付き）
         $query = Project::with([
             'client',
             'user',
-            'status',
+            'users',
+            'color', 
             'tasks',
             'quotes',
             'invoices',
@@ -49,10 +63,10 @@ class ProjectController extends Controller
             }
         }], 'amount');
 
-        // デフォルトで「今日開催中 or これから開催予定」のプロジェクトだけ表示
-        if (!$request->has('search') && !$request->has('status_filter')) {
+        // デフォルト絞り込み
+        if (!$request->has('search')) {
             $query->where(function ($q) {
-                $today = \Carbon\Carbon::today(); // ← ここで直接宣言
+                $today = \Carbon\Carbon::today();
                 $q->where(function($q2) use ($today) {
                     $q2->where('start_date', '<=', $today)
                     ->where('end_date', '>=', $today);
@@ -61,6 +75,33 @@ class ProjectController extends Controller
             });
         }
 
+        // キーワード検索
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhereHas('client', function($q2) use ($search) {
+                    $q2->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('tasks', function($q3) use ($search) {
+                    $q3->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // ステータスフィルター
+        $today = \Carbon\Carbon::today();
+        if ($status = $request->input('status')) {
+            if ($status === 'upcoming') {
+                $query->where('start_date', '>', $today);
+            } elseif ($status === 'ongoing') {
+                $query->where('start_date', '<=', $today)
+                    ->where('end_date', '>=', $today);
+            } elseif ($status === 'finished') {
+                $query->where('end_date', '<', $today);
+            }
+        }
+
+        $projects = $query->with(['client', 'users', 'tasks'])->get();
 
         // 検索キーワード
         if ($search = $request->input('search')) {
@@ -69,32 +110,30 @@ class ProjectController extends Controller
                 ->orWhereHas('tasks', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
-        // ステータスフィルター
-        if ($statusId = $request->input('status_filter')) {
-            $query->where('project_status_id', $statusId);
-        }
-
         $projects = $query->orderBy('start_date', 'asc')->get();
 
-        // 最新見積書を配列で取得
+        // 最新見積書
         $latestQuotes = [];
         foreach ($projects as $project) {
             $latestQuotes[$project->id] = $project->quotes->sortByDesc('issue_date')->first();
         }
 
-        // ステータス一覧をビューに渡す
-        $projectStatuses = ProjectStatus::all();
+        // 色一覧
+        $colors = Color::all();
 
-        return view('projects.index', compact('projects', 'latestQuotes', 'projectStatuses'));
+        // Bladeに2種類渡す（リスト用・全件カレンダー用）
+        return view('projects.index', compact('projects', 'latestQuotes',  'allProjects', 'colors'));
     }
 
     /* 新規プロジェクト作成フォームを表示する */
     public function create()
     {
         $clients = Client::all();
-        $projectStatuses = ProjectStatus::all();
+        $colors = Color::all(); 
+        $users = User::all();
+        $projectUsers = [];
 
-        return view('projects.create', compact('clients', 'projectStatuses'));
+        return view('projects.create', compact('clients', 'colors', 'users', 'projectUsers'));
     }
 
     /* 新規プロジェクトをデータベースに保存する */
@@ -102,37 +141,50 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'color' => 'required|integer|exists:colors,id',
+            'client_id' => 'required|integer|exists:clients,id',
+            'venue' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'project_status_id' => 'required|exists:project_statuses,id',
-            'client_id' => 'required|exists:clients,id',
-            'venue' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'users' => 'nullable|array',
+            'users.*' => 'integer|exists:users,id',
         ]);
 
         $userId = Auth::id();
 
-        Project::create([
+        // プロジェクト作成
+        $project = Project::create([
             'name' => $request->name,
-            'description' => $request->description,
+            'color' => $request->color,
+            'client_id' => $request->client_id,
+            'venue' => $request->venue,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
-            'project_status_id' => $request->project_status_id,
-            'client_id' => $request->client_id,
+            'description' => $request->description,
             'user_id' => $userId,
-            'venue' => $request->venue,
         ]);
 
-        return redirect()->route('projects.index')
-                         ->with('success', 'プロジェクトが正常に作成されました。');
+        // 担当者保存（多対多）
+        if ($request->has('users')) {
+            $project->users()->sync($request->users);
+        }
+
+        return redirect()->route('projects.show', $project)
+                        ->with('success', 'プロジェクトを作成しました。');
     }
+
 
     /* プロジェクト編集フォームを表示する */
     public function edit(Project $project)
     {
         $clients = Client::all();
-        $projectStatuses = ProjectStatus::all();
-        return view('projects.edit', compact('project', 'clients', 'projectStatuses'));
+        $colors = Color::all();
+        $users = User::all(); // ← 追加
+
+        $projectUsers = $project->users()->pluck('id')->toArray();
+
+        return view('projects.edit', compact('project', 'clients', 'users', 'colors', 'projectUsers'));
     }
 
     /* プロジェクトをデータベースで更新する */
@@ -140,26 +192,29 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'color' => 'required|integer|exists:colors,id',
+            'client_id' => 'required|integer|exists:clients,id',
+            'venue' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'project_status_id' => 'required|exists:project_statuses,id',
-            'client_id' => 'required|exists:clients,id',
-            'venue' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'users' => 'nullable|array',
+            'users.*' => 'integer|exists:users,id',
         ]);
 
         $project->update([
             'name' => $request->name,
-            'description' => $request->description,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'project_status_id' => $request->project_status_id,
+            'color' => $request->color,
             'client_id' => $request->client_id,
             'venue' => $request->venue,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'description' => $request->description,
         ]);
 
-        return redirect()->route('projects.index')
-                         ->with('success', 'プロジェクトが正常に更新されました。');
+        $project->users()->sync($request->users ?? []);
+
+        return redirect()->route('projects.show', $project)->with('success', 'プロジェクトを更新しました。');
     }
 
     /* プロジェクトをデータベースから削除する */
@@ -180,11 +235,9 @@ class ProjectController extends Controller
         $project = Project::with([
             'client',
             'user',
-            'status',
+            'color',
             'tasks',
-            // 'quotes.items', // 個別の見積書詳細に飛ばす場合、これらのリレーションは直接は必要ないかもしれません
-            // 'invoices.items',
-            // 'expenses.items'
+            'tasks.users',
         ])
         ->withSum('quotes', 'total_amount')
         ->withSum('invoices', 'total_amount')

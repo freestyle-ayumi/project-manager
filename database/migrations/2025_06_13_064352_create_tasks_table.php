@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('status')->default('未完了')->comment('ステータス（未完了 / 完了など）');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null')->comment('登録者ID');
             $table->string('priority', 10)->nullable()->comment('優先度（高/中/低）');
+            $table->unsignedTinyInteger('color')->default(1)->comment('カレンダー表示用カラー番号（1〜5）');
             $table->timestamps();
         });
 

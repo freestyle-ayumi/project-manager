@@ -38,5 +38,9 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    
+    // タスクの担当者（多対多）
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
+    }
 }

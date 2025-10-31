@@ -12,8 +12,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('set null'); // 顧客ID (任意)
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // プロジェクト作成ユーザーID (必須)
-            $table->foreignId('project_status_id')->nullable()->constrained('project_statuses')->onDelete('set null'); // プロジェクトステータスID (任意)
+            $table->text('user_id');
             $table->string('name')->comment('プロジェクト名');
             $table->string('venue')->comment('催事場所'); // ← 追加
             $table->text('description')->nullable()->comment('プロジェクト概要');

@@ -4,8 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>イベント管理ツール</title>
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <!-- Scripts -->
+            @if (app()->environment('local'))
+                {{-- 開発環境用 --}}
+                @vite(['resources/css/app.css', 'resources/js/app.js'])
+            @else
+                {{-- 本番環境用 --}}
+                <link rel="stylesheet" href="/build/assets/app-DQk-URVn.css">
+                <script type="module" src="/build/assets/app-Bf4POITK.js"></script>
+            @endif
+
 </head>
 <body class="antialiased bg-gray-100 flex items-center justify-center min-h-screen text-center px-4 sm:px-0">
     <div class="w-full max-w-md">

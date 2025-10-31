@@ -9,11 +9,30 @@
         <form action="{{ route('tasks.update', $task) }}" method="POST">
             @csrf
             @method('PUT')
+            <!-- プロジェクト選択 -->
+            <div class="mb-4">
+                <label class="block text-gray-700">プロジェクト</label>
+                <select name="project_id" class="w-full border rounded px-3 py-2">
+                    @foreach($projects as $project)
+                        <option value="{{ $project->id }}" @if($task->project_id == $project->id) selected @endif>{{ $project->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-            <!-- 登録者（変更不可） -->
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <!-- タスク名 -->
+            <div class="mb-4">
+                <label class="block text-gray-700">タスク名</label>
+                <input type="text" name="name" value="{{ old('name', $task->name) }}" class="w-full border rounded px-3 py-2" required>
+            </div>
+
+            
+
+
+            
+            <!-- 依頼人 依頼日 優先度 ステータス -->
+            <div class="grid grid-cols-4 gap-4 mb-4">
                 <div>
-                    <label class="block text-gray-700">登録者</label>
+                    <label class="block text-gray-700">依頼人</label>
                     <input type="text" value="{{ $task->creator->name }}" disabled class="w-full border rounded px-3 py-2 bg-gray-100">
                 </div>
                 <div class="relative">
@@ -34,26 +53,61 @@
                         </svg>
                     </div>
                 </div>
-            </div>
-
-            <!-- プロジェクト選択 -->
-            <div class="mb-4">
-                <label class="block text-gray-700">プロジェクト</label>
-                <select name="project_id" class="w-full border rounded px-3 py-2">
-                    @foreach($projects as $project)
-                        <option value="{{ $project->id }}" @if($task->project_id == $project->id) selected @endif>{{ $project->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- タスク名 -->
-            <div class="mb-4">
-                <label class="block text-gray-700">タスク名</label>
-                <input type="text" name="name" value="{{ old('name', $task->name) }}" class="w-full border rounded px-3 py-2" required>
+                
+                <div>
+                    <label class="block text-gray-700">優先度</label>
+                    <select name="priority" class="w-full border rounded px-3 py-2">
+                        <option value="高" {{ $task->priority === '高' ? 'selected' : '' }}>高</option>
+                        <option value="中" {{ $task->priority === '中' ? 'selected' : '' }}>中</option>
+                        <option value="低" {{ $task->priority === '低' ? 'selected' : '' }}>低</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700">ステータス</label>
+                    <select name="status" class="w-full border rounded px-3 py-2">
+                        <option value="未完了" {{ $task->status === '未完了' ? 'selected' : '' }}>未完了</option>
+                        <option value="完了" {{ $task->status === '完了' ? 'selected' : '' }}>完了</option>
+                    </select>
+                </div>
             </div>
             
-            <!-- 完了希望日 期日 優先度 ステータス -->
-            <div class="grid grid-cols-4 gap-4 mb-4">
+            <!-- 詳細 -->
+            <div class="mb-4">
+                <label class="block text-gray-700">詳細</label>
+                <textarea name="description" class="w-full border rounded px-3 py-2" rows="4">{{ old('description', $task->description) }}</textarea>
+            </div>
+
+            <!-- 担当者選択 -->
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">担当者</label>
+
+                <!-- ユーザー単体 -->
+                <div class="ml-5">
+                    @foreach($users as $user)
+                        <label class="inline-flex items-center mr-4">
+                            <input type="checkbox" name="assignees[]" value="{{ $user->id }}" class="form-checkbox"
+                                {{ in_array($user->id, $selectedAssignees) ? 'checked' : '' }}>
+                            <span class="ml-2 text-sm">{{ $user->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+
+                <!-- ロール単位 -->
+                <div class="ml-5">
+                    <span class="text-gray-500 text-xs">まとめて追加</span>
+                    <div>
+                        @foreach($roles as $role)
+                            <label class="inline-flex items-center mr-4">
+                                <input type="checkbox" name="roles[]" value="{{ $role->id }}" class="form-checkbox">
+                                <span class="ml-2 text-sm">{{ $role->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- 完了希望日 期日） -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="relative">
                     <label class="block text-gray-700">完了希望日</label>
                     <input
@@ -86,59 +140,7 @@
                         </svg>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-gray-700">優先度</label>
-                    <select name="priority" class="w-full border rounded px-3 py-2">
-                        <option value="高" {{ $task->priority === '高' ? 'selected' : '' }}>高</option>
-                        <option value="中" {{ $task->priority === '中' ? 'selected' : '' }}>中</option>
-                        <option value="低" {{ $task->priority === '低' ? 'selected' : '' }}>低</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-gray-700">ステータス</label>
-                    <select name="status" class="w-full border rounded px-3 py-2">
-                        <option value="未完了" {{ $task->status === '未完了' ? 'selected' : '' }}>未完了</option>
-                        <option value="完了" {{ $task->status === '完了' ? 'selected' : '' }}>完了</option>
-                    </select>
-                </div>
             </div>
-
-
-            <!-- 担当者選択 -->
-            <div class="mb-3">
-                <label class="block text-gray-700 mb-2">担当者</label>
-
-                <!-- ユーザー単体 -->
-                <div class="ml-5">
-                    @foreach($users as $user)
-                        <label class="inline-flex items-center mr-4">
-                            <input type="checkbox" name="assignees[]" value="{{ $user->id }}" class="form-checkbox"
-                                {{ in_array($user->id, $selectedAssignees) ? 'checked' : '' }}>
-                            <span class="ml-2 text-sm">{{ $user->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-
-                <!-- ロール単位 -->
-                <div class="ml-5">
-                    <span class="text-gray-500 text-xs">まとめて追加</span>
-                    <div>
-                        @foreach($roles as $role)
-                            <label class="inline-flex items-center mr-4">
-                                <input type="checkbox" name="roles[]" value="{{ $role->id }}" class="form-checkbox">
-                                <span class="ml-2 text-sm">{{ $role->name }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <!-- 詳細 -->
-            <div class="mb-4">
-                <label class="block text-gray-700">詳細</label>
-                <textarea name="description" class="w-full border rounded px-3 py-2" rows="4">{{ old('description', $task->description) }}</textarea>
-            </div>
-
 
             <div class="mt-6">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">

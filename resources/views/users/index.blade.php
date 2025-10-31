@@ -28,7 +28,7 @@
                     @endif
 
                     <div class="mb-4 text-right">
-                        <a href="{{ route('roles.index') }}" class="inline-flex items-center px-2 py-1 bg-gray-800 text-white rounded text-xs font-semibold hover:bg-gray-700">
+                        <a href="{{ route('roles.index') }}" class="inline-flex items-center pt-2 pb-1.5 px-2 bg-gray-800 text-white rounded text-xs font-semibold hover:bg-gray-700">
                             ロール管理
                         </a>
                     </div>

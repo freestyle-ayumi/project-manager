@@ -19,19 +19,29 @@
 
                             {{-- 中央: 顧客 --}}
                             <div class="col-span-4">
-                                <dt class="font-medium">顧客</dt>
+                                <dt class="font-medium text-sm">顧客</dt>
                                 <dd class="ml-0">{{ $project->client->name ?? 'N/A' }}</dd>
                             </div>
 
                             {{-- 右: ステータス --}}
-                            <div class="col-span-2 text-right">
-                                @if ($project->status)
-                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 truncate">
-                                        {{ $project->status->name }}
+                            <div class="col-span-2 text-right text-xs">
+                                @php
+                                    $today = \Carbon\Carbon::today();
+                                    $start = \Carbon\Carbon::parse($project->start_date);
+                                    $end = \Carbon\Carbon::parse($project->end_date);
+                                @endphp
+
+                                @if ($today->lt($start))
+                                    <span class="px-3 py-0.5 inline-flex leading-5 font-semibold rounded-full bg-red-200 text-red-700">
+                                        開催前
+                                    </span>
+                                @elseif ($today->between($start, $end))
+                                    <span class="px-3 py-0.5 inline-flex leading-5 font-semibold rounded-full bg-amber-200 text-amber-700">
+                                        開催中
                                     </span>
                                 @else
-                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-100 truncate">
-                                        ステータスなし
+                                    <span class="px-3 py-0.5 inline-flex leading-5 font-semibold rounded-full bg-slate-200 text-slate-700">
+                                        終了
                                     </span>
                                 @endif
                             </div>
@@ -42,7 +52,7 @@
                             <!-- 上段: 2カラム -->
                             <div class="grid grid-cols-12 gap-6">
                                 <div class="col-span-7">
-                                    <dt class="font-medium">開催日程</dt>
+                                    <dt class="font-medium text-sm">●開催日程</dt>
                                     <dd class="ml-0 text-sm">
                                         {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('Y年m月d日') : 'N/A' }}
                                         〜
@@ -51,14 +61,14 @@
                                 </div>
 
                                 <div class="col-span-5">
-                                    <dt class="font-medium">催事場所</dt>
+                                    <dt class="font-medium text-sm">●催事場所</dt>
                                     <dd class="ml-0">{{ $project->venue ?? 'N/A' }}</dd>
                                 </div>
                             </div>
 
                             <!-- 下段: 説明は1カラム -->
                             <div>
-                                <dt class="font-medium">説明</dt>
+                                <dt class="font-medium text-sm">●説明</dt>
                                 <dd class="ml-0 whitespace-pre-wrap">{{ $project->description ?? 'N/A' }}</dd>
                             </div>
                         </dl>
@@ -67,20 +77,47 @@
 
                     {{-- 右カラム --}}
                     <div class="bg-white border border-slate-200 p-6 rounded-lg shadow-sm">
-                        {{-- 担当者セクションを横並びに変更 --}}
-                        <div class="flex items-start mb-4 border-b border-dashed pb-2">
-                            <dt class="font-medium mr-2 whitespace-nowrap">担当者:</dt>
-                            <dd class="ml-0">{{ $project->user->name ?? 'N/A' }}</dd>
+                        {{-- 担当者セクション（複数表示） --}}
+                        <div class="mb-4 border-b border-dashed pb-2">
+                            <div class="flex items-center gap-2">
+                                <dt class="font-medium whitespace-nowrap text-sm">登録者:</dt>
+                                <dd class="ml-0 flex flex-wrap gap-1">
+                                    @forelse ($project->users as $user)
+                                        <span class="bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                            {{ $user->name }}
+                                        </span>
+                                    @empty
+                                        登録者なし
+                                    @endforelse
+                                </dd>
+                            </div>
                         </div>
+
+
+                        {{-- タスク表示 --}}
                         <div>
-                            <dt class="font-medium">タスク</dt>
-                            <dd class="ml-0">                                    @forelse ($project->tasks as $task)
-                                        <a href="{{ route('tasks.show', $task) }}" class="text-blue-600 hover:text-blue-800 hover:underline block">{{ $task->name }}</a>
+                            <dt class="font-medium text-sm">タスク</dt>
+                            <dd class="ml-0">
+                                <ul>
+                                    @forelse ($project->tasks as $task)
+                                        <li>
+                                            <a href="{{ route('tasks.show', $task) }}" class="text-blue-600 hover:text-blue-800 hover:underline">
+                                                ・{{ $task->name }}
+                                            @if ($task->users->count() > 0)
+                                                <span class="text-gray-500 text-sm ml-2">
+                                                    (担当: {{ $task->users->pluck('name')->join(', ') }})
+                                                </span>
+                                            @endif
+                                            </a>
+                                        </li>
                                     @empty
                                         タスクなし
-                                    @endforelse</dd>
+                                    @endforelse
+                                    </ul>
+                            </dd>
                         </div>
                     </div>
+
                 </div>
 
                 {{-- 情報テーブル --}}
@@ -181,7 +218,7 @@
                 </div>
 
                 {{-- アクションボタン --}}
-                <div class="mt-6 flex space-x-4 justify-end">
+                <div class="mt-6 flex space-x-2 justify-end">
                     <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         {{ __('編集') }}
                     </a>

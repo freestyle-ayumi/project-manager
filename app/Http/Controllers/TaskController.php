@@ -12,9 +12,8 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $today = now()->startOfDay();
-        $endDate = $today->copy()->addDays(6); // 1週間
-
-        $holidays = []; // 必要に応じて祝日データを残す
+        $endDate = $today->copy()->addDays(6);
+        $holidays = [];
 
         // ログインユーザーのタスク
         $myTasks = Task::whereExists(function($query) {
@@ -24,18 +23,66 @@ class TaskController extends Controller
                 ->where('task_user.user_id', auth()->id());
         })->get();
 
-        // 全ユーザーのタスク
-        $allTasks = Task::whereBetween('due_date', [$today, $endDate])
-            ->with(['project', 'assignees'])
-            ->get();
+        // フィルター値取得
+        $userIds = $request->input('user_ids', []);
+        $roleIds = $request->input('role_ids', []);
 
-        $users = User::with(['tasks' => function($query) use ($today, $endDate) {
-            // 1週間内のタスクだけに絞る
+        // ===== タスクフィルター =====
+        $allTasksQuery = Task::whereBetween('due_date', [$today, $endDate])
+            ->with(['project', 'assignees']);
+
+        // 担当者フィルター
+        if (!empty($userIds) && !in_array('all', $userIds)) {
+            $allTasksQuery->whereHas('assignees', function ($q) use ($userIds) {
+                $q->whereIn('users.id', $userIds);
+            });
+        }
+
+        // ロールフィルター
+        if (!empty($roleIds) && !in_array('all', $roleIds)) {
+            $allTasksQuery->whereHas('assignees', function ($q) use ($roleIds) {
+                $q->whereIn('users.role_id', $roleIds);
+            });
+        }
+
+        $allTasks = $allTasksQuery->get();
+
+        // ===== ユーザー取得 =====
+        $userQuery = User::with(['tasks' => function($query) use ($today, $endDate) {
             $query->whereBetween('due_date', [$today, $endDate]);
-        }])->get();
+        }]);
 
+        // 担当者 or ロールでユーザーを絞り込む
+        $numericUserIds = array_filter($userIds, fn($id) => is_numeric($id));
+        $numericRoleIds = array_filter($roleIds, fn($id) => is_numeric($id));
 
-        return view('tasks.index', compact('today', 'endDate', 'myTasks', 'allTasks', 'users', 'holidays'));
+        if (!in_array('all', $userIds) || !in_array('all', $roleIds)) {
+            if (!empty($numericUserIds)) {
+                $userQuery->whereIn('id', $numericUserIds);
+            }
+            if (!empty($numericRoleIds)) {
+                $userQuery->orWhereIn('role_id', $numericRoleIds);
+            }
+        }
+
+        $users = $userQuery->get();
+
+        // フィルターボタン用
+        $allUsersForFilter = User::all();
+        $allRolesForFilter = \App\Models\Role::all();
+
+        return view('tasks.index', compact(
+            'today',
+            'endDate',
+            'myTasks',
+            'allTasks',
+            'users',
+            'allUsersForFilter',
+            'allRolesForFilter',
+            'userIds',
+            'roleIds',
+            'holidays'
+        ));
     }
 
     /* ★タスク詳細 */
@@ -46,13 +93,18 @@ class TaskController extends Controller
     }
 
     /* ★タスク作成フォーム */
-    public function create()
+    public function create(Request $request)
     {
         $projects = \App\Models\Project::all();
         $users = User::all();
         $roles = \App\Models\Role::all();
 
-        return view('tasks.create', compact('projects', 'users', 'roles'));
+        $selectedUserId = $request->query('user_id');
+        $defaultDate    = $request->query('date');
+
+        return view('tasks.create', compact(
+            'projects', 'users', 'roles', 'selectedUserId', 'defaultDate'
+        ));
     }
 
     /* ★タスク保存 */

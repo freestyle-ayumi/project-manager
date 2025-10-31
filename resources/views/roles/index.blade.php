@@ -15,8 +15,14 @@
                         </div>
                     @endif
 
-                    <div class="mb-4 text-right">
-                        <a href="{{ route('roles.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <div class="mb-4 text-right flex justify-end space-x-2">
+                        <!-- ユーザー一覧に戻るボタン -->
+                        <a href="{{ route('users.index') }}" class="inline-flex items-center pt-2 pb-1.5 px-2 bg-gray-500 text-white rounded font-semibold text-xs hover:bg-gray-400">
+                            ユーザー一覧
+                        </a>
+
+                        <!-- ロール追加ボタン -->
+                        <a href="{{ route('roles.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 text-white rounded font-semibold text-xs hover:bg-gray-700">
                             ＋ロール追加
                         </a>
                     </div>

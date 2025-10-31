@@ -6,14 +6,22 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'Freestyle_Project_manager') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+            @if (app()->environment('local'))
+                {{-- 開発環境用 --}}
+                @vite(['resources/css/app.css', 'resources/js/app.js'])
+            @else
+                {{-- 本番環境用 --}}
+                <link rel="stylesheet" href="/build/assets/app-DQk-URVn.css">
+                <script type="module" src="/build/assets/app-Bf4POITK.js"></script>
+            @endif
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
         <!-- Flatpickr CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

@@ -19,8 +19,8 @@ class Project extends Model
         'total_expenses',
         'net_profit',
         'user_id',
-        'project_status_id',
-        'venue', // ← ここを追加
+        'venue',
+        'color',
     ];
 
     public function client()
@@ -31,11 +31,6 @@ class Project extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function status()
-    {
-        return $this->belongsTo(ProjectStatus::class, 'project_status_id'); 
     }
 
     public function tasks()
@@ -61,4 +56,20 @@ class Project extends Model
     {
         return $this->hasMany(Schedule::class, 'project_id');
     }
+    public function color()
+    {
+        return $this->belongsTo(Color::class);
+    }
+    
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'project_user');
+    }
 }
+
+
