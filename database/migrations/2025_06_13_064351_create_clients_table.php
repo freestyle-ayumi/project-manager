@@ -9,8 +9,9 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->string('name')->comment('顧客名');
+            $table->string('abbreviation')->nullable()->comment('略称');
             $table->string('email')->unique()->nullable()->comment('メールアドレス');
-            $table->string('phone')->nullable()->comment('電話番号'); // あなたの希望でphone1, phone2などに変更可能
+            $table->string('phone')->nullable()->comment('電話番号');
             $table->string('address')->nullable()->comment('住所');
             $table->text('notes')->nullable()->comment('備考');
             $table->timestamps();

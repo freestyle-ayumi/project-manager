@@ -31,67 +31,52 @@
     $weekRangeText = $baseDate->format('Y/m/d') . ' 〜 ' . $baseDate->copy()->addDays(6)->format('Y/m/d');
 @endphp
 
-<style>
-    .calendar-table {
-        table-layout: fixed;
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .calendar-table th,
-    .calendar-table td {
-        width: 6rem;
-        text-align: center;
-        vertical-align: middle;
-        height: 2rem;
-    }
-</style>
-
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('タスク管理') }}
         </h2>
     </x-slot>
 
-    <div class="py-4">
+    <div class="py-1 sm:py-2">
         {{-- ＋新規ボタン --}}
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 text-right mb-4">
+        <div class="max-w-3xl sm:max-w-7xl mx-auto pl-2 sm:pl-0 pb-1 sm:px-6 lg:px-8 flex justify-end">
             <a href="{{ route('tasks.create') }}"
                 class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 ＋新規
             </a>
         </div>
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-2 sm:space-y-6">
 
             {{-- あなたのタスク --}}
-            <div class="bg-white shadow-sm rounded-lg p-4">
-                <h3 class="font-semibold">あなたのタスク</h3>
+            <div class="bg-white shadow-sm rounded-lg p-4 mx-1 sm:m-0">
+                <h3 class="absolute text-sm font-semibold pl-1">あなたのタスク</h3>
 
-            {{-- 週送りナビゲーション --}}
-            <div class="flex flex-col items-center">
-                {{-- 期間表示 --}}
-                <div class="text-gray-700 text-center text-sm">
-                    <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                {{-- 週送りナビゲーション --}}
+                <div class="flex flex-col items-center">
+                    {{-- 期間表示 --}}
+                    <div class="text-gray-700 text-center text-sm">
+                        <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                    </div>
+                    <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
+                        <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                        class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </a>
+                        <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                            今日
+                        </a>
+                        <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                        class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
                 </div>
-                <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
-                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
-                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </a>
-                    <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
-                        今日
-                    </a>
-                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
-                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </div>
-            </div>
 
                 {{-- あなたのタスク表 --}}
                 <div class="overflow-x-auto">
@@ -133,6 +118,9 @@
                                                         <span class="text-black">•</span>
                                                         <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline">
                                                             {{ $task->name }}
+                                                            @if($task->start_time)
+                                                                <span class="text-gray-500">({{ \Carbon\Carbon::parse($task->start_time)->format('H:i') }})</span>
+                                                            @endif
                                                         </a>
                                                     </li>
                                                 @endforeach
@@ -147,26 +135,29 @@
             </div>
 
             {{-- 他の人のタスク --}}
-            <div class="bg-white shadow-sm rounded-lg p-4 text-xs">
+            <div class="bg-white shadow-sm rounded-lg p-4 text-xs mx-1 sm:m-0">
 
                 {{-- フィルター --}}
-                <form method="GET" action="{{ route('tasks.index') }}" class="mb-2">
+                <form method="GET" action="{{ route('tasks.index') }}" class="mb-0 rounded border p-1">
                     <div class="flex flex-wrap items-center gap-2">
 
                         {{-- フィルターマーク --}}
                         <div class="flex items-center text-gray-600 ml-2">
                             {{-- Heroicons: Funnel（フィルター）アイコン --}}
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" 
+                            fill="none" viewBox="0 0 24 24" 
+                            stroke-width="1.5" 
+                            stroke="currentColor"
+                             class="w-4 h-4 size-4 flex-shrink-0">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                             </svg>
-
-                            <span class="text-xs font-semibold">フィルター：</span>
+                            <span class="text-xs font-semibold whitespace-nowrap ml-1">フィルター：</span>
                         </div>
 
                         {{-- 共通「すべて」ボタン --}}
                         <button type="button"
                             id="btn-all"
-                            class="px-2 py-1 rounded border text-xs hover:bg-gray-100 focus:outline-none">
+                            class="px-2 py-1 rounded border text-xs hover:bg-blue-400 focus:outline-none">
                             すべて
                         </button>
 
@@ -175,11 +166,13 @@
 
                         {{-- ユーザーボタン群 --}}
                         @foreach($allUsersForFilter as $user)
-                            <button type="button"
-                                class="px-2 py-1 rounded border text-xs user-filter-btn hover:bg-sky-200 focus:outline-none"
-                                data-user-id="{{ $user->id }}">
-                                {{ $user->name }}
-                            </button>
+                            @if($user->id != Auth::id())
+                                <button type="button"
+                                    class="px-2 py-1 rounded border text-xs user-filter-btn hover:bg-sky-200 focus:outline-none"
+                                    data-user-id="{{ $user->id }}">
+                                    {{ $user->name }}
+                                </button>
+                            @endif
                         @endforeach
 
                         {{-- 区切り --}}
@@ -206,6 +199,30 @@
                     <div id="hidden-inputs"></div>
                 </form>
 
+            {{-- 週送りナビゲーション --}}
+            <div class="flex flex-col items-center">
+                {{-- 期間表示 --}}
+                <div class="text-gray-700 text-center text-sm">
+                    <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                </div>
+                <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                        今日
+                    </a>
+                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                    class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
 
             {{-- スクリプト：1つの「すべて」でユーザー/ロール両方をリセットする --}}
             <script>
@@ -332,7 +349,7 @@
 
 
             {{-- タスク表示 --}}
-                <div class="overflow-x-auto mt-2">
+                <div class="overflow-x-auto">
                     <table class="calendar-table border text-sm text-gray-700">
                         <thead class="bg-gray-50">
                             <tr>
@@ -351,7 +368,7 @@
                         <tbody>
                             @foreach ($users as $user)
                                 <tr class="border-b">
-                                    <td class="px-2 py-1 border bg-gray-50 font-semibold">{{ $user->name }}</td>
+                                    <td class="px-2 py-1 border bg-gray-50 text-xs">{{ $user->name }}</td>
                                     @foreach($headerDays as $hd)
                                         @php
                                             $tasksForDay = $user->tasks->filter(function($task) use ($hd) {
@@ -374,7 +391,11 @@
                                                                 <span class="text-black">•</span>
                                                                 <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline">
                                                                     {{ $task->name }}
+                                                                    @if($task->start_time)
+                                                                        <span class="text-gray-500">({{ \Carbon\Carbon::parse($task->start_time)->format('H:i') }})</span>
+                                                                    @endif
                                                                 </a>
+
                                                             </li>
                                                         @endforeach
                                                     </ul>

@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('経費一覧') }}
         </h2>
     </x-slot>
 
-    <div class="py-4">
-        <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
+    <div class="py-2">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
+                <div class="p-2 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
 
                     {{-- 成功メッセージ --}}
                     @if (session('success'))
@@ -18,23 +18,23 @@
                     @endif
 
                     {{-- 検索・フィルターフォーム --}}
-                    <form action="{{ route('expenses.index') }}" method="GET" class="mb-6 p-4 rounded-md shadow-sm bg-white">
+                    <form action="{{ route('expenses.index') }}" method="GET" class="mb-2 p-2 rounded-md shadow-sm bg-white">
                         <div class="grid grid-cols-12 gap-2">
-                            <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="申請者名・プロジェクト名・ステータス"
+                            <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="申請者名・イベント名・ステータス"
                                 class="col-span-12 md:col-span-8 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                             <select name="status_filter" id="status_filter"
-                                    class="col-span-12 md:col-span-2 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    class="h-8 mt-0.5 col-span-12 sm:col-span-2 md:col-span-2 border border-gray-300 rounded-md py-0 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="all" {{ request('status_filter', 'all') == 'all' ? 'selected' : '' }}>全て</option>
                                 <option value="pending" {{ request('status_filter') == 'pending' ? 'selected' : '' }}>申請中</option>
                                 <option value="approved" {{ request('status_filter') == 'approved' ? 'selected' : '' }}>承認済み</option>
                                 <option value="rejected" {{ request('status_filter') == 'rejected' ? 'selected' : '' }}>否認</option>
                             </select>
                             <button type="submit"
-                                    class="col-span-12 md:col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-md px-4 py-2 transition">
+                                    class="h-8 w-full flex rounded-md mt-0.5 pt-2 pb-1.5 items-center justify-center text-white text-xs bg-indigo-600 hover:bg-indigo-700">
                                 検索
                             </button>
                             <a href="{{ route('expenses.index') }}"
-                               class="col-span-12 md:col-span-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold text-sm rounded-md px-4 py-2 text-center transition">
+                               class="h-8 w-full flex rounded-md mt-0.5 pt-2 pb-1.5 mr-5 sm:mr-0 items-center justify-center text-white text-xs bg-gray-400 hover:bg-gray-500">
                                 クリア
                             </a>
                         </div>
@@ -42,7 +42,7 @@
 
                     {{-- 新規作成ボタン --}}
                     <div class="mb-4 text-right">
-                        <a href="{{ route('expenses.create') }}" class="inline-flex items-center bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 px-4 py-2">
+                        <a href="{{ route('expenses.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                             ＋新規
                         </a>
                     </div>
@@ -58,7 +58,7 @@
                                 <tr>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">申請日</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">申請者</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">関連プロジェクト</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">関連イベント</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">経費合計金額</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ステータス</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">操作</th>

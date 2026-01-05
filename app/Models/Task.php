@@ -14,6 +14,7 @@ class Task extends Model
         'name',
         'description',
         'start_date',
+        'start_time',
         'plans_date',
         'due_date',
         'status',

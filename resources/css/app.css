@@ -60,3 +60,67 @@ npm run dev
 .flatpickr-calendar .flatpickr-day.nextMonthDay:nth-child(7n) {
     color: #acf;
 }
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* Projectページ */
+    #project-calendar .fc-toolbar-title {
+        font-size: 1rem; line-height: 1.5rem;
+    }
+    #project-calendar .fc-toolbar button {
+        padding: 0.25rem 0.5rem; font-size: 0.75rem; border-color: #ccc !important; background-color: #fff; color: #666;
+    }
+    #project-calendar .fc-prev-button { border-radius: 0.375rem 0 0 0.375rem; }
+    #project-calendar .fc-next-button { border-radius: 0 0.375rem 0.375rem 0; }
+    #project-calendar .fc-toolbar .fc-today-button{ color: #333; }
+    
+    #project-calendar .fc-toolbar button:hover {
+        background-color: rgb(100 116 139); color: #fff; font-weight: normal;
+    }
+    #project-calendar .fc-col-header-cell-cushion { font-size: 0.75rem; color: #666; }
+    #project-calendar .fc-toolbar {
+        margin-bottom: 0.5rem ;
+    }
+    #project-calendar .fc-toolbar-chunk {
+        margin-bottom: 0 ;
+    }
+    #project-calendar .fc-daygrid-day-number{
+        font-size: 0.75rem; color: #666;
+    }
+
+    #project-calendar .fc-event-title {
+        font-size: 0.7rem; /* text-sm相当 */
+        line-height: 1rem;
+        padding:0.3rem 0.1rem 0.2rem 0.4rem;
+    }
+    #project-calendar .fc-event {
+        margin-bottom:0.1rem;
+    }
+
+    #project-calendar .fc-event-time {
+        font-size: 0.65rem;
+    }
+    @media (max-width: 400px) {
+    .responsive-padding {
+        padding: 0.5rem;
+    }
+    
+}
+
+
+/* taskページ */
+    .calendar-table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .calendar-table th,
+    .calendar-table td {
+        width: 6rem;
+        text-align: center;
+        vertical-align: middle;
+        height: 2rem;
+    }

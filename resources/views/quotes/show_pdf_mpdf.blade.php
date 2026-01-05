@@ -52,7 +52,7 @@
                                 <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->subject }}</td>
                             </tr>
                             <tr style="border: 4px solid #fff;">
-                                <th style="text-align: center; background-color: #f0fdf4; padding: 0.375rem;" class="p-xy">納品予定日</th>
+                                <th style="text-align: center; background-color: #f0fdf4; padding: 0.375rem;" class="p-xy">納入予定日</th>
                                 <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->delivery_date ? \Carbon\Carbon::parse($quote->delivery_date)->format('Y年m月d日') : '未設定' }}</td>
                             </tr>
                             <tr style="border: 4px solid #fff;">
@@ -60,7 +60,7 @@
                                 <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->expiry_date }}</td>
                             </tr>
                             <tr style="border: 4px solid #fff;">
-                                <th style="text-align: center; background-color: #f0fdf4; padding: 0.375rem;" class="p-xy">納品場所</th>
+                                <th style="text-align: center; background-color: #f0fdf4; padding: 0.375rem;" class="p-xy">納入場所</th>
                                 <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->delivery_location ?: '未設定' }}</td>
                             </tr>
                             <tr style="border: 4px solid #fff;">
@@ -91,7 +91,7 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 45%;" class="font-s">品名</th>
+                        <th style="width: 45%;" class="font-s">品目</th>
                         <th style="width: 15%;" class="text-right font-s">単価</th>
                         <th style="width: 5%;" class="text-right font-s">数量</th>
                         <th style="width: 5%;" class="text-right font-s">単位</th>

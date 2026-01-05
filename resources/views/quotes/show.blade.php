@@ -1,4 +1,5 @@
 <x-app-layout>
+    <div class="quote-page">
     {{-- このファイルは主にウェブブラウザでの表示に使用されます。 --}}
     <style>
         /* 日本語フォントの埋め込み (DomPDFとの互換性を考慮した標準CSS) */
@@ -9,7 +10,20 @@
         }
 
         /* 基本的なスタイルリセットとフォント設定 */
-        body, h1, h2, h3, h4, h5, h6, table, th, td, p, span, div, strong {
+        .quote-page h1,
+        .quote-page h2,
+        .quote-page h3,
+        .quote-page h4,
+        .quote-page h5,
+        .quote-page h6,
+        .quote-page table,
+        .quote-page th,
+        .quote-page td,
+        .quote-page p,
+        .quote-page span,
+        .quote-page div,
+        .quote-page strong,
+        .quote-page a, {
             font-family: 'ipaexgothic', sans-serif !important;
             font-size: 10pt;
             line-height: 1.5;
@@ -24,13 +38,17 @@
         .font-s{
             font-size: 12px;
         }
+        .text-sm{
+            font-size: 0.875rem;  line-height:
+                      1.25rem; /* 20px */
+        }
         .max-w-cont {
             max-width: 900px;
             margin-left: auto;
             margin-right: auto;
             padding-left: 2rem;
             padding-right: 2rem;
-            padding-top: 1rem;
+            padding-top: 0.5rem;
         }
         @media (min-width: 1024px) {
             .max-w-cont {
@@ -44,7 +62,7 @@
             overflow: hidden;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             border-radius: 0.5rem;
-            padding: 1.5rem;
+            padding: 0.5rem 1rem 1rem 1rem;
         }
 
         /* セクション間の区切り線 */
@@ -221,24 +239,24 @@
 
     <div>
         <div class="max-w-cont text-gray-700 pb-20">
+            {{-- アクションボタン --}}
+            <div class="flex justify-end mb-3 space-x-4">
+                <a href="#log-section"
+                class="bg-slate-400 hover:bg-slate-300 text-white font-bold text-xs px-4 py-2 rounded-md">
+                    log</a>
+                <a href="{{ route('quotes.edit', $quote) }}"
+                class="bg-indigo-600 hover:bg-indigo-400 text-white font-bold text-xs px-4 py-2 rounded-md">
+                    編集
+                </a>
+                <a href="{{ route('quotes.index') }}"
+                class="bg-green-600 hover:bg-green-400 text-white font-bold text-xs px-4 py-2 rounded-md">
+                    一覧に戻る
+                </a>
+                <a href="{{ route('quotes.downloadPdfMpdf', $quote) }}" class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
+                    PDF出力
+                </a>
+            </div>
             <div class="bg-card">
-                                {{-- アクションボタン --}}
-                <div class="flex justify-end my-3 space-x-4">
-                    <a href="#log-section"
-                    class="bg-slate-400 hover:bg-slate-300 text-white font-bold text-xs px-4 py-2 rounded-md">
-                        log</a>
-                    <a href="{{ route('quotes.edit', $quote) }}"
-                    class="bg-indigo-600 hover:bg-indigo-400 text-white font-bold text-xs px-4 py-2 rounded-md">
-                        編集
-                    </a>
-                    <a href="{{ route('quotes.index') }}"
-                    class="bg-green-600 hover:bg-green-400 text-white font-bold text-xs px-4 py-2 rounded-md">
-                        一覧に戻る
-                    </a>
-                    <a href="{{ route('quotes.downloadPdfMpdf', $quote) }}" class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
-                        PDF出力
-                    </a>
-                </div>
                 <div class="divider"></div>
                 {{-- トップセクション：タイトル --}}
                 <div class="flex-col-cont">
@@ -249,7 +267,7 @@
                 {{-- 顧客名・見積番号・発行日をテーブル化 --}}
                 <table style="width: 100%; border-collapse: collapse; padding-left: 0.75rem;">
                     <tr>
-                        <td style="width: 60%; font-size: 1.7rem; font-weight: 500;">
+                        <td style="width: 60%; font-size: 1.2rem; font-weight: 500;">
                             {{ $quote->client->name ?? 'N/A' }} 御中
                         </td>
                         <td style="width: 40%; font-size: 0.875rem; text-align: right;" class="p-xy">
@@ -260,7 +278,7 @@
                 </table>
 
                 {{-- プロジェクト名と会社情報 (2カラム) --}}
-                <table style="width: 100%; border-collapse: collapse;">
+                <table style="width: 100%; border-collapse: collapse; font-size:0.85em;">
                     <tr>
                         {{-- 左側 --}}
                         <td class="p-xy" style="width: 60%; vertical-align: top;">
@@ -283,7 +301,7 @@
                                         <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->subject }}</td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
-                                        <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納品予定日</th>
+                                        <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納入予定日</th>
                                         <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->delivery_date ? \Carbon\Carbon::parse($quote->delivery_date)->format('Y年m月d日') : '未設定' }}</td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
@@ -291,7 +309,7 @@
                                         <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->expiry_date }}</td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
-                                        <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納品場所</th>
+                                        <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納入場所</th>
                                         <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;">{{ $quote->delivery_location ?: '未設定' }}</td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
@@ -303,7 +321,7 @@
                         </td>
 
                         {{-- 右側 --}}
-                        <td style="width: 40%; vertical-align: top; font-size: 0.7em;"  class="company-txt p-xy">
+                        <td style="width: 40%; vertical-align: top; font-size: 0.85em;"  class="company-txt p-xy">
                         <img src="{{ asset('img/fse-logo.png') }}" alt="株式会社フリースタイルエンターテイメント" class="comp-logo">
                             <p>株式会社フリースタイルエンターテイメント</p>
                             <p>〒710-0038</p>
@@ -322,7 +340,7 @@
                     <table class="items-table">
                         <thead>
                             <tr>
-                                <th style="width: 45%; text-align: left;" class="font-s">品名</th>
+                                <th style="width: 45%; text-align: left;" class="font-s">品目</th>
                                 <th style="width: 15%;" class="font-s">単価</th>
                                 <th style="width: 5%;" class="font-s">数量</th>
                                 <th style="width: 5%;" class="font-s">単位</th>
@@ -400,36 +418,30 @@
             {{-- ログデータ --}}
             <hr class="border-t border-gray-300 my-6">
             <div class="overflow-x-auto bg-white rounded-md shadow-sm p-6 pt-4 max-w-4xl mx-auto">
-                <h3 id="quote-log-section" class="text-lg font-semibold text-gray-800 pl-1 pb-1">
+                <h3 id="quote-log-section" class="text-lg font-semibold text-gray-800 pl-1 pb-1 text-sm">
                     log
                 </h3>
-
                 <table class="min-w-full text-sm text-left text-gray-700">
-                    <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                    <thead class="bg-gray-100 text-gray-600 uppercase">
                         <tr>
-                            <th class="px-6 py-2">操作内容</th>
-                            <th class="px-6 py-2">ユーザー</th>
-                            <th class="px-6 py-2">日時</th>
+                            <th class="px-3 py-1" style="font-size:0.75em;">操作内容</th>
+                            <th class="px-3 py-1" style="font-size:0.75em;">ユーザー</th>
+                            <th class="px-3 py-1" style="font-size:0.75em;">日時</th>
                         </tr>
                     </thead>
-                </table>
-
-                <div class="overflow-y-auto" style="max-height: calc(1.75rem * 5 + 2rem);"> 
-                    {{-- 1行の高さ×5行 + ヘッダーや余白分 --}}
-                    <table class="min-w-full text-sm text-left text-gray-700">
                         <tbody class="divide-y divide-gray-200">
                             @foreach ($quote->logs as $log)
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                    <td class="px-6 py-2">{!! $log->action !!}</td>
-                                    <td class="px-6 py-2">{{ $log->user->name ?? '不明' }}</td>
-                                    <td class="px-6 py-2 whitespace-nowrap">{{ $log->created_at->format('Y年m月d日 H:i') }}</td>
+                                    <td class="px-6 py-2" style="font-size:0.75em;">{!! $log->action !!}</td>
+                                    <td class="px-6 py-2" style="font-size:0.75em;">{{ $log->user->name ?? '不明' }}</td>
+                                    <td class="px-6 py-2 whitespace-nowrap" style="font-size:0.75em;">{{ $log->created_at->format('Y年m月d日 H:i') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
-
         </div>
+    </div>
     </div>
 </x-app-layout>

@@ -10,14 +10,15 @@ return new class extends Migration
     {
         // projects テーブル作成
         Schema::create('projects', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('set null'); // 顧客ID (任意)
-            $table->text('user_id');
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('client_id')->nullable();
+            $table->unsignedBigInteger('user_id')->comment('登録者');
             $table->string('name')->comment('プロジェクト名');
-            $table->string('venue')->comment('催事場所'); // ← 追加
             $table->text('description')->nullable()->comment('プロジェクト概要');
             $table->date('start_date')->nullable()->comment('開始日');
             $table->date('end_date')->nullable()->comment('終了日');
+            $table->string('venue')->nullable()->comment('催事場所');
+            $table->tinyInteger('color')->unsigned()->default(1)->comment('=colors.id');
             $table->timestamps();
         });
 

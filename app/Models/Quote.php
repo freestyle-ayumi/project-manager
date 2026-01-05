@@ -16,9 +16,9 @@ class Quote extends Model
         'quote_number',
         'issue_date',
         'expiry_date',
-        'delivery_date', // 追加
-        'delivery_location', // 追加
-        'payment_terms', // 追加
+        'delivery_date',
+        'delivery_location',
+        'payment_terms',
         'subject',
         'notes',
         'total_amount',
@@ -26,6 +26,29 @@ class Quote extends Model
         'action',
         'pdf_path',
     ];
+    // ステータス定数
+    const STATUS_DRAFT = '作成済み';
+    const STATUS_ISSUED = '発行済み';
+    const STATUS_SENT = '送信済み';
+
+    // ステータス配列（順番が重要）
+    public static $statuses = [
+        self::STATUS_DRAFT,
+        self::STATUS_ISSUED,
+        self::STATUS_SENT,
+    ];
+
+    // 次のステータスを取得するメソッド
+    public function nextStatus()
+    {
+        $currentIndex = array_search($this->status, self::$statuses);
+        // 送信済みの次は進めない（循環させない）
+        if ($currentIndex === false || $currentIndex === count(self::$statuses) - 1) {
+            return $this->status; // 変更なし
+        }
+        $nextIndex = $currentIndex + 1;
+        return self::$statuses[$nextIndex];
+    }
 
     public function project()
     {

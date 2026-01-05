@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             経費申請詳細
         </h2>
     </x-slot>
@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-6" style="@media (max-width: 400px) {padding: 0.5rem;}">
 
-                {{-- 上部：申請者・日付・プロジェクト・ステータス --}}
+                {{-- 上部：申請者・日付・イベント・ステータス --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white border border-slate-200 p-6 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-6 border-b pb-3">
@@ -26,7 +26,7 @@
                                 </dd>
                             </div>
                             <div>
-                                <dt class="font-medium">関連プロジェクト</dt>
+                                <dt class="font-medium">関連イベント</dt>
                                 <dd class="ml-0">{{ $expense->project->name ?? 'N/A' }}</dd>
                             </div>
                             <div>

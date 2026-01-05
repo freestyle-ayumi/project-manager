@@ -4,15 +4,15 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('ユーザー一覧') }}
         </h2>
     </x-slot>
 
-    <div class="py-4">
-        <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
+    <div class="py-2 text-gray-600">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
+                <div class="p-4 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
 
                     {{-- 権限チェック --}}
                     @if(!$authUser || !in_array($authUser->role->name, ['master', 'developer']))
@@ -34,13 +34,12 @@
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-gray-200 font-medium">
+                            <thead class="bg-gray-50 text-xs">
                                 <tr>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ID</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">名前</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">メールアドレス</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                    <th class="px-2 py-2 text-left uppercase tracking-wider">名前</th>
+                                    <th class="px-2 py-2 text-left uppercase tracking-wider">メールアドレス</th>
+                                    <th class="px-2 py-2 text-left uppercase tracking-wider">
                                         <a href="{{ route('users.index', ['sort_role' => request('sort_role') === 'asc' ? 'desc' : 'asc']) }}" class="hover:underline">
                                             ロール
                                             @if(request('sort_role'))
@@ -48,19 +47,18 @@
                                             @endif
                                         </a>
                                     </th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">登録日時</th>
-                                    <th class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">操作</th>
+                                    <th class="px-2 py-2 text-left uppercase tracking-wider">登録日時</th>
+                                    <th class="px-2 py-2 text-left uppercase tracking-wider">操作</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-500 text-xs">
                                 @foreach ($users as $user)
                                     <tr>
-                                        <td class="px-2 py-2 text-sm text-gray-500">{{ $user->id }}</td>
-                                        <td class="px-2 py-2 text-sm text-gray-500">{{ $user->name }}</td>
-                                        <td class="px-2 py-2 text-sm text-gray-500">{{ $user->email }}</td>
-                                        <td class="px-2 py-2 text-sm text-gray-500">{{ $user->role->name ?? 'N/A' }}</td>
-                                        <td class="px-2 py-2 text-sm text-gray-500">{{ $user->created_at?->format('Y/m/d') ?? 'N/A' }}</td>
-                                        <td class="px-2 py-2 text-sm text-right">
+                                        <td class="px-2 py-2">{{ $user->name }}</td>
+                                        <td class="px-2 py-2">{{ $user->email }}</td>
+                                        <td class="px-2 py-2">{{ $user->role->name ?? 'N/A' }}</td>
+                                        <td class="px-2 py-2">{{ $user->created_at?->format('Y/m/d') ?? 'N/A' }}</td>
+                                        <td class="px-2 py-2 text-right">
                                             <div class="flex justify-end space-x-2">
                                                 <a href="{{ route('users.edit', $user) }}" class="text-emerald-600 hover:text-emerald-400" title="編集">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">

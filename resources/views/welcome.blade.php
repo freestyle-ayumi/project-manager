@@ -3,14 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>イベント管理ツール</title>
+    <title>イベント管琁E��ール</title>
         <!-- Scripts -->
             @if (app()->environment('local'))
-                {{-- 開発環境用 --}}
+                {{-- 開発 --}}
                 @vite(['resources/css/app.css', 'resources/js/app.js'])
             @else
-                {{-- 本番環境用 --}}
-                <link rel="stylesheet" href="/build/assets/app-DQk-URVn.css">
+                {{-- 本番 --}}
+                <link rel="stylesheet" href="/build/assets/app-DTMzEqAA.css">
                 <script type="module" src="/build/assets/app-Bf4POITK.js"></script>
             @endif
 
@@ -18,11 +18,10 @@
 <body class="antialiased bg-gray-100 flex items-center justify-center min-h-screen text-center px-4 sm:px-0">
     <div class="w-full max-w-md">
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-            イベント管理ツール
+            イベント管琁E�Eル
         </h1>
         <p class="text-sm sm:text-lg md:text-xl text-gray-700 mb-8 whitespace-nowrap">
-            株式会社フリースタイルエンターテインメント
-        </p>
+            株式会社フリースタイルエンターチE��ンメンチE/p>
 
         @if (Route::has('login'))
             <div class="flex justify-center gap-4 w-full max-w-sm mx-auto">

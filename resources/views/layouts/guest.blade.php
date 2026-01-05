@@ -13,11 +13,11 @@
 
         <!-- Scripts -->
             @if (app()->environment('local'))
-                {{-- 開発環境用 --}}
+                {{-- 開発 --}}
                 @vite(['resources/css/app.css', 'resources/js/app.js'])
             @else
-                {{-- 本番環境用 --}}
-                <link rel="stylesheet" href="/build/assets/app-DQk-URVn.css">
+                {{-- 本番 --}}
+                <link rel="stylesheet" href="/build/assets/app-DTMzEqAA.css">
                 <script type="module" src="/build/assets/app-Bf4POITK.js"></script>
             @endif
     </head>

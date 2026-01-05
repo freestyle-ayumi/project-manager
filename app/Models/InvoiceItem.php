@@ -17,11 +17,9 @@ class InvoiceItem extends Model
         'unit',
         'tax_rate',
         'tax',
-        'subtotal',
-        'memo',
+        'subtotal'
     ];
 
-    // この明細が関連する請求書を取得
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);

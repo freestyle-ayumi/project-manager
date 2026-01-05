@@ -50,7 +50,8 @@ class TaskController extends Controller
         // ===== ユーザー取得 =====
         $userQuery = User::with(['tasks' => function($query) use ($today, $endDate) {
             $query->whereBetween('due_date', [$today, $endDate]);
-        }]);
+        }])
+        ->where('id', '!=', auth()->id());
 
         // 担当者 or ロールでユーザーを絞り込む
         $numericUserIds = array_filter($userIds, fn($id) => is_numeric($id));
@@ -115,6 +116,7 @@ class TaskController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
+            'start_time' => 'nullable|date_format:H:i',
             'plans_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'status' => 'required|string',
@@ -130,6 +132,7 @@ class TaskController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'start_date' => $request->start_date,
+            'start_time' => $request->start_time,
             'plans_date' => $request->plans_date,
             'due_date' => $request->due_date,
             'status' => $request->status,
@@ -172,6 +175,7 @@ class TaskController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
+            'start_time' => 'nullable|date_format:H:i',
             'plans_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'status' => 'required|string',
@@ -185,6 +189,7 @@ class TaskController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'start_date' => $request->start_date,
+            'start_time' => $request->start_time,
             'plans_date' => $request->plans_date,
             'due_date' => $request->due_date,
             'status' => $request->status,

@@ -12,13 +12,13 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projects')->onDelete('cascade');
             $table->string('name')->comment('タスク名');
             $table->text('description')->nullable()->comment('タスク詳細');
-            $table->date('start_date')->nullable()->comment('開始日');
-            $table->date('plans_date')->nullable()->comment('予定日');
+            $table->date('start_date')->nullable()->comment('依頼日');
+            $table->time('start_time')->nullable()->comment('開始時間');
+            $table->date('plans_date')->nullable()->comment('完了希望日');
             $table->date('due_date')->nullable()->comment('期日');
-            $table->string('status')->default('未完了')->comment('ステータス（未完了 / 完了など）');
+            $table->string('status')->default('未完了')->comment('ステータス（例：未完了、完了）');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null')->comment('登録者ID');
             $table->string('priority', 10)->nullable()->comment('優先度（高/中/低）');
-            $table->unsignedTinyInteger('color')->default(1)->comment('カレンダー表示用カラー番号（1〜5）');
             $table->timestamps();
         });
 

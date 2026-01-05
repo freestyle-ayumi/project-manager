@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('顧客一覧') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-2">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-4">
                     <!-- 新規登録ボタン -->
                     <div class="mb-4 text-right">
                         <a href="{{ route('clients.create') }}"
@@ -24,26 +24,22 @@
                             <table class="min-w-full divide-y divide-gray-200 text-gray-600 text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">ID</th>
                                         <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">顧客名</th>
+                                        <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">略称</th>
                                         <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">メールアドレス</th>
                                         <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">電話番号</th>
                                         <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">担当者名</th>
-                                        <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">登録日</th>
                                         <th class="px-2 py-2 text-left font-medium uppercase tracking-wider">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach ($clients as $client)
-                                        <tr class="hover:bg-gray-50 text-gray-500">
-                                            <td class="px-2 py-1 whitespace-nowrap">{{ $client->id }}</td>
+                                        <tr class="hover:bg-gray-50 text-gray-500 text-xs">
                                             <td class="px-2 py-1 whitespace-nowrap">{{ $client->name }}</td>
+                                            <td class="px-2 py-1 whitespace-nowrap">{{ $client->abbreviation }}</td>
                                             <td class="px-2 py-1 whitespace-nowrap">{{ $client->email }}</td>
                                             <td class="px-2 py-1 whitespace-nowrap">{{ $client->phone }}</td>
                                             <td class="px-2 py-1 whitespace-nowrap">{{ $client->contact_person_name }}</td>
-                                            <td class="px-2 py-1 whitespace-nowrap">
-                                                {{ $client->created_at->format('Y/m/d') }}
-                                            </td>
                                             <td class="px-2 py-1 whitespace-nowrap text-right text-sm font-medium">
                                                 <div class="flex items-center justify-end space-x-1">
                                                     <!-- 編集 -->

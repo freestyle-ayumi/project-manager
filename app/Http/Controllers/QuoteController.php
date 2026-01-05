@@ -6,66 +6,97 @@ use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Project;
 use App\Models\Client;
-use App\Models\QuoteLog; // QuoteLogモデルをインポート
+use App\Models\QuoteLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Mpdf\Mpdf; // mPDFをインポート
-use Illuminate\Support\Facades\Storage; // Storageファサードをインポート
-use Illuminate\Validation\Rule; // Ruleクラスをインポート
+use Mpdf\Mpdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class QuoteController extends Controller
 {
-    // 見積書一覧を表示する
+    // ■ 見積書一覧を表示する
     public function index(Request $request)
     {
-        // Eloquentクエリを開始し、必要なリレーションをEagerロード
-        $quotes = Quote::with(['project', 'client', 'user']);
+        $today = Carbon::today();
+        $sixMonthsAgo = $today->copy()->subMonths(6);
+        $sixMonthsLater = $today->copy()->addMonths(6);
 
         // キーワード検索
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $quotes->where(function ($query) use ($search) {
-                $query->where('quote_number', 'like', '%' . $search . '%')
-                      ->orWhere('subject', 'like', '%' . $search . '%')
-                      ->orWhereHas('client', function ($q) use ($search) {
-                          $q->where('name', 'like', '%' . $search . '%');
-                      })
-                      ->orWhereHas('project', function ($q) use ($search) {
-                          $q->where('name', 'like', '%' . $search . '%');
-                      });
+        $search = $request->input('search');
+
+        // 並び替え
+        $sort = $request->input('sort', 'latest');
+
+        // プロジェクトフィルター（all / before / current / past / active）
+        $projectFilter = $request->input('project_filter', 'all');
+
+        // ベースクエリ（前後半年のプロジェクトのみ）
+        $quotes = Quote::with(['project'])
+            ->whereHas('project', function ($q) use ($sixMonthsAgo, $sixMonthsLater) {
+                $q->whereBetween('start_date', [$sixMonthsAgo, $sixMonthsLater]);
+            })
+            ->when($search, function ($query, $search) {
+                $query->where('quotes.title', 'like', "%{$search}%")
+                    ->orWhereHas('project', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('client', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+
+        // フィルター処理
+        if ($projectFilter !== 'all') {
+            $quotes->whereHas('project', function ($q) use ($today, $projectFilter) {
+                if ($projectFilter === 'before') {
+                    $q->where('start_date', '>', $today);
+
+                } elseif ($projectFilter === 'current') {
+                    $q->where('start_date', '<=', $today)
+                    ->whereRaw('COALESCE(end_date, start_date) >= ?', [$today]);
+
+                } elseif ($projectFilter === 'past') {
+                    $q->whereRaw('COALESCE(end_date, start_date) < ?', [$today]);
+
+                } elseif ($projectFilter === 'active') {
+                    $q->where(function ($q2) use ($today) {
+                        $q2->where('start_date', '>', $today)
+                        ->orWhere(function ($q3) use ($today) {
+                            $q3->where('start_date', '<=', $today)
+                                ->whereRaw('COALESCE(end_date, start_date) >= ?', [$today]);
+                        });
+                    });
+                }
             });
         }
 
-        // プロジェクトタイプフィルター
-        $projectFilter = $request->input('project_filter', 'current'); // デフォルトは 'current'
-
-        if ($projectFilter === 'current') {
-            $today = Carbon::today();
-            // 開催中とこれから開催するプロジェクト (終了日が今日以降)
-            $quotes->whereHas('project', function ($q) use ($today) {
-                $q->where('end_date', '>=', $today);
-            });
-        } elseif ($projectFilter === 'past') {
-            $today = Carbon::today();
-            // 過去のプロジェクト (終了日が今日より前)
-            $quotes->whereHas('project', function ($q) use ($today) {
-                $q->where('end_date', '<', $today);
-            });
+        // 並び替え
+        if ($sort === 'oldest') {
+            $quotes->orderBy('created_at', 'asc');
+        } else {
+            $quotes->orderBy('created_at', 'desc');
         }
-        // 'all' の場合は、プロジェクトに関するフィルタリングは行わない
 
-        // ページネーションを適用
-        $quotes = $quotes->orderBy('issue_date', 'desc')->paginate(10);
+        // ページネーション
+        $quotes = $quotes->paginate(20)->appends($request->query());
 
-        return view('quotes.index', compact('quotes'));
+        return view('quotes.index', compact('quotes', 'search', 'sort', 'projectFilter'));
     }
 
     // 新規見積書作成フォームを表示する
     public function create(Request $request)
     {
-        $projects = Project::with('client')->get();
+        $today = Carbon::today();
+        $sixMonthsAgo = $today->copy()->subMonths(6);
+
+        $projects = Project::with('client')
+            ->whereDate('start_date', '>=', $sixMonthsAgo) // 半年前以降
+            ->orderBy('start_date', 'asc')
+            ->get();
+
         $clients = Client::all();
 
         $projectClientMap = $projects->mapWithKeys(function ($project) {
@@ -127,13 +158,12 @@ class QuoteController extends Controller
         ]);
 
         DB::beginTransaction();
-
         try {
             $quote = new Quote();
-            $quote->fill($validated); // fillメソッドでバリデート済みのデータを一括設定
+            $quote->fill($validated);
             $quote->user_id = Auth::id();
-            $quote->status = '登録済み';
-            $quote->total_amount = 0; // 仮の初期値
+            $quote->status = '作成済み';
+            $quote->total_amount = 0;
             $quote->save();
 
             $totalAmount = 0;
@@ -193,7 +223,13 @@ class QuoteController extends Controller
     {
         $quote->load('items');
 
-        $projects = Project::with('client')->get();
+        $today = Carbon::today();
+        $sixMonthsAgo = $today->copy()->subMonths(6);
+
+        $projects = Project::with('client')
+            ->whereDate('start_date', '>=', $sixMonthsAgo) // 半年前以降
+            ->orderBy('start_date', 'asc')
+            ->get();
         $clients = Client::all();
 
         $projectClientMap = $projects->mapWithKeys(function ($project) {
@@ -237,7 +273,6 @@ class QuoteController extends Controller
         ]);
 
         DB::beginTransaction();
-
         try {
             $quote->fill($validated); // fillメソッドでバリデート済みのデータを一括設定
             $quote->save();
@@ -300,7 +335,7 @@ class QuoteController extends Controller
             DB::commit();
 
             return redirect()->route('quotes.index')
-                             ->with('success', '見積書が正常に更新されました。');
+                             ->with('success', '見積書が更新されました。');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -332,8 +367,6 @@ class QuoteController extends Controller
         }
     }
 
-    // 見積書をPDFとして生成し、保存してダウンロードする
-    // generatePdf と generatePdfWithMpdf を統合し、pdf_pathを保存する
     public function downloadPdf($id)
     {
         try {
@@ -383,7 +416,7 @@ class QuoteController extends Controller
             Storage::disk('public')->put($savePath, $mpdf->Output('', 'S'));
 
             // 公開 URL を生成
-            $fullUrl = url(Storage::url($savePath));
+            $fullUrl = asset('storage/' . $savePath);
 
             // 見積書の pdf_path を更新
             $quote->pdf_path = $fullUrl;
@@ -407,6 +440,91 @@ class QuoteController extends Controller
             // ユーザーに戻す
             return back()->withErrors(['error' => 'PDF生成中にエラーが発生しました。']);
         }
+    }
+    // app/Http/Controllers/QuoteController.php
+        public function downloadPdfMpdf(Quote $quote)
+    {
+        try {
+            // PDF生成用フォント設定
+            $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
+            $fontDirs = $defaultConfig['fontDir'];
+
+            $defaultFontConfig = (new \Mpdf\Config\FontVariables())->getDefaults();
+            $fontData = $defaultFontConfig['fontdata'];
+
+            $mpdf = new \Mpdf\Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'default_font' => 'notosansjp',
+                'fontDir' => array_merge($fontDirs, [storage_path('fonts')]),
+                'fontdata' => [
+                    'notosansjp' => [
+                        'R' => 'NotoSansJP-Regular.ttf',
+                        'B' => 'NotoSansJP-Bold.ttf',
+                    ],
+                ],
+            ]);
+
+            // CSS 読み込み
+            $cssPath = public_path('css/pdf.css');
+            if (file_exists($cssPath)) {
+                $mpdf->WriteHTML(file_get_contents($cssPath), \Mpdf\HTMLParserMode::HEADER_CSS);
+            }
+
+            // Bladeビューをレンダリング
+            $html = view('quotes.show_pdf_mpdf', compact('quote'))->render();
+            $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
+
+            // ファイル名作成
+            $filename = $quote->quote_number . '-' . \Carbon\Carbon::parse($quote->issue_date)->format('Ymd') . '.pdf';
+            $savePath = 'quotes/' . $filename;
+
+            // 保存
+            Storage::disk('public')->put($savePath, $mpdf->Output('', 'S'));
+
+            // 公開 URL
+            $fullUrl = asset('storage/' . $savePath);
+
+            // quote テーブルに PDF パス保存
+            $quote->pdf_path = $fullUrl;
+            $quote->save();
+
+            // ログに保存
+            $quote->logs()->create([
+                'user_id' => auth()->id(),
+                'action' => '<a href="' . $fullUrl . '" target="_blank">PDF出力</a>',
+            ]);
+
+            // PDFをブラウザにダウンロードさせる
+            return $mpdf->Output($filename, 'D');
+
+        } catch (\Throwable $e) {
+            \Log::error('PDF生成エラー: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'PDF生成中にエラーが発生しました。']);
+        }
+    }
+    public function toggleStatus(Quote $quote)
+    {
+        // 送信済みなら進めない
+        if ($quote->status === Quote::STATUS_SENT) {
+            return response()->json(['status' => $quote->status]);
+        }
+
+        // 次のステータスに変更
+        $newStatus = $quote->nextStatus();
+
+        // 変更して保存
+        $quote->status = $newStatus;
+        $quote->save();  // ← これが絶対必要！！
+
+        // ログ（任意）
+        QuoteLog::create([
+            'quote_id' => $quote->id,
+            'user_id' => Auth::id(),
+            'action' => 'ステータス変更: ' . $newStatus,
+        ]);
+
+        return response()->json(['status' => $newStatus]);
     }
 
 }

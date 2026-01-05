@@ -17,8 +17,7 @@ class QuoteItem extends Model
         'unit',
         'tax_rate',
         'tax',
-        'subtotal',
-        'memo',
+        'subtotal'
     ];
 
     // この明細が関連する見積書を取得

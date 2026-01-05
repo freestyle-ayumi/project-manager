@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,13 +16,8 @@ class DeliveryItem extends Model
         'unit',
         'tax_rate',
         'tax',
-        'subtotal',
-        'memo',
+        'subtotal'
     ];
 
-    // この明細が関連する納品書を取得
-    public function delivery()
-    {
-        return $this->belongsTo(Delivery::class);
-    }
+    public function delivery() { return $this->belongsTo(Delivery::class); }
 }

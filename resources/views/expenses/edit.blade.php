@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('経費編集') }}
         </h2>
     </x-slot>
@@ -24,11 +24,11 @@
                         @method('PATCH') {{-- 更新には PATCH メソッドを使用 --}}
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            {{-- プロジェクト選択 --}}
+                            {{-- イベント選択 --}}
                             <div>
-                                <label for="project_id" class="block text-sm font-medium text-gray-700">プロジェクト<span class="text-red-500">*</span></label>
+                                <label for="project_id" class="block text-sm font-medium text-gray-700">イベント<span class="text-red-500">*</span></label>
                                 <select name="project_id" id="project_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                    <option value="">プロジェクトを選択してください</option>
+                                    <option value="">イベントを選択してください</option>
                                     @foreach ($projects as $project)
                                         <option value="{{ $project->id }}" {{ old('project_id', $expense->project_id) == $project->id ? 'selected' : '' }}>
                                             {{ $project->name }}

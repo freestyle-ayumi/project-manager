@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectKeywordFlagController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\DeliveryController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ExpenseStatusController;
 
 /*
@@ -28,9 +30,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
 
     // ダッシュボード
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, '__invoke'])->middleware(['auth'])->name('dashboard');
 
     // プロフィール
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -40,6 +40,18 @@ Route::middleware('auth')->group(function () {
     // プロジェクト
     Route::resource('projects', ProjectController::class);
 
+    // プロジェクトキーワード
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('keyword_flags', ProjectKeywordFlagController::class);
+    });
+    // キーワードテンプレートのマッチ検索（AJAX）
+    Route::get('/admin/keyword_flags/match', [App\Http\Controllers\ProjectKeywordFlagController::class, 'match'])->name('admin.keyword_flags.match');
+    Route::patch('/projects/{project}/checklists/{checklist}/toggle-status', [ProjectController::class, 'toggleChecklistStatus'])
+    ->name('projects.checklists.toggleStatus');
+    Route::patch('/projects/{project}/checklists/{checklist}/update-link', [ProjectController::class, 'updateChecklistLink']);
+    Route::post('/quotes/{quote}/downloadPdfMpdf', [QuoteController::class, 'downloadPdfMpdf'])->name('quotes.downloadPdfMpdf');
+
+
     // タスク
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
     Route::get('/tasks/weekly', [TaskController::class, 'weeklyIndex'])->name('tasks.weekly');
@@ -48,14 +60,20 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class);
 
     // 見積書
-    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdfMpdf');
     Route::resource('quotes', QuoteController::class);
+    Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdfMpdf');
+    Route::patch('/quotes/{quote}/toggle-status', [App\Http\Controllers\QuoteController::class, 'toggleStatus'])->name('quotes.toggleStatus');
 
     // 納品書
-    Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
+    Route::resource('deliveries', DeliveryController::class);
+    Route::get('/deliveries/{delivery}/pdf-mpdf', [DeliveryController::class, 'downloadPdf'])->name('deliveries.downloadPdfMpdf');
+    Route::patch('/deliveries/{delivery}/toggle-status', [DeliveryController::class, 'toggleStatus'])->name('deliveries.toggleStatus');
+
 
     // 請求書
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::resource('invoices', InvoiceController::class);
+    Route::patch('/invoices/{invoice}/toggle-status', [InvoiceController::class, 'toggleStatus'])->name('invoices.toggleStatus');
+    Route::get('/invoices/{invoice}/pdf-mpdf', [InvoiceController::class, 'downloadPdfMpdf'])->name('invoices.downloadPdfMpdf');
 
     // 経費
     Route::resource('expenses', ExpenseController::class);
@@ -64,12 +82,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('expense-statuses', ExpenseStatusController::class);
     Route::patch('/expenses/{expense}/status', [ExpenseController::class, 'updateStatus'])->name('expenses.updateStatus');
 
-
     // 顧客
     Route::resource('clients', ClientController::class);
     Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
     Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
-
 
     // ユーザー管理（一覧・編集・更新・削除のみ）
     Route::resource('users', UserController::class)->except(['create', 'store', 'show']);

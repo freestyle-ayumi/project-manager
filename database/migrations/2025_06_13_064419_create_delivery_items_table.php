@@ -8,13 +8,15 @@ return new class extends Migration
     {
         Schema::create('delivery_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('delivery_id')->constrained('deliveries')->onDelete('cascade'); // 関連する納品書ID
-            $table->string('description')->comment('項目説明');
-            $table->integer('quantity')->comment('数量');
-            $table->decimal('unit_price', 10, 2)->comment('単価');
-            $table->decimal('amount', 10, 2)->comment('金額'); // 数量 * 単価
+            $table->foreignId('delivery_id')->constrained('deliveries');
+            $table->string('item_name');
+            $table->integer('price')->default(0);
+            $table->integer('quantity')->default(1);
+            $table->string('unit')->nullable();
+            $table->integer('tax_rate')->default(10);
             $table->timestamps();
         });
+
     }
     public function down(): void
     {
