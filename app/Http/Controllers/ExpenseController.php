@@ -49,9 +49,14 @@ class ExpenseController extends Controller
      */
     public function create()
     {
-        $projects = Project::whereDoesntHave('status', function ($query) {
-            $query->whereIn('name', ['完了', '終了']); // '完了' または '終了' ステータスのプロジェクトを除外
-        })->orderBy('name')->get();
+        $today = Carbon::today();
+        $oneYearAgo = $today->copy()->subYear();
+        $oneYearLater = $today->copy()->addYear();
+
+        // start_date が 今日を基準に前後1年のプロジェクトだけ取得
+        $projects = Project::whereBetween('start_date', [$oneYearAgo, $oneYearLater])
+            ->orderBy('start_date', 'desc')
+            ->get();
 
         // デフォルトの申請日 (今日の日付)
         $defaultApplicationDate = Carbon::now()->format('Y-m-d');
@@ -105,7 +110,8 @@ class ExpenseController extends Controller
     
     public function show(Expense $expense) {
     $expense->load('items','user','status','project');
-    return view('expenses.show', compact('expense'));
+    $statuses = \App\Models\ExpenseStatus::all();
+    return view('expenses.show', compact('expense', 'statuses'));
     }
 
 public function edit(Expense $expense) {

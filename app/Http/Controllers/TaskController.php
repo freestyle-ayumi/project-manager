@@ -151,12 +151,26 @@ class TaskController extends Controller
             $task->assignees()->sync($assigneeIds);
         }
 
+        // URLの保存（複数対応）
+        if ($request->has('urls')) {
+            foreach ($request->input('urls') as $urlData) {
+                if (!empty($urlData['url'])) {  // URLが空でなければ保存
+                    $task->urls()->create([
+                        'url'   => $urlData['url'],
+                        'title' => $urlData['title'] ?? null,
+                        'memo'  => $urlData['memo'] ?? null,
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('tasks.index')->with('success', 'タスクを作成しました');
     }
 
     /* ★タスク編集フォーム */
     public function edit(Task $task)
     {
+        $task->load('urls');
         $projects = \App\Models\Project::all();
         $users = User::all();
         $roles = \App\Models\Role::all();
@@ -198,6 +212,35 @@ class TaskController extends Controller
 
         $task->assignees()->sync($request->assignees ?? []);
 
+        if ($request->has('urls')) {
+            $submittedIds = [];
+
+            foreach ($request->input('urls') as $urlData) {
+                if (!empty($urlData['url'])) {
+                    $data = [
+                        'task_id' => $task->id,
+                        'url'     => $urlData['url'],
+                        'title'   => $urlData['title'] ?? null,
+                        'memo'    => $urlData['memo'] ?? null,
+                    ];
+
+                    if (empty($urlData['id'])) {
+                        \Log::info('新規URL作成試行: ' . json_encode($data));
+                        $created = $task->urls()->create($data);
+                        \Log::info('新規URL作成成功: ID=' . $created->id);
+
+                        $submittedIds[] = $created->id;
+                    } else {
+                        $task->urls()->where('id', $urlData['id'])->update($data);
+                        $submittedIds[] = $urlData['id'];
+                    }
+                }
+            }
+
+            // ★ 本当に削除すべきものだけ削除
+            $task->urls()->whereNotIn('id', $submittedIds)->delete();
+        }
+
         return redirect()->route('tasks.index')->with('success', 'タスクを更新しました。');
     }
 
@@ -209,4 +252,23 @@ class TaskController extends Controller
 
         return redirect()->route('tasks.index')->with('success', 'タスクを削除しました。');
     }
+
+    /* ★タスクステータス変更 */
+    public function updateStatus(Request $request, Task $task)
+    {
+        $request->validate([
+            'status' => 'required|string',
+        ]);
+
+        $oldStatus = $task->status;
+        $task->status = $request->status;
+        $task->save();
+
+        return response()->json([
+            'success' => true,
+            'oldStatus' => $oldStatus,
+            'newStatus' => $task->status,
+        ]);
+    }
+
 }

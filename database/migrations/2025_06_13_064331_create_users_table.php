@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->unsignedBigInteger('role_id')->default(0);
+            $table->unsignedBigInteger('role_id')->nullable();
         });
     }
     public function down(): void

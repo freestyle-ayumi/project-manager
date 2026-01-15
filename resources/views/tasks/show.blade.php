@@ -63,10 +63,24 @@
                         $statusClass = match($task->status) {
                             '未完了' => 'bg-red-500 text-white',
                             '完了'   => 'bg-green-500 text-white',
+                            '修正' => 'bg-amber-500 text-white',
                             default  => 'bg-gray-200 text-gray-800',
                         };
+
+                        $statusOrder = ['未完了', '完了', '修正']; // 次ステータスの順序
+                        $currentIndex = array_search($task->status, $statusOrder);
+                        $nextStatus = $statusOrder[($currentIndex + 1) % count($statusOrder)];
                     @endphp
-                    <span class="px-2 py-1 rounded {{ $statusClass }}">{{ $task->status }}</span>
+
+                    <span 
+                        id="task-status" 
+                        class="px-2 py-1 rounded {{ $statusClass }} cursor-pointer"
+                        data-task-id="{{ $task->id }}"
+                        data-next-status="{{ $nextStatus }}"
+                    >
+                        {{ $task->status }}
+                    </span>
+
 
                     {{-- 優先度 --}}
                     <span class="px-2 py-1 bg-gray-200 rounded">{{ $task->priority ?? '-' }}</span>
@@ -81,7 +95,36 @@
                 {{ $task->description ?? '詳細情報は登録されていません。' }}
             </p>
 
-            <hr class="mt-5 mb-3 border-gray-200">
+            <!-- 関連URL -->
+            @unless($task->urls->isEmpty())
+            <div>
+                <ul class="space-y-1 mt-1">
+                    @foreach($task->urls as $url)
+                        <li class="group flex items-center gap-1 bg-white rounded-md hover:border-indigo-300 hover:shadow-sm transition-all">
+                            <!-- リンクマーク（先頭） -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+
+                            <!-- クリック可能なURL（別ウィンドウ） -->
+                            <a href="{{ $url->url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-indigo-600 hover:text-indigo-800 flex-1 break-all text-xs">
+                                {{ $url->title ?: $url->url }}
+                            </a>
+
+                            <!-- メモ（存在する場合） -->
+                            @if($url->memo)
+                                <span class="text-xs text-gray-500 italic ml-auto">
+                                    {{ $url->memo }}
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endunless
+
+            <hr class="mt-3 mb-3 border-gray-200">
             <!-- 担当者 -->
             <div class="flex items-center space-x-2 mb-3">
                 <strong class="text-gray-500 text-xs">担当者：</strong>
@@ -111,4 +154,47 @@
 
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusEl = document.getElementById('task-status');
+
+            statusEl.addEventListener('click', function () {
+                const taskId = this.dataset.taskId;
+                const currentStatus = this.textContent.trim();
+                const nextStatus = this.dataset.nextStatus;
+
+                if (!confirm(`ステータスを「${currentStatus}」→「${nextStatus}」に変更します。よろしいですか？`)) {
+                    return;
+                }
+
+                fetch(`/tasks/${taskId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ status: nextStatus })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        statusEl.textContent = data.newStatus;
+
+                        // クラスも更新
+                        if (data.newStatus === '未完了') {
+                            statusEl.className = 'px-2 py-1 rounded bg-red-500 text-white cursor-pointer';
+                            statusEl.dataset.nextStatus = '完了';
+                        } else if (data.newStatus === '完了') {
+                            statusEl.className = 'px-2 py-1 rounded bg-green-500 text-white cursor-pointer';
+                            statusEl.dataset.nextStatus = '未完了';
+                        }
+                    }
+                })
+                .catch(err => {
+                    alert('ステータス更新に失敗しました');
+                    console.error(err);
+                });
+            });
+        });
+    </script>
 </x-app-layout>

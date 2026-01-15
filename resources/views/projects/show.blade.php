@@ -262,6 +262,7 @@
                                     @endif
                                 </td>
 
+                                <!-- 請求額 -->
                                 <td class="px-2 py-1 text-right whitespace-nowrap border border-gray-200">
                                     @if ($project->invoices_sum_total_amount > 0 && isset($latestInvoice))
                                         <span class="flex items-center">
@@ -283,33 +284,31 @@
                                         ¥0
                                     @endif
                                 </td>
+                                <!-- 経費合計 -->
                                 <td class="px-2 py-1 text-right whitespace-nowrap border border-gray-200">
-                                    <span class="bg-green-200 text-green-800 text-xs font-semibold px-1 py-0.5 rounded mr-2">
-                                        認 ¥{{ number_format($project->total_approved_expenses_sum ?? 0, 0) }}
+                                    <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-0.5 rounded mr-2">
+                                        認 ¥{{ number_format($project->total_approved_expenses_sum ?? 0) }}
                                     </span>
-                                    <span class="bg-red-200 text-red-800 text-xs font-semibold px-1 py-0.5  rounded">
-                                        未 ¥{{ number_format($project->total_pending_expenses_sum ?? 0, 0) }}
+                                    <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                        未 ¥{{ number_format($project->total_pending_expenses_sum ?? 0) }}
                                     </span>
                                 </td>
+                                <!-- 実利 -->
                                 <td class="px-2 py-1 text-right whitespace-nowrap border border-gray-200">
                                     @php
-                                        $approvedExpenses = $project->expenses()
-                                                                    ->whereHas('status', fn($q) => $q->where('name', '承認済み'))
-                                                                    ->sum('amount');
-
-                                        $allExpenses = $project->expenses()->sum('amount');
-
                                         $invoicesTotal = $project->invoices_sum_total_amount ?? 0;
+                                        $approved = $project->total_approved_expenses_sum ?? 0;
+                                        $all = $project->total_all_expenses_sum ?? 0;
 
-                                        $netProfitApprovedOnly = $invoicesTotal - $approvedExpenses;
-                                        $netProfitAll = $invoicesTotal - $allExpenses;
+                                        $profitApproved = $invoicesTotal - $approved;
+                                        $profitAll = $invoicesTotal - $all;
                                     @endphp
 
-                                    <span class="bg-green-200 text-green-800 text-xs font-semibold  px-1 py-0.5 rounded mr-2">
-                                        認 ¥{{ number_format($netProfitApprovedOnly, 0) }}
+                                    <span class="bg-green-200 text-green-800 text-xs font-semibold px-2 py-0.5 rounded mr-2">
+                                        認 ¥{{ number_format($profitApproved) }}
                                     </span>
-                                    <span class="bg-red-200 text-red-800 text-xs font-semibold  px-1 py-0.5 rounded">
-                                        未 ¥{{ number_format($netProfitAll, 0) }}
+                                    <span class="bg-red-200 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                        未 ¥{{ number_format($profitAll) }}
                                     </span>
                                 </td>
                             </tr>
@@ -319,10 +318,10 @@
 
                 {{-- アクションボタン --}}
                 <div class="mt-6 flex space-x-2 justify-end text-xs text-white">
-                    <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <a href="{{ route('projects.edit', $project) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         {{ __('編集') }}
                     </a>
-                    <a href="{{ route('projects.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <a href="{{ route('projects.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         {{ __('一覧に戻る') }}
                     </a>
                 </div>

@@ -5,24 +5,23 @@
         </h2>
     </x-slot>
 
-    <div class="py-4">
+    <div class="py-4 max-w-2xl mx-auto">
         <div class="max-w-7xl mx-auto sm:px-2 lg:px-2">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
+                <div class="p-4 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
                     @if (session('success'))
-                        <div class="mb-4 p-4 bg-emerald-100 border border-emerald-400 text-emerald-700 rounded">
+                        <div class="mb-2 p-2 text-sm bg-emerald-100 border border-emerald-400 text-emerald-700 rounded">
                             {{ session('success') }}
                         </div>
                     @endif
 
-                    <div class="mb-4 text-right flex justify-end space-x-2">
+                    <div class="mb-4 text-right flex justify-end space-x-2 text-xs">
                         <!-- ユーザー一覧に戻るボタン -->
-                        <a href="{{ route('users.index') }}" class="inline-flex items-center pt-2 pb-1.5 px-2 bg-gray-500 text-white rounded font-semibold text-xs hover:bg-gray-400">
+                        <a href="{{ route('users.index') }}" class="inline-flex items-center pt-2 pb-1.5 px-2 bg-gray-500 text-white rounded hover:bg-gray-400">
                             ユーザー一覧
                         </a>
-
                         <!-- ロール追加ボタン -->
-                        <a href="{{ route('roles.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 text-white rounded font-semibold text-xs hover:bg-gray-700">
+                        <a href="{{ route('roles.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 text-white rounded hover:bg-gray-700">
                             ＋ロール追加
                         </a>
                     </div>
@@ -30,30 +29,30 @@
                         <p>まだロールが登録されていません。</p>
                     @else
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200 text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                                            ID
+                                        <th scope="col" class="px-2 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">
+                                            管理名(小英数字)
                                         </th>
-                                        <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                        <th scope="col" class="px-2 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">
                                             ロール名
                                         </th>
-                                        <th scope="col" class="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                                        <th scope="col" class="px-2 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">
                                             操作
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
+                                <tbody class="bg-white divide-y divide-gray-200 text-gray-500">
                                     @foreach ($roles as $role)
                                         <tr>
-                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $role->id }}
-                                            </td>
-                                            <td class="px-2 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            <td class="px-2 py-1 whitespace-nowrap">
                                                 {{ $role->name }}
                                             </td>
-                                            <td class="px-2 py-3 whitespace-nowrap text-right text-xs">
+                                            <td class="px-2 py-1 whitespace-nowrap">
+                                                {{ $role->description }}
+                                            </td>
+                                            <td class="px-2 py-1 whitespace-nowrap text-right text-xs">
                                                 <div class="flex items-center justify-end space-x-1">
                                                     <a href="{{ route('roles.edit', $role->id) }}" class="text-emerald-600 hover:text-emerald-400" title="編集">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">

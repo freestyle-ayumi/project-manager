@@ -37,7 +37,7 @@
 
                             <!-- イベントフィルター -->
                             <select name="project_filter" 
-                                class="h-8 mt-0.5 col-span-12 sm:col-span-3 md:col-span-1 block w-full py-0 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs">
+                                class="mt-0.5 col-span-12 sm:col-span-3 md:col-span-1 block w-full py-0 border border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-xs">
                                 <option value="all" {{ ($projectFilter ?? 'all') === 'all' ? 'selected' : '' }}>すべて</option>
                                 <option value="before" {{ ($projectFilter ?? '') === 'before' ? 'selected' : '' }}>開催前</option>
                                 <option value="current" {{ ($projectFilter ?? '') === 'current' ? 'selected' : '' }}>開催中</option>
@@ -45,13 +45,13 @@
                             </select>
 
                             <!-- ボタン部分 -->
-                            <div class="col-span-12 sm:col-span-3 md:col-span-2 grid grid-cols-2 md:flex space-x-2 pt-0.5">
+                            <div class="col-span-12 sm:col-span-3 md:col-span-2 grid grid-cols-2 md:flex space-x-2 mt-0.5">
                                 <button type="submit"
-                                    class="h-8 w-full flex rounded-md mt-0.5 pt-2 pb-1.5 items-center justify-center text-white text-xs bg-indigo-600 hover:bg-indigo-700">
+                                    class="h-8 w-full flex rounded-md pt-2 pb-1.5 items-center justify-center text-white text-xs bg-indigo-600 hover:bg-indigo-700">
                                     検索
                                 </button>
                                 <a href="{{ route('invoices.index') }}"
-                                    class="h-8 w-full flex rounded-md mt-0.5 pt-2 pb-1.5 mr-5 sm:mr-0 items-center justify-center text-white text-xs bg-gray-400 hover:bg-gray-500">
+                                    class="h-8 w-full flex rounded-md pt-2 pb-1.5 mr-5 sm:mr-0 items-center justify-center text-white text-xs bg-gray-400 hover:bg-gray-500">
                                     クリア
                                 </a>
                             </div>

@@ -305,48 +305,66 @@ class ProjectController extends Controller
     // ■ 詳細表示
     public function show(Project $project)
     {
-        $approvedStatus = ExpenseStatus::where('name','承認済み')->first();
-        $pendingStatus = ExpenseStatus::where('name','未承認')->first();
+        // 承認済み経費のステータスID（ID=2）
+        $approvedStatusId = ExpenseStatus::where('name', '承認済み')->value('id');
+
+        // 仮の実利に含めるステータスID（申請中=1, 承認済み=2, 差し戻し=4）
+        $hypotheticalStatusIds = ExpenseStatus::whereIn('name', ['申請中', '承認済み', '差し戻し'])
+            ->pluck('id')
+            ->toArray();
 
         $project = Project::with(['client','user','color','tasks','tasks.users'])
             ->withSum('quotes','total_amount')
             ->withSum('invoices','total_amount')
-            ->withSum(['expenses as total_approved_expenses_sum'=>fn($q)=> $approvedStatus?$q->where('expense_status_id',$approvedStatus->id):null],'amount')
-            ->withSum(['expenses as total_pending_expenses_sum'=>fn($q)=> $pendingStatus?$q->where('expense_status_id',$pendingStatus->id):null],'amount')
+            // 確定経費合計（承認済みのみ）
+            ->withSum(['expenses as total_approved_expenses_sum' => function($q) use ($approvedStatusId) {
+                if ($approvedStatusId) {
+                    $q->where('expense_status_id', $approvedStatusId);
+                }
+            }], 'amount')
+            // 仮経費合計（申請中 + 承認済み + 差し戻し）
+            ->withSum(['expenses as total_hypothetical_expenses_sum' => function($q) use ($hypotheticalStatusIds) {
+                if (!empty($hypotheticalStatusIds)) {
+                    $q->whereIn('expense_status_id', $hypotheticalStatusIds);
+                }
+            }], 'amount')
             ->findOrFail($project->id);
 
+        // Bladeで使いやすいように属性追加
+        $project->total_approved_expenses_sum = $project->total_approved_expenses_sum ?? 0;
+        $project->total_hypothetical_expenses_sum = $project->total_hypothetical_expenses_sum ?? 0;
+
+        // 以下省略（latestQuoteなどはそのまま）
         $latestQuote = $project->quotes()->latest('created_at')->first();
         $latestInvoice = $project->invoices()->latest('created_at')->first();
 
-        // 見積書の最新PDF（既存のままOK）
-        $latestLogWithPdf = \App\Models\QuoteLog::whereHas('quote',fn($q)=> $q->where('project_id',$project->id))
-            ->whereHas('quote',fn($q)=> $q->whereNotNull('pdf_path'))
-            ->latest('created_at')->first();
+        // 見積書の最新PDF
+        $latestLogWithPdf = \App\Models\QuoteLog::whereHas('quote', fn($q) => $q->where('project_id', $project->id))
+            ->whereHas('quote', fn($q) => $q->whereNotNull('pdf_path'))
+            ->latest('created_at')
+            ->first();
 
-        $latestPdfQuoteId = $latestLogWithPdf?->quote_id;
+        $latestPdfQuoteId = $latestLogWithPdf?->quote_id ?? null;
 
-        // --- ここから修正（納品書用） ---
-        // 最新の納品書
+        // 納品書の最新データ
         $latestDelivery = $project->deliveries()->latest('created_at')->first();
-
-        // PDFが生成されている最新の納品書（pdf_path が NULL でないもの）
         $latestPdfDelivery = $project->deliveries()
             ->whereNotNull('pdf_path')
             ->latest('created_at')
             ->first();
 
-        $latestPdfDeliveryId = $latestPdfDelivery?->id;
-        // --- ここまで修正 ---
+        $latestPdfDeliveryId = $latestPdfDelivery?->id ?? null;
 
         return view('projects.show', compact(
             'project',
             'latestQuote',
             'latestInvoice',
             'latestPdfQuoteId',
-            'latestDelivery',        // 追加
-            'latestPdfDeliveryId'    // 追加
+            'latestDelivery',
+            'latestPdfDeliveryId'
         ));
     }
+
     // ■ 詳細にチェック項目表示
     public function toggleChecklistStatus(Project $project, ProjectChecklist $checklist)
     {
@@ -360,7 +378,7 @@ class ProjectController extends Controller
 
         // 次のステータスを計算
         $currentIndex = array_search($checklist->status, $statuses);
-        $nextIndex = ($currentIndex + 1) % count($statuses); // 循環
+        $nextIndex = ($currentIndex + 1) % count($statuses);
         $checklist->status = $statuses[$nextIndex];
         $checklist->save();
 
@@ -382,6 +400,5 @@ class ProjectController extends Controller
 
         return response()->json(['success'=>true, 'link'=>$checklist->link]);
     }
-
 
 }

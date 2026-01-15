@@ -5,10 +5,29 @@
         </h2>
     </x-slot>
 
-    <div class="py-4">
+    <style>
+        /* Chrome / Edge / Safari 用 */
+        .no-spin::-webkit-inner-spin-button,
+        .no-spin::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox 用 */
+        .no-spin[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* さらに Edge / Chrome の矢印UIを無効化 */
+        .no-spin {
+            appearance: textfield;
+        }
+    </style>
+
+    <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
+                <div class="p-4 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
                     @if ($errors->any())
                         <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                             <ul>
@@ -22,92 +41,103 @@
                     <form action="{{ route('expenses.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        {{-- 申請者・日付・イベント --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <div>
+                        {{-- ヘッダ情報（請求書ページと同一） --}}
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-2">
+                            {{-- 申請日（発行日に相当） --}}
+                            <div class="md:col-span-2">
                                 <label for="application_date" class="block text-sm font-medium text-gray-700">申請日<span class="text-red-500">*</span></label>
-                                <input type="text" name="application_date" id="application_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm flatpickr" value="{{ old('application_date', $defaultApplicationDate) }}" required>
+                                <div class="relative">
+                                    <input type="text" name="application_date" id="application_date"
+                                        class="block w-full py-1.5 pl-3 pr-10 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm"
+                                        value="{{ old('application_date', $defaultApplicationDate) }}" required>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-10 4h10m-6 4h6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
+
+                            {{-- 関連イベント --}}
+                            <div class="md:col-span-6">
                                 <label for="project_id" class="block text-sm font-medium text-gray-700">関連イベント<span class="text-red-500">*</span></label>
-                                <select name="project_id" id="project_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="">選択してください</option>
+                                <select name="project_id" id="project_id" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" required>
+                                    <option value="">イベントを選択してください</option>
                                     @foreach($projects as $project)
-                                        <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                                        @php
+                                            $dateSuffix = $project->start_date ? ' (' . \Carbon\Carbon::parse($project->start_date)->format('n/j') . '～)' : '';
+                                        @endphp
+                                        <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                            {{ $project->name . $dateSuffix }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div>
-                                <label for="applicant_id" class="block text-sm font-medium text-gray-700">申請者</label>
-                                <input type="text" id="applicant_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed" value="{{ Auth::user()->name }}" readonly>
+
+                            {{-- 申請者（顧客表示に相当） --}}
+                            <div class="md:col-span-4">
+                                <label class="block text-sm font-medium text-gray-700">申請者</label>
+                                <input type="text" class="block w-full py-1.5 border-gray-300 bg-gray-100 rounded-md focus:ring-opacity-50 text-sm cursor-not-allowed" value="{{ Auth::user()->name }}" readonly>
                                 <input type="hidden" name="applicant_id" value="{{ Auth::id() }}">
                             </div>
                         </div>
 
                         <input type="hidden" name="expense_status_id" value="{{ \App\Models\ExpenseStatus::where('name', '申請中')->first()->id ?? 1 }}">
 
-                        <h3 class="font-bold text-xl mb-1">経費項目</h3>
-                        <div id="items-container" class="border border-gray-200 rounded-md p-4">
-                            {{-- ラベル行 --}}
-                            <div class="grid grid-cols-12 gap-2">
-                                <div class="col-span-2 text-sm font-medium text-gray-700 pl-2">日付<span class="text-red-500">*</span></div>
-                                <div class="col-span-4 text-sm font-medium text-gray-700 pl-2">品名<span class="text-red-500">*</span></div>
-                                <div class="col-span-1 text-sm font-medium text-gray-700 pl-2">単価<span class="text-red-500">*</span></div>
-                                <div class="col-span-1 text-sm font-medium text-gray-700 pl-2">数量</div>
-                                <div class="col-span-1 text-sm font-medium text-gray-700 pl-2">単位</div>
-                                <div class="col-span-1 text-sm font-medium text-gray-700 pl-2">税率 (%)<span class="text-red-500">*</span></div>
-                                <div class="col-span-2 text-sm font-medium text-gray-700 pl-2">小計</div>
-                            </div>
+                        {{-- 明細 --}}
+                        <h4 class="font-bold text-lg ml-1 text-sm">明細</h4>
+                        <div id="items-container" class="space-y-4 border p-2 rounded-md">
+                            @php
+                                $items = old('items', [[]]);
+                                if (empty($items)) { $items = [[]]; }
+                            @endphp
 
-                            {{-- 初期項目 --}}
-                            <div class="item-row grid grid-cols-12 gap-2 mb-2 relative">
-                                <div class="col-span-2">
-                                    <input type="text" name="items[0][date]" class="block w-full rounded-md border-gray-300 shadow-sm flatpickr" value="{{ $defaultApplicationDate }}" required>
+                            @foreach($items as $index => $item)
+                                <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end relative">
+                                    <input type="hidden" name="items[{{ $index }}][id]" value="">
+                                    <div class="md:col-span-5">
+                                        <label class="block text-sm font-medium text-gray-700">品名・内容<span class="text-red-500">*</span></label>
+                                        <input type="text" name="items[{{ $index }}][item_name]" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="{{ $item['item_name'] ?? '' }}" required>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700">単価</label>
+                                        <input type="number" step="1" name="items[{{ $index }}][price]" class="text-right block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm no-spin item-price" value="{{ $item['price'] ?? '' }}">
+                                    </div>
+                                    <div class="md:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700">数量</label>
+                                        <input type="number" name="items[{{ $index }}][quantity]" class="text-right block w-full sm:pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-quantity" value="{{ $item['quantity'] ?? '1' }}">
+                                    </div>
+                                    <div class="md:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700">単位</label>
+                                        <input type="text" name="items[{{ $index }}][unit]" class="block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm unit-no-spin" value="{{ $item['unit'] ?? '' }}">
+                                    </div>
+                                    <div class="md:col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
+                                        <input type="number" step="1" name="items[{{ $index }}][tax_rate]" class="text-right block w-full sm:pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-tax-rate" value="{{ $item['tax_rate'] ?? '10' }}" required>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700">小計</label>
+                                        <input type="text" class="block w-full py-1.5 border-gray-300 rounded-md bg-gray-100 text-sm cursor-not-allowed item-subtotal" value="0" readonly>
+                                    </div>
+                                    <button type="button" class="absolute top-6 right-1 text-red-500 hover:text-red-700 remove-item-row">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
-                                <div class="col-span-4">
-                                    <input type="text" name="items[0][item_name]" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="品名" required>
-                                </div>
-                                <div class="col-span-1">
-                                    <input type="number" name="items[0][price]" class="block w-full rounded-md border-gray-300 shadow-sm item-price" value="0" min="0" required>
-                                </div>
-                                <div class="col-span-1">
-                                    <input type="number" name="items[0][quantity]" class="block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="1" min="1">
-                                </div>
-                                <div class="col-span-1">
-                                    <input type="text" name="items[0][unit]" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="個">
-                                </div>
-                                <div class="col-span-1">
-                                    <input type="number" name="items[0][tax_rate]" class="block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="10" min="0" required>
-                                </div>
-                                <div class="col-span-2">
-                                    <input type="text" name="items[0][subtotal]" class="block w-full rounded-md border-gray-300 shadow-sm item-subtotal bg-gray-100 cursor-not-allowed" value="0" readonly>
-                                </div>
-                                {{-- 削除ボタンを col-span 外にして絶対配置 --}}
-                                <button type="button" class="absolute top-1/2 right-1 -translate-y-1/2 text-red-500 hover:text-red-700 remove-item-row">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-span-2 relative flex justify-end">
-                            <button type="button" id="add-item-button" class="flex justify-end items-center px-4 py-2 bg-gray-800 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 mt-4">
-                                + 項目を追加
-                            </button>
+                            @endforeach
                         </div>
 
-                        <div class="px-4 pb-4 pt-8 border-gray-200">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                                <div class="md:col-start-2 flex justify-end">
-                                    <label for="total_amount" class="block text-sm font-medium text-gray-700 mr-4 self-center">合計金額:</label>
-                                    <input type="text" id="total_amount" class="block w-auto border-none shadow-none bg-transparent cursor-not-allowed text-3xl font-bold text-gray-900 text-right" value="¥0" readonly>
-                                </div>
+                        {{-- 行追加ボタンと合計（請求書ページと同一） --}}
+                        <div class="mx-2 my-2 text-xs">
+                            <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-1 rounded-md mb-2 ml-auto block">＋行</button>
+                            <div class="flex justify-end items-center mb-3 mr-1">
+                                <p class="text-xl font-bold text-gray-800">合計金額: <span id="display-total-amount">¥0</span></p>
+                                <input type="hidden" name="total_amount" id="total_amount_input" value="0">
                             </div>
-
-                            <div class="flex justify-end">
-                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                    申請する
-                                </button>
+                            <div class="flex justify-end space-x-2">
+                                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white pt-2 pb-1.5 pr-2 pl-2 rounded-md">申請</button>
+                                <a href="{{ route('expenses.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white pt-2 pb-1.5 pr-2 pl-2 rounded-md">キャンセル</a>
                             </div>
                         </div>
                     </form>
@@ -116,103 +146,99 @@
         </div>
     </div>
 
-    {{-- flatpickr --}}
+    {{-- Flatpickr --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
 
+    {{-- ページ用スクリプト（請求書ページと同一） --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            flatpickr('.flatpickr', { dateFormat: "Y/m/d" });
+            // Flatpickr 設定
+            if (typeof flatpickr !== 'undefined' && flatpickr.l10ns && flatpickr.l10ns.ja) flatpickr.localize(flatpickr.l10ns.ja);
+            flatpickr("#application_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('application_date', $defaultApplicationDate) }}" });
 
-            function updateSubtotal(row) {
-                const price = parseFloat(row.querySelector('.item-price').value) || 0;
-                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
-                const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
-                const subtotal = price * quantity * (1 + taxRate / 100);
-                row.querySelector('.item-subtotal').value = subtotal.toLocaleString();
-            }
-
-            function updateTotal() {
-                let total = 0;
-                document.querySelectorAll('.item-subtotal').forEach(sub => {
-                    total += parseFloat(sub.value.replace(/,/g,'')) || 0;
-                });
-                document.getElementById('total_amount').value = '¥' + total.toLocaleString();
-            }
-
+            // 明細行の処理
             const itemsContainer = document.getElementById('items-container');
-            itemsContainer.querySelectorAll('.item-row').forEach(row => {
-                ['input.item-price','input.item-quantity','input.item-tax-rate'].forEach(sel => {
-                    row.querySelector(sel).addEventListener('input', () => {
-                        updateSubtotal(row);
-                        updateTotal();
-                    });
-                });
-                updateSubtotal(row);
-            });
-            updateTotal();
-
-            let itemIndex = {{ old('items') ? count(old('items')) : 1 }};
             const addItemButton = document.getElementById('add-item-button');
+            let itemIndex = {{ old('items') ? count(old('items')) : 1 }};
 
-            addItemButton.addEventListener('click', function () {
-                const today = new Date();
-                const yyyy = today.getFullYear();
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const formattedToday = `${yyyy}/${mm}/${dd}`;
+            function calculateRowTotal(row) {
+                const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+                const quantity = parseFloat(row.querySelector('.item-quantity')?.value) || 0;
+                const taxRate = parseFloat(row.querySelector('.item-tax-rate')?.value) || 0;
+                const subtotalInput = row.querySelector('.item-subtotal');
+                const subtotal = Math.round(price * quantity * (1 + taxRate / 100));
+                if (subtotalInput) subtotalInput.value = subtotal.toLocaleString();
+                calculateTotals();
+            }
 
-                const template = document.createElement('div');
-                template.className = 'item-row grid grid-cols-12 gap-2 mb-2 relative';
-                template.innerHTML = `
-                    <div class="col-span-2">
-                        <input type="text" name="items[${itemIndex}][date]" class="block w-full rounded-md border-gray-300 shadow-sm flatpickr" value="${formattedToday}" required>
+            function calculateTotals() {
+                let grandTotal = 0;
+                document.querySelectorAll('.item-row').forEach(row => {
+                    const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+                    const quantity = parseInt(row.querySelector('.item-quantity')?.value) || 0;
+                    const taxRate = parseFloat(row.querySelector('.item-tax-rate')?.value) || 0;
+                    grandTotal += Math.round(price * quantity * (1 + taxRate / 100));
+                });
+                const disp = document.getElementById('display-total-amount');
+                const hiddenTotal = document.getElementById('total_amount_input');
+                if (disp) disp.textContent = '¥' + grandTotal.toLocaleString();
+                if (hiddenTotal) hiddenTotal.value = grandTotal;
+            }
+
+            function attachEventListenersToRow(row) {
+                row.querySelector('.item-price')?.addEventListener('input', () => calculateRowTotal(row));
+                row.querySelector('.item-quantity')?.addEventListener('input', () => calculateRowTotal(row));
+                row.querySelector('.item-tax-rate')?.addEventListener('input', () => calculateRowTotal(row));
+                row.querySelector('.remove-item-row')?.addEventListener('click', () => { row.remove(); calculateTotals(); });
+                calculateRowTotal(row);
+            }
+
+            function createItemRow(itemData = {}) {
+                const newRow = document.createElement('div');
+                newRow.className = 'item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end relative';
+                newRow.innerHTML = `
+                    <input type="hidden" name="items[${itemIndex}][id]" value="">
+                    <div class="md:col-span-5">
+                        <label class="block text-sm font-medium text-gray-700">品名・内容<span class="text-red-500">*</span></label>
+                        <input type="text" name="items[${itemIndex}][item_name]" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="${itemData.item_name || ''}" required>
                     </div>
-                    <div class="col-span-4">
-                        <input type="text" name="items[${itemIndex}][item_name]" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="品名" required>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">単価</label>
+                        <input type="number" step="1" name="items[${itemIndex}][price]" class="text-right block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm no-spin item-price" value="${itemData.price || ''}">
                     </div>
-                    <div class="col-span-1">
-                        <input type="number" name="items[${itemIndex}][price]" class="block w-full rounded-md border-gray-300 shadow-sm item-price" value="0" min="0" required>
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">数量</label>
+                        <input type="number" name="items[${itemIndex}][quantity]" class="text-right block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-quantity" value="${itemData.quantity || 1}">
                     </div>
-                    <div class="col-span-1">
-                        <input type="number" name="items[${itemIndex}][quantity]" class="block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="1" min="1">
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">単位</label>
+                        <input type="text" name="items[${itemIndex}][unit]" class="block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm unit-no-spin" value="${itemData.unit || ''}">
                     </div>
-                    <div class="col-span-1">
-                        <input type="text" name="items[${itemIndex}][unit]" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="個">
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
+                        <input type="number" step="1" name="items[${itemIndex}][tax_rate]" class="text-right block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-tax-rate" value="${itemData.tax_rate ?? 10}" required>
                     </div>
-                    <div class="col-span-1">
-                        <input type="number" name="items[${itemIndex}][tax_rate]" class="block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="10" min="0" required>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">小計</label>
+                        <input type="text" class="block w-full py-1.5 border-gray-300 rounded-md bg-gray-100 text-sm cursor-not-allowed item-subtotal" value="0" readonly>
                     </div>
-                    <div class="col-span-2">
-                        <input type="text" name="items[${itemIndex}][subtotal]" class="block w-full rounded-md border-gray-300 shadow-sm item-subtotal bg-gray-100 cursor-not-allowed" value="0" readonly>
-                    </div>
-                    {{-- 削除ボタンを col-span 外にして絶対配置 --}}
-                    <button type="button" class="absolute top-1/2 right-1 -translate-y-1/2 text-red-500 hover:text-red-700 remove-item-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button type="button" class="absolute top-6 right-1 text-red-500 hover:text-red-700 remove-item-row">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                    `;
-                itemsContainer.appendChild(template);
-
-                flatpickr(template.querySelector('.flatpickr'), { dateFormat: "Y/m/d" });
-
-                ['.item-price', '.item-quantity', '.item-tax-rate'].forEach(sel => {
-                    template.querySelector(sel).addEventListener('input', () => {
-                        updateSubtotal(template);
-                        updateTotal();
-                    });
-                });
-
+                `;
+                itemsContainer.appendChild(newRow);
+                attachEventListenersToRow(newRow);
                 itemIndex++;
-            });
+            }
 
-            itemsContainer.addEventListener('click', function(e){
-                if(e.target.closest('.remove-item-row')){
-                    e.target.closest('.item-row').remove();
-                    updateTotal();
-                }
-            });
+            addItemButton.addEventListener('click', () => createItemRow());
+
+            // 既存行にもイベントを付与
+            document.querySelectorAll('.item-row').forEach(row => attachEventListenersToRow(row));
         });
     </script>
 </x-app-layout>

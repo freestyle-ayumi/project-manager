@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -10,18 +10,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         
-        <!-- Scripts & Styles -->
-        @if (app()->environment('local'))
-            {{-- 開発環境：Viteホットリロード --}}
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @else
-            {{-- 本番環境：キャッシュ回避のため ?v=タイムスタンプ付き --}}
-            <?php
-                $version = time(); // 毎回違う値になる（キャッシュ回避）
-            ?>
-            <link rel="stylesheet" href="/build/assets/app-DTMzEqAA.css?v={{ $version }}">
-            <script type="module" src="/build/assets/app-Bf4POITK.js?v={{ $version }}" defer></script>
-        @endif
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         

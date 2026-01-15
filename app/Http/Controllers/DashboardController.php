@@ -40,11 +40,12 @@ class DashboardController extends Controller
         ->limit(5)
         ->get();
 
-        // 2. 未承認の経費（自分が申請したもの）
+        // 2. 未承認の経費（自分が申請した「申請中」または「差し戻し」）
         $pendingExpenses = Expense::where('user_id', $user->id)
             ->whereHas('status', function ($query) {
-                $query->where('name', '未承認');
+                $query->whereIn('name', ['申請中', '差し戻し']);
             })
+            ->with(['status', 'project'])  // statusとprojectもロード（Bladeで使う）
             ->orderBy('date', 'desc')
             ->limit(5)
             ->get();

@@ -45,7 +45,7 @@
                     </x-nav-link>
 
                     @auth
-                        @if(in_array(Auth::user()->role->name, ['master', 'developer']))
+                        @if(in_array(Auth::user()->role->name, ['master', 'developer']) || Auth::user()->developer == 1)
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
                                 {{ __('ユーザー管理') }}
                             </x-nav-link>
@@ -148,7 +148,7 @@
             </x-responsive-nav-link>
 
             @auth
-                @if(in_array(Auth::user()->role->name, ['master', 'developer']))
+                @if(in_array(Auth::user()->role->name, ['master', 'developer']) || Auth::user()->developer == 1)
                     <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
                         {{ __('ユーザー管理') }}
                     </x-responsive-nav-link>

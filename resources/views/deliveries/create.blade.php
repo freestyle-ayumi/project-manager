@@ -227,15 +227,15 @@
                         </div>
 
                         {{-- 行追加ボタンと合計 --}}
-                        <div class="mx-2 my-4">
-                            <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-1 text-sm rounded-md mb-2 ml-auto block">＋行</button>
+                        <div class="mx-2 my-2">
+                            <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white pt-2 pb-1.5 pr-2 pl-1 text-xs rounded-md mb-2 ml-auto block">＋行</button>
                             <div class="flex justify-end items-center mb-3 mr-1">
                                 <p class="text-xl font-bold text-gray-800">合計金額: <span id="display-total-amount">¥0</span></p>
                                 <input type="hidden" name="total_amount" id="total_amount_input" value="0">
                             </div>
-                            <div class="flex justify-end space-x-2">
-                                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">作成</button>
-                                <a href="{{ route('deliveries.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">キャンセル</a>
+                            <div class="flex justify-end space-x-2 text-xs">
+                                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white pt-2 pb-1.5 pr-2 pl-2 rounded-md">作成</button>
+                                <a href="{{ route('deliveries.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white pt-2 pb-1.5 pr-2 pl-2 rounded-md">キャンセル</a>
                             </div>
                         </div>
                     </form>

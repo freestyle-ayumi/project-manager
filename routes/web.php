@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::resource('tasks', TaskController::class);
+    Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
+
 
     // 見積書
     Route::resource('quotes', QuoteController::class);
@@ -68,7 +70,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('deliveries', DeliveryController::class);
     Route::get('/deliveries/{delivery}/pdf-mpdf', [DeliveryController::class, 'downloadPdf'])->name('deliveries.downloadPdfMpdf');
     Route::patch('/deliveries/{delivery}/toggle-status', [DeliveryController::class, 'toggleStatus'])->name('deliveries.toggleStatus');
-
 
     // 請求書
     Route::resource('invoices', InvoiceController::class);

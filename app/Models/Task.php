@@ -44,4 +44,9 @@ class Task extends Model
     {
         return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id');
     }
+    // タスクの参考URL(複数)
+    public function urls()
+    {
+        return $this->hasMany(TaskUrl::class);
+    }
 }

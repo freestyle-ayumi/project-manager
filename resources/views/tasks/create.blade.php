@@ -98,6 +98,47 @@
                 <textarea name="description" class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" rows="4">{{ old('description') }}</textarea>
             </div>
 
+            <!-- 関連URL（複数登録可能） -->
+            <div>
+                <label class="block font-medium text-sm text-gray-700">関連URL</label>
+                
+                <div id="url-fields" class="space-y-2">
+                    <!-- 初期1行 -->
+                    <div class="url-field bg-gray-50 p-2 rounded-md border border-gray-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <input type="text" name="urls[0][title]" placeholder="タイトル" 
+                                    class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                            </div>
+                            <div>
+                                <input type="text" name="urls[0][memo]" placeholder="メモ" 
+                                    class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-400 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <input type="url" name="urls[0][url]" placeholder="URL"
+                                class="flex-1 block py-1.5 border-gray-300 rounded-md focus:border-indigo-400 focus:ring focus:ring-indigo-500 focus:ring-opacity-50 sm:text-sm">
+                            <button type="submit" class="text-red-600 hover:text-red-400" title="削除">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 追加ボタン -->
+                <div class="mt-1 flex justify-end">
+                    <button type="button" id="add-url" class="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-600 hover:text-white transition text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        追加
+                    </button>
+                </div>
+            </div>
+
             <!-- 担当者 -->
             <div class="mb-3">
                 <label class="block font-medium text-sm text-gray-700">担当者</label>
@@ -180,6 +221,46 @@
     flatpickr("#start_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('start_date', $defaultDate ?? \Carbon\Carbon::today()->format('Y-m-d')) }}" });
     flatpickr("#due_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('due_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" });
     flatpickr("#plans_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('plans_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" });
+</script>
+<!-- JavaScript（動的追加/削除） -->
+<script>
+    let urlIndex = 1; // 初期1行あるので次は1から
+
+    document.getElementById('add-url').addEventListener('click', function() {
+        const container = document.getElementById('url-fields');
+        const field = document.createElement('div');
+        field.className = 'url-field bg-gray-50 p-4 rounded-md border border-gray-200';
+        field.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                <div>
+                    <input type="text" name="urls[${urlIndex}][title]" placeholder="タイトル（任意）" 
+                           class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                </div>
+                <div>
+                    <input type="text" name="urls[${urlIndex}][memo]" placeholder="メモ（任意）" 
+                           class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <input type="url" name="urls[${urlIndex}][url]" placeholder="URL（必須）" required
+                       class="flex-1 block py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                <button type="button" class="remove-url p-2 bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(field);
+        urlIndex++;
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-url')) {
+            e.target.closest('.url-field').remove();
+        }
+    });
 </script>
 
 </x-app-layout>
