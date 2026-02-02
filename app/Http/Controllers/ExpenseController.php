@@ -114,10 +114,57 @@ class ExpenseController extends Controller
     return view('expenses.show', compact('expense', 'statuses'));
     }
 
-public function edit(Expense $expense) {
+public function edit(Expense $expense)
+{
     // 編集用に必要なデータを渡す
     $projects = Project::orderBy('name')->get();
-    return view('expenses.edit', compact('expense','projects'));
+    
+    $expenseStatuses = \App\Models\ExpenseStatus::orderBy('id')->get();  // または orderBy('name') でもOK
+
+    return view('expenses.edit', compact('expense', 'projects', 'expenseStatuses'));
+}
+
+public function update(Request $request, Expense $expense)
+{
+    $request->validate([
+        'project_id' => 'required|exists:projects,id',
+        'application_date' => 'required|date',
+        'expense_status_id' => 'required|exists:expense_statuses,id',
+        'items.*.item_name' => 'required|string',
+        'items.*.price' => 'required|numeric|min:0',
+        'items.*.tax_rate' => 'required|numeric|min:0',
+    ]);
+
+    DB::transaction(function() use ($request, $expense) {
+        $expense->update([
+            'date' => $request->application_date,
+            'project_id' => $request->project_id,
+            'expense_status_id' => $request->expense_status_id,
+            'amount' => 0, // 後で更新
+        ]);
+
+        // 既存アイテム削除 → 新規追加（シンプルに）
+        $expense->items()->delete();
+
+        $totalAmount = 0;
+        foreach ($request->input('items') as $itemData) {
+            $subtotal = $itemData['price'] * ($itemData['quantity'] ?? 1) * (1 + $itemData['tax_rate']/100);
+            ExpenseItem::create([
+                'expense_id' => $expense->id,
+                'item_name' => $itemData['item_name'],
+                'price' => $itemData['price'],
+                'quantity' => $itemData['quantity'] ?? 1,
+                'unit' => $itemData['unit'] ?? '',
+                'tax_rate' => $itemData['tax_rate'],
+                'subtotal' => $subtotal,
+            ]);
+            $totalAmount += $subtotal;
+        }
+
+        $expense->update(['amount' => $totalAmount]);
+    });
+
+    return redirect()->route('expenses.index')->with('success', '経費を更新しました。');
 }
 
 public function destroy(Expense $expense) {

@@ -1,24 +1,33 @@
-<x-app-layout>
-<x-slot name="header">
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+ <?php $__env->slot('header', null, []); ?> 
 <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">タスク作成</h2>
-</x-slot>
+ <?php $__env->endSlot(); ?>
 
 <div class="py-4 max-w-3xl mx-auto sm:px-6 lg:px-8">
     <div class="bg-white shadow-sm rounded-lg p-6">
-        <form action="{{ route('tasks.store') }}" method="POST">
-            @csrf
+        <form action="<?php echo e(route('tasks.store')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
             <!-- イベント -->
             <div class="mb-2">
                 <label class="block font-medium text-sm text-gray-700">イベント</label>
                 <select name="project_id" class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                    @foreach($projects as $project)
-                        <option value="{{ $project->id }}">
-                            {{ $project->name }} 
-                            @if($project->start_date)
-                                （{{ \Carbon\Carbon::parse($project->start_date)->format('n/j') }}〜）
-                            @endif
+                    <?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($project->id); ?>">
+                            <?php echo e($project->name); ?> 
+                            <?php if($project->start_date): ?>
+                                （<?php echo e(\Carbon\Carbon::parse($project->start_date)->format('n/j')); ?>〜）
+                            <?php endif; ?>
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             
@@ -43,7 +52,7 @@
             <div class="grid grid-cols-4 gap-4 mb-2">
                 <div>
                     <label class="block font-medium text-sm text-gray-700">依頼人</label>
-                    <input type="text" value="{{ Auth::user()->name }}" disabled class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                    <input type="text" value="<?php echo e(Auth::user()->name); ?>" disabled class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                 </div>
                 <!-- 依頼日 -->
                 <div class="relative">
@@ -52,7 +61,7 @@
                         type="text"
                         name="start_date"
                         id="start_date"
-                        value="{{ old('start_date', \Carbon\Carbon::today()->format('Y-m-d')) }}"
+                        value="<?php echo e(old('start_date', \Carbon\Carbon::today()->format('Y-m-d'))); ?>"
                         class="block py-1.5 w-full border-gray-300 rounded-md 
                             focus:border-indigo-500 focus:ring focus:ring-indigo-200 
                             focus:ring-opacity-50 text-sm"
@@ -72,7 +81,7 @@
                     <input
                         type="time"
                         name="start_time"
-                        value="{{ old('start_time') }}"
+                        value="<?php echo e(old('start_time')); ?>"
                         class="block py-1.5 w-full border-gray-300 rounded-md 
                             focus:border-indigo-500 focus:ring focus:ring-indigo-200 
                             focus:ring-opacity-50 text-sm pl-8"
@@ -91,10 +100,10 @@
                 <div>
                     <label class="block font-medium text-sm text-gray-700">ステータス</label>
                     <select name="status" class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
-                        <option value="未完了" {{ old('status') == '未完了' ? 'selected' : '' }}>未完了</option>
-                        <option value="完了" {{ old('status') == '完了' ? 'selected' : '' }}>完了</option>
-                        <option value="修正" {{ old('status') == '修正' ? 'selected' : '' }}>修正</option>
-                        <option value="無効" {{ old('status') == '無効' ? 'selected' : '' }}>無効</option>
+                        <option value="未完了" <?php echo e(old('status') == '未完了' ? 'selected' : ''); ?>>未完了</option>
+                        <option value="完了" <?php echo e(old('status') == '完了' ? 'selected' : ''); ?>>完了</option>
+                        <option value="修正" <?php echo e(old('status') == '修正' ? 'selected' : ''); ?>>修正</option>
+                        <option value="無効" <?php echo e(old('status') == '無効' ? 'selected' : ''); ?>>無効</option>
                     </select>
                 </div>
             </div>
@@ -102,7 +111,7 @@
             <!-- 詳細 -->
             <div class="mb-2">
                 <label class="block font-medium text-sm text-gray-700">詳細</label>
-                <textarea name="description" class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" rows="4">{{ old('description') }}</textarea>
+                <textarea name="description" class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" rows="4"><?php echo e(old('description')); ?></textarea>
             </div>
 
             <!-- 関連URL（複数登録可能） -->
@@ -150,24 +159,24 @@
             <div class="mb-3">
                 <label class="block font-medium text-sm text-gray-700">担当者</label>
                 <div class="ml-5">
-                    @foreach($users as $user)
+                    <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <label class="inline-flex items-center mr-4">
-                            <input type="checkbox" name="assignees[]" value="{{ $user->id }}" class="form-checkbox border-gray-400"
-                                {{ (isset($selectedUserId) && $selectedUserId == $user->id) ? 'checked' : '' }}>
-                            <span class="ml-2 text-xs">{{ $user->name }}</span>
+                            <input type="checkbox" name="assignees[]" value="<?php echo e($user->id); ?>" class="form-checkbox border-gray-400"
+                                <?php echo e((isset($selectedUserId) && $selectedUserId == $user->id) ? 'checked' : ''); ?>>
+                            <span class="ml-2 text-xs"><?php echo e($user->name); ?></span>
                         </label>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
 
                 <div class="ml-5">
                     <span class="text-gray-500 text-xs">まとめて追加</span>
                     <div>
-                        @foreach($roles as $role)
+                        <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <label class="inline-flex items-center mr-4">
-                                <input type="checkbox" name="roles[]" value="{{ $role->id }}" class="form-checkbox border-gray-400">
-                                <span class="ml-2 text-xs">{{ $role->name }}</span>
+                                <input type="checkbox" name="roles[]" value="<?php echo e($role->id); ?>" class="form-checkbox border-gray-400">
+                                <span class="ml-2 text-xs"><?php echo e($role->name); ?></span>
                             </label>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
             </div>
@@ -180,7 +189,7 @@
                         type="text"
                         name="plans_date"
                         id="plans_date"
-                        value="{{ old('plans_date', \Carbon\Carbon::today()->format('Y-m-d')) }}"
+                        value="<?php echo e(old('plans_date', \Carbon\Carbon::today()->format('Y-m-d'))); ?>"
                         class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm"
                         placeholder="yyyy-mm-dd"
                     />
@@ -197,7 +206,7 @@
                         type="text"
                         name="due_date"
                         id="due_date"
-                        value="{{ old('due_date', \Carbon\Carbon::today()->format('Y-m-d')) }}"
+                        value="<?php echo e(old('due_date', \Carbon\Carbon::today()->format('Y-m-d'))); ?>"
                         class="block py-1.5 w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm"
                         placeholder="yyyy-mm-dd"
                     />
@@ -225,9 +234,9 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
 <script>
     flatpickr.localize(flatpickr.l10ns.ja);
-    flatpickr("#start_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('start_date', $defaultDate ?? \Carbon\Carbon::today()->format('Y-m-d')) }}" });
-    flatpickr("#due_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('due_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" });
-    flatpickr("#plans_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "{{ old('plans_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" });
+    flatpickr("#start_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "<?php echo e(old('start_date', $defaultDate ?? \Carbon\Carbon::today()->format('Y-m-d'))); ?>" });
+    flatpickr("#due_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "<?php echo e(old('due_date', \Carbon\Carbon::today()->format('Y-m-d'))); ?>" });
+    flatpickr("#plans_date", { dateFormat: "Y-m-d", allowInput: true, defaultDate: "<?php echo e(old('plans_date', \Carbon\Carbon::today()->format('Y-m-d'))); ?>" });
 </script>
 <!-- JavaScript（動的追加/削除） -->
 <script>
@@ -270,4 +279,14 @@
     });
 </script>
 
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\xampp\htdocs\project-manager\resources\views/tasks/create.blade.php ENDPATH**/ ?>

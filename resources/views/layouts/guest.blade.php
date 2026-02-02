@@ -1,18 +1,28 @@
 ﻿<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Freestyle_Project_manager') }}</title>
+    <title>{{ config('app.name', 'Freestyle_Project_manager') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+    <!-- Viteアセット読み込み -->
+    @if (app()->environment('local'))
+        <!-- ローカル（開発）：Viteホットリロード（第2引数なし） -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'], 'build/.vite')
+    @else
+        <!-- 本番：ビルド済みアセット -->
+        <?php $version = time(); ?>
+        <link rel="stylesheet" href="{{ asset('build/assets/app-DoV7GPdk.css') }}?v={{ $version }}">
+        <script type="module" src="{{ asset('build/assets/app-KTi7UBEu.js') }}?v={{ $version }}" defer></script>
+    @endif
 
-    </head>
+</head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>

@@ -1,4 +1,4 @@
-@php
+<?php
     use Carbon\Carbon;
 
     // 現在のオフセット（クエリパラメータ week_offset で週移動）
@@ -29,19 +29,29 @@
     });
 
     $weekRangeText = $baseDate->format('Y/m/d') . ' 〜 ' . $baseDate->copy()->addDays(6)->format('Y/m/d');
-@endphp
+?>
 
-<x-app-layout>
-    <x-slot name="header">
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+     <?php $__env->slot('header', null, []); ?> 
         <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
-            {{ __('タスク管理') }}
+            <?php echo e(__('タスク管理')); ?>
+
         </h2>
-    </x-slot>
+     <?php $__env->endSlot(); ?>
 
     <div class="py-1 sm:py-2">
-        {{-- ＋新規ボタン --}}
+        
         <div class="max-w-3xl sm:max-w-7xl mx-auto pl-2 sm:pl-0 pb-1 sm:px-6 lg:px-8 flex justify-end">
-            <a href="{{ route('tasks.create') }}"
+            <a href="<?php echo e(route('tasks.create')); ?>"
                 class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 ＋新規
             </a>
@@ -49,27 +59,27 @@
 
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-2 sm:space-y-6">
 
-            {{-- あなたのタスク --}}
+            
             <div class="bg-white shadow-sm rounded-lg p-4 mx-1 sm:m-0">
                 <h3 class="absolute text-sm font-semibold pl-1">あなたのタスク</h3>
 
-                {{-- 週送りナビゲーション --}}
+                
                 <div class="flex flex-col items-center">
-                    {{-- 期間表示 --}}
+                    
                     <div class="text-gray-700 text-center text-sm">
-                        <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                        <span class="text-xs"><?php echo e($baseDate->format('Y年')); ?></span> <?php echo e($baseDate->format('m/d')); ?>〜<?php echo e($baseDate->copy()->addDays(6)->format('m/d')); ?></span>
                     </div>
                     <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
-                        <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                        <a href="<?php echo e(route('tasks.index', ['week_offset' => $weekOffset - 1])); ?>"
                         class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
-                        <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                        <a href="<?php echo e(route('tasks.index')); ?>" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
                             今日
                         </a>
-                        <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                        <a href="<?php echo e(route('tasks.index', ['week_offset' => $weekOffset + 1])); ?>"
                         class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -78,27 +88,27 @@
                     </div>
                 </div>
 
-                {{-- あなたのタスク表 --}}
+                
                 <div class="overflow-x-auto">
                     <table class="calendar-table border text-sm text-gray-700">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-2 py-1 border w-40">&nbsp;</th>
-                                @foreach($headerDays as $hd)
-                                    <th class="px-2 py-1 border {{ $hd['bgClass'] }}">
-                                        {{ $hd['day']->format('m/d') }} <span class="text-xs">({{ $hd['day']->format('D') }})</span>
-                                        @if($hd['isHoliday'])
-                                            <div class="text-xs">{{ $hd['holidayName'] }}</div>
-                                        @endif
+                                <?php $__currentLoopData = $headerDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <th class="px-2 py-1 border <?php echo e($hd['bgClass']); ?>">
+                                        <?php echo e($hd['day']->format('m/d')); ?> <span class="text-xs">(<?php echo e($hd['day']->format('D')); ?>)</span>
+                                        <?php if($hd['isHoliday']): ?>
+                                            <div class="text-xs"><?php echo e($hd['holidayName']); ?></div>
+                                        <?php endif; ?>
                                     </th>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="border-b">
                                 <td class="px-2 py-1 border bg-gray-50">&nbsp;</td>
-                                @foreach($headerDays as $hd)
-                                    @php
+                                <?php $__currentLoopData = $headerDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $taskBgClass = $hd['day']->dayOfWeek === 0 || $hd['isHoliday']
                                             ? 'bg-pink-50'
                                             : ($hd['day']->dayOfWeek === 6 ? 'bg-blue-50' : 'bg-white');
@@ -135,23 +145,24 @@
                                             // 上記のどれにも該当しなければ表示しない
                                             return false;
                                         });
-                                    @endphp
+                                    ?>
 
-                                    <td class="px-2 py-1 border {{ $taskBgClass }}">
-                                        @if ($tasksForDay->isNotEmpty())
+                                    <td class="px-2 py-1 border <?php echo e($taskBgClass); ?>">
+                                        <?php if($tasksForDay->isNotEmpty()): ?>
                                             <ul class="m-0 p-0 text-xs">
-                                                @foreach ($tasksForDay as $task)
+                                                <?php $__currentLoopData = $tasksForDay; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <li class="flex items-start gap-1 mb-1">
                                                         <span class="text-black">•</span>
-                                                        <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline">
-                                                            {{ $task->name }}
-                                                            @if($task->start_time)
-                                                                <span class="text-gray-500">({{ \Carbon\Carbon::parse($task->start_time)->format('H:i') }})</span>
-                                                            @endif
+                                                        <a href="<?php echo e(route('tasks.show', $task->id)); ?>" class="text-blue-600 hover:underline">
+                                                            <?php echo e($task->name); ?>
+
+                                                            <?php if($task->start_time): ?>
+                                                                <span class="text-gray-500">(<?php echo e(\Carbon\Carbon::parse($task->start_time)->format('H:i')); ?>)</span>
+                                                            <?php endif; ?>
                                                         </a>
 
                                                         <!-- ステータスバッジ（頭1文字だけ表示） -->
-                                                        @php
+                                                        <?php
                                                             $status = $task->status ?? '未完了';
 
                                                             // 頭1文字だけ取得（日本語なので mb_substr で安全に）
@@ -164,33 +175,34 @@
                                                                 '無効'   => 'bg-gray-500 text-white',
                                                                 default  => 'bg-red-500 text-white',
                                                             };
-                                                        @endphp
+                                                        ?>
 
-                                                        <span class="inline-flex items-center px-0.5 py-0.2 rounded-sm text-xs {{ $statusClass }}">
-                                                            {{ $firstChar }}
+                                                        <span class="inline-flex items-center px-0.5 py-0.2 rounded-sm text-xs <?php echo e($statusClass); ?>">
+                                                            <?php echo e($firstChar); ?>
+
                                                         </span>
                                                     </li>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </ul>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {{-- 他の人のタスク --}}
+            
             <div class="bg-white shadow-sm rounded-lg p-4 text-xs mx-1 sm:m-0">
 
-                {{-- フィルター --}}
-                <form method="GET" action="{{ route('tasks.index') }}" class="mb-0 rounded border p-1">
+                
+                <form method="GET" action="<?php echo e(route('tasks.index')); ?>" class="mb-0 rounded border p-1">
                     <div class="flex flex-wrap items-center gap-2">
 
-                        {{-- フィルターマーク --}}
+                        
                         <div class="flex items-center text-gray-600 ml-2">
-                            {{-- Heroicons: Funnel（フィルター）アイコン --}}
+                            
                             <svg xmlns="http://www.w3.org/2000/svg" 
                             fill="none" viewBox="0 0 24 24" 
                             stroke-width="1.5" 
@@ -201,40 +213,42 @@
                             <span class="text-xs font-semibold whitespace-nowrap ml-1">フィルター：</span>
                         </div>
 
-                        {{-- 共通「すべて」ボタン --}}
+                        
                         <button type="button"
                             id="btn-all"
                             class="px-2 py-1 rounded border text-xs hover:bg-blue-400 focus:outline-none">
                             すべて
                         </button>
 
-                        {{-- 区切り --}}
+                        
                         <div class="mx-1 h-6 border-l"></div>
 
-                        {{-- ユーザーボタン群 --}}
-                        @foreach($allUsersForFilter as $user)
-                            @if($user->id != Auth::id())
+                        
+                        <?php $__currentLoopData = $allUsersForFilter; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($user->id != Auth::id()): ?>
                                 <button type="button"
                                     class="px-2 py-1 rounded border text-xs user-filter-btn hover:bg-sky-200 focus:outline-none"
-                                    data-user-id="{{ $user->id }}">
-                                    {{ $user->name }}
-                                </button>
-                            @endif
-                        @endforeach
+                                    data-user-id="<?php echo e($user->id); ?>">
+                                    <?php echo e($user->name); ?>
 
-                        {{-- 区切り --}}
+                                </button>
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                        
                         <div class="mx-1 h-6 border-l"></div>
 
-                        {{-- ロールボタン群 --}}
-                        @foreach(\App\Models\Role::all() as $role)
+                        
+                        <?php $__currentLoopData = \App\Models\Role::all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <button type="button"
                                 class="px-2 py-1 rounded border text-xs role-filter-btn hover:bg-teal-100 focus:outline-none"
-                                data-role-id="{{ $role->id }}">
-                                {{ $role->name }}
-                            </button>
-                        @endforeach
+                                data-role-id="<?php echo e($role->id); ?>">
+                                <?php echo e($role->name); ?>
 
-                        {{-- 検索ボタン --}}
+                            </button>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                        
                         <div class="ml-auto">
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs">
                                 検索
@@ -242,27 +256,27 @@
                         </div>
                     </div>
 
-                    {{-- hidden inputs --}}
+                    
                     <div id="hidden-inputs"></div>
                 </form>
 
-            {{-- 週送りナビゲーション --}}
+            
             <div class="flex flex-col items-center">
-                {{-- 期間表示 --}}
+                
                 <div class="text-gray-700 text-center text-sm">
-                    <span class="text-xs">{{ $baseDate->format('Y年') }}</span> {{ $baseDate->format('m/d') }}〜{{ $baseDate->copy()->addDays(6)->format('m/d') }}</span>
+                    <span class="text-xs"><?php echo e($baseDate->format('Y年')); ?></span> <?php echo e($baseDate->format('m/d')); ?>〜<?php echo e($baseDate->copy()->addDays(6)->format('m/d')); ?></span>
                 </div>
                 <div class="flex justify-between w-full items-center bg-gray-500 p-1 rounded">
-                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset - 1]) }}"
+                    <a href="<?php echo e(route('tasks.index', ['week_offset' => $weekOffset - 1])); ?>"
                     class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </a>
-                    <a href="{{ route('tasks.index') }}" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
+                    <a href="<?php echo e(route('tasks.index')); ?>" class="px-2 py-0.5 bg-gray-200 hover:bg-white text-xs text-gray-700 font-bold rounded shadow">
                         今日
                     </a>
-                    <a href="{{ route('tasks.index', ['week_offset' => $weekOffset + 1]) }}"
+                    <a href="<?php echo e(route('tasks.index', ['week_offset' => $weekOffset + 1])); ?>"
                     class="mx-1 my-1 bg-gray-200 hover:bg-white text-gray-700 rounded shadow flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -271,58 +285,59 @@
                 </div>
             </div>
 
-            {{-- タスク表示 --}}
+            
                 <div class="overflow-x-auto">
                     <table class="calendar-table border text-sm text-gray-700">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-2 py-1 border w-40">ユーザー名</th>
-                                @foreach($headerDays as $hd)
-                                    <th class="px-2 py-1 border {{ $hd['bgClass'] }}">
-                                        {{ $hd['day']->format('m/d') }} <span class="text-xs">({{ $hd['day']->format('D') }})</span>
-                                        @if($hd['isHoliday'])
-                                            <div class="text-xs">{{ $hd['holidayName'] }}</div>
-                                        @endif
+                                <?php $__currentLoopData = $headerDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <th class="px-2 py-1 border <?php echo e($hd['bgClass']); ?>">
+                                        <?php echo e($hd['day']->format('m/d')); ?> <span class="text-xs">(<?php echo e($hd['day']->format('D')); ?>)</span>
+                                        <?php if($hd['isHoliday']): ?>
+                                            <div class="text-xs"><?php echo e($hd['holidayName']); ?></div>
+                                        <?php endif; ?>
                                     </th>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tr>
                         </thead>
 
                         <tbody>
-                            @foreach ($users as $user)
+                            <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="border-b">
-                                    <td class="px-2 py-1 border bg-gray-50 text-xs">{{ $user->name }}</td>
-                                    @foreach($headerDays as $hd)
-                                        @php
+                                    <td class="px-2 py-1 border bg-gray-50 text-xs"><?php echo e($user->name); ?></td>
+                                    <?php $__currentLoopData = $headerDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $taskBgClass = $hd['day']->dayOfWeek === 0 || $hd['isHoliday']
                                                 ? 'bg-pink-50'
                                                 : ($hd['day']->dayOfWeek === 6 ? 'bg-blue-50' : 'bg-white');
 
                                             // フィルタ完全削除（コントローラーで取得済み全タスクを表示）
                                             $tasksForDay = $user->tasks;
-                                        @endphp
+                                        ?>
 
-                                        <td class="px-2 py-1 border align-top {{ $taskBgClass }}">
+                                        <td class="px-2 py-1 border align-top <?php echo e($taskBgClass); ?>">
                                             <div class="flex justify-between items-center">
-                                                @if ($tasksForDay->isNotEmpty())
+                                                <?php if($tasksForDay->isNotEmpty()): ?>
                                                     <ul class="m-0 p-0 text-xs">
-                                                        @foreach ($tasksForDay as $task)
+                                                        <?php $__currentLoopData = $tasksForDay; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <li class="flex items-start gap-1 mb-1">
                                                                 <span class="text-black">•</span>
-                                                                <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline">
-                                                                    {{ $task->name }}
-                                                                    @if($task->start_time)
-                                                                        <span class="text-gray-500">({{ \Carbon\Carbon::parse($task->start_time)->format('H:i') }})</span>
-                                                                    @endif
+                                                                <a href="<?php echo e(route('tasks.show', $task->id)); ?>" class="text-blue-600 hover:underline">
+                                                                    <?php echo e($task->name); ?>
+
+                                                                    <?php if($task->start_time): ?>
+                                                                        <span class="text-gray-500">(<?php echo e(\Carbon\Carbon::parse($task->start_time)->format('H:i')); ?>)</span>
+                                                                    <?php endif; ?>
                                                                 </a>
                                                             </li>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </ul>
-                                                @else
+                                                <?php else: ?>
                                                     <span class="text-gray-400 text-xs"></span>
-                                                @endif
+                                                <?php endif; ?>
 
-                                                <a href="{{ route('tasks.create', ['user_id' => $user->id, 'date' => $hd['day']->format('Y-m-d')]) }}"
+                                                <a href="<?php echo e(route('tasks.create', ['user_id' => $user->id, 'date' => $hd['day']->format('Y-m-d')])); ?>"
                                                 class="text-green-600 hover:text-green-800"
                                                 title="タスク追加">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="inline-block h-5 w-5" viewBox="0 0 16 16">
@@ -331,9 +346,9 @@
                                                 </a>
                                             </div>
                                         </td>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
@@ -341,7 +356,7 @@
 
         </div>
     </div>
-    {{-- スクリプト：1つの「すべて」でユーザー/ロール両方をリセットする --}}
+    
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         // ボタンノード
@@ -352,8 +367,8 @@
 
         // 初期選択セット（Bladeで渡されている userIds, roleIds を利用して初期化）
         // コントローラから渡した変数名に合わせてください（存在しない場合は空配列）
-        let selectedUsers = new Set(@json($userIds ?? []));
-        let selectedRoles = new Set(@json($roleIds ?? []));
+        let selectedUsers = new Set(<?php echo json_encode($userIds ?? [], 15, 512) ?>);
+        let selectedRoles = new Set(<?php echo json_encode($roleIds ?? [], 15, 512) ?>);
 
         // helper: render hidden inputs
         function renderHiddenInputs() {
@@ -463,4 +478,13 @@
 
     });
     </script>
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?><?php /**PATH C:\xampp\htdocs\project-manager\resources\views/tasks/index.blade.php ENDPATH**/ ?>

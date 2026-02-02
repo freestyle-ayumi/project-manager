@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
 
     // 経費
     Route::resource('expenses', ExpenseController::class);
+    Route::patch('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
 
     // 経費ステータス
     Route::resource('expense-statuses', ExpenseStatusController::class);

@@ -1,29 +1,25 @@
 ﻿<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>イベント管理ツール</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
     <!-- Viteアセット読み込み -->
-    @if (app()->environment('local'))
+    <?php if(app()->environment('local')): ?>
         <!-- ローカル（開発）：Viteホットリロード（第2引数なし） -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'], 'build/.vite')
-    @else
-        <!-- 本番：ビルド済みアセット -->
+        <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+    <?php else: ?>
+        <!-- 本番：ビルド済みアセット（手動で最新ハッシュに更新） -->
         <?php $version = time(); ?>
-        <link rel="stylesheet" href="{{ asset('build/assets/app-DoV7GPdk.css') }}?v={{ $version }}">
-        <script type="module" src="{{ asset('build/assets/app-KTi7UBEu.js') }}?v={{ $version }}" defer></script>
-    @endif
+        <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-最新ハッシュ.css')); ?>?v=<?php echo e($version); ?>">
+        <script type="module" src="<?php echo e(asset('build/assets/app-最新ハッシュ.js')); ?>?v=<?php echo e($version); ?>" defer></script>
+    <?php endif; ?>
 
     <!-- ファビコン -->
-    <link rel="icon" href="{{ asset('fse-logo.ico') }}" type="image/x-icon">
-    <link rel="icon" href="{{ asset('fse-logo.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ asset('fse-logo.svg') }}">
+    <link rel="icon" href="<?php echo e(asset('fse-logo.ico')); ?>" type="image/x-icon">
+    <link rel="icon" href="<?php echo e(asset('fse-logo.svg')); ?>" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="<?php echo e(asset('fse-logo.svg')); ?>">
 </head>
 <body class="antialiased bg-gray-100 flex items-center justify-center min-h-screen text-center px-4 sm:px-0">
     <div class="w-full max-w-md">
@@ -34,21 +30,22 @@
             株式会社フリースタイルエンターテインメント
         </p>
 
-        @if (Route::has('login'))
+        <?php if(Route::has('login')): ?>
             <div class="flex justify-center gap-4 w-full max-w-sm mx-auto">
-                <a href="{{ route('login') }}" 
+                <a href="<?php echo e(route('login')); ?>" 
                 class="flex-1 px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition text-center">
                     ログイン
                 </a>
 
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" 
+                <?php if(Route::has('register')): ?>
+                    <a href="<?php echo e(route('register')); ?>" 
                     class="flex-1 px-6 py-2 border border-1 border-gray-800 text-gray-800 bg-white rounded hover:bg-slate-300 transition text-center">
                         登録
                     </a>
-                @endif
+                <?php endif; ?>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\project-manager\resources\views/welcome.blade.php ENDPATH**/ ?>

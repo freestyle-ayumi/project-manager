@@ -74,7 +74,10 @@
                                         <tr class="hover:bg-gray-50/50 transition text-xs">
                                             <td class="px-3 py-1">{{ $item->item_name ?? ($item->description ?? '-') }}</td>
                                             <td class="px-3 py-1 text-right">¥{{ number_format($item->price) }}</td>
-                                            <td class="px-3 py-1 text-right">{{ $item->quantity }} <span class="block text-[10px] text-gray-300">{{ $item->unit }}</span></td>
+                                            <td class="px-3 py-1 text-right">
+                                                {{ $item->quantity ?? 0 }}
+                                                <span class="text-[10px] text-gray-400">{{ $item->unit ?? '' }}</span>
+                                            </td>
                                             <td class="px-3 py-1 text-right">{{ number_format($item->tax_rate ?? 0, 0) }}%</td>
                                             <td class="px-3 py-1 text-right">¥{{ number_format($subtotal) }}</td>
                                         </tr>

@@ -10,81 +10,41 @@ class TaskController extends Controller
 {
     /* ★タスク一覧 */
     public function index(Request $request)
-    {
-        $today = now()->startOfDay();
-        $endDate = $today->copy()->addDays(6);
-        $holidays = [];
+{
+    $today = now()->startOfDay();
+    $endDate = $today->copy()->addDays(6);
+    $holidays = [];
 
-        // ログインユーザーのタスク
-        $myTasks = Task::whereExists(function($query) {
-            $query->select('*')
-                ->from('task_user')
-                ->whereColumn('task_user.task_id', 'tasks.id')
-                ->where('task_user.user_id', auth()->id());
-        })->get();
+    // ログインユーザーのタスク（絞り込みなし、全件）
+    $myTasks = Task::whereExists(function($query) {
+        $query->select('*')
+            ->from('task_user')
+            ->whereColumn('task_user.task_id', 'tasks.id')
+            ->where('task_user.user_id', auth()->id());
+    })->with(['project', 'assignees'])->get();
 
-        // フィルター値取得
-        $userIds = $request->input('user_ids', []);
-        $roleIds = $request->input('role_ids', []);
+    // 他のユーザー（tasksも絞り込みなし、全件）
+    $userQuery = User::with(['tasks' => function($query) {
+        $query->with('assignees');
+    }])
+    ->where('id', '!=', auth()->id());
 
-        // ===== タスクフィルター =====
-        $allTasksQuery = Task::whereBetween('due_date', [$today, $endDate])
-            ->with(['project', 'assignees']);
+    $users = $userQuery->get();
 
-        // 担当者フィルター
-        if (!empty($userIds) && !in_array('all', $userIds)) {
-            $allTasksQuery->whereHas('assignees', function ($q) use ($userIds) {
-                $q->whereIn('users.id', $userIds);
-            });
-        }
+    // フィルターボタン用（そのまま）
+    $allUsersForFilter = User::all();
+    $allRolesForFilter = \App\Models\Role::all();
 
-        // ロールフィルター
-        if (!empty($roleIds) && !in_array('all', $roleIds)) {
-            $allTasksQuery->whereHas('assignees', function ($q) use ($roleIds) {
-                $q->whereIn('users.role_id', $roleIds);
-            });
-        }
-
-        $allTasks = $allTasksQuery->get();
-
-        // ===== ユーザー取得 =====
-        $userQuery = User::with(['tasks' => function($query) use ($today, $endDate) {
-            $query->whereBetween('due_date', [$today, $endDate]);
-        }])
-        ->where('id', '!=', auth()->id());
-
-        // 担当者 or ロールでユーザーを絞り込む
-        $numericUserIds = array_filter($userIds, fn($id) => is_numeric($id));
-        $numericRoleIds = array_filter($roleIds, fn($id) => is_numeric($id));
-
-        if (!in_array('all', $userIds) || !in_array('all', $roleIds)) {
-            if (!empty($numericUserIds)) {
-                $userQuery->whereIn('id', $numericUserIds);
-            }
-            if (!empty($numericRoleIds)) {
-                $userQuery->orWhereIn('role_id', $numericRoleIds);
-            }
-        }
-
-        $users = $userQuery->get();
-
-        // フィルターボタン用
-        $allUsersForFilter = User::all();
-        $allRolesForFilter = \App\Models\Role::all();
-
-        return view('tasks.index', compact(
-            'today',
-            'endDate',
-            'myTasks',
-            'allTasks',
-            'users',
-            'allUsersForFilter',
-            'allRolesForFilter',
-            'userIds',
-            'roleIds',
-            'holidays'
-        ));
-    }
+    return view('tasks.index', compact(
+        'today',
+        'endDate',
+        'myTasks',
+        'users',
+        'allUsersForFilter',
+        'allRolesForFilter',
+        'holidays'
+    ));
+}
 
     /* ★タスク詳細 */
     public function show(Task $task)
@@ -96,7 +56,7 @@ class TaskController extends Controller
     /* ★タスク作成フォーム */
     public function create(Request $request)
     {
-        $projects = \App\Models\Project::all();
+        $projects = \App\Models\Project::orderBy('start_date', 'desc')->get();
         $users = User::all();
         $roles = \App\Models\Role::all();
 
@@ -148,7 +108,7 @@ class TaskController extends Controller
         }
         $assigneeIds = array_unique($assigneeIds);
         if (!empty($assigneeIds)) {
-            $task->assignees()->sync($assigneeIds);
+            $task->assignees()->attach($assigneeIds);
         }
 
         // URLの保存（複数対応）
@@ -171,7 +131,7 @@ class TaskController extends Controller
     public function edit(Task $task)
     {
         $task->load('urls');
-        $projects = \App\Models\Project::all();
+        $projects = \App\Models\Project::orderBy('start_date', 'desc')->get();
         $users = User::all();
         $roles = \App\Models\Role::all();
 
@@ -185,33 +145,48 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'required|date',
-            'start_time' => 'nullable|date_format:H:i',
-            'plans_date' => 'nullable|date',
-            'due_date' => 'nullable|date',
-            'status' => 'required|string',
-            'priority' => 'nullable|string',
-            'assignees' => 'nullable|array',
-            'assignees.*' => 'exists:users,id',
+            'project_id'   => 'required|exists:projects,id',
+            'name'         => 'required|string|max:255',
+            'description'  => 'nullable|string',
+            'start_date'   => 'required|date',
+            'start_time'   => 'nullable|date_format:H:i',
+            'plans_date'   => 'nullable|date',
+            'due_date'     => 'nullable|date',
+            'status'       => 'required|string',
+            'priority'     => 'nullable|string',
+            'assignees'    => 'nullable|array',
+            'assignees.*'  => 'exists:users,id',
         ]);
 
+        // 基本情報の更新
         $task->update([
-            'project_id' => $request->project_id,
-            'name' => $request->name,
-            'description' => $request->description,
-            'start_date' => $request->start_date,
-            'start_time' => $request->start_time,
-            'plans_date' => $request->plans_date,
-            'due_date' => $request->due_date,
-            'status' => $request->status,
-            'priority' => $request->priority,
+            'project_id'   => $request->project_id,
+            'name'         => $request->name,
+            'description'  => $request->description,
+            'start_date'   => $request->start_date,
+            'start_time'   => $request->start_time,
+            'plans_date'   => $request->plans_date,
+            'due_date'     => $request->due_date,
+            'status'       => $request->status,
+            'priority'     => $request->priority,
         ]);
 
-        $task->assignees()->sync($request->assignees ?? []);
+        // 担当者の同期（重複エラーを防ぐために sync() を使用）
+        $assigneeIds = $request->assignees ?? [];
 
+        // ロールからユーザーを追加する場合
+        if ($request->has('roles')) {
+            $roleUserIds = User::whereIn('role_id', $request->roles)->pluck('id')->toArray();
+            $assigneeIds = array_merge($assigneeIds, $roleUserIds);
+        }
+
+        // 重複を排除
+        $assigneeIds = array_unique($assigneeIds);
+
+        // sync() で現在の担当者を完全に置き換え（追加・削除を自動処理）
+        $task->assignees()->sync($assigneeIds);
+
+        // URLの保存（複数対応） - 既存コードをそのまま
         if ($request->has('urls')) {
             $submittedIds = [];
 
@@ -225,19 +200,18 @@ class TaskController extends Controller
                     ];
 
                     if (empty($urlData['id'])) {
-                        \Log::info('新規URL作成試行: ' . json_encode($data));
+                        // 新規作成
                         $created = $task->urls()->create($data);
-                        \Log::info('新規URL作成成功: ID=' . $created->id);
-
                         $submittedIds[] = $created->id;
                     } else {
+                        // 更新
                         $task->urls()->where('id', $urlData['id'])->update($data);
                         $submittedIds[] = $urlData['id'];
                     }
                 }
             }
 
-            // ★ 本当に削除すべきものだけ削除
+            // 送信されなかったURLは削除
             $task->urls()->whereNotIn('id', $submittedIds)->delete();
         }
 
