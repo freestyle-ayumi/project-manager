@@ -21,14 +21,6 @@ return new class extends Migration
             $table->string('priority', 10)->nullable()->comment('優先度（高/中/低）');
             $table->timestamps();
         });
-
-        // 担当者用の中間テーブル
-        Schema::create('task_user', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('task_id')->constrained('tasks')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->timestamps();
-        });
     }
 
     public function down(): void

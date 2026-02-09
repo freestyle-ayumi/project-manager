@@ -17,8 +17,8 @@
     <?php else: ?>
         <!-- 本番：ビルド済みアセット -->
         <?php $version = time(); ?>
-        <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-DoV7GPdk.css')); ?>?v=<?php echo e($version); ?>">
-        <script type="module" src="<?php echo e(asset('build/assets/app-KTi7UBEu.js')); ?>?v=<?php echo e($version); ?>" defer></script>
+        <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-dKeCdml8.css')); ?>?v=<?php echo e($version); ?>">
+        <script type="module" src="<?php echo e(asset('build/assets/app-DRVRqlT5.js')); ?>?v=<?php echo e($version); ?>" defer></script>
     <?php endif; ?>
 
 

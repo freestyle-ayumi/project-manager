@@ -1,0 +1,605 @@
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+     <?php $__env->slot('header', null, []); ?> 
+        <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
+            <?php echo e(__('見積書編集')); ?>
+
+        </h2>
+     <?php $__env->endSlot(); ?>
+    <style>
+        /* Chrome / Edge / Safari 用 */
+        .no-spin::-webkit-inner-spin-button,
+        .no-spin::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Firefox 用 */
+        .no-spin[type=number] {
+        -moz-appearance: textfield;
+        }
+
+        /* さらに Edge / Chrome の矢印UIを無効化 */
+        .no-spin {
+        appearance: textfield;
+        }
+    </style>
+
+    <div class="py-2">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-4 text-gray-900" style="@media (max-width: 400px) {padding: 0.5rem;}">
+                    <?php if($errors->any()): ?>
+                        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <ul>
+                                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+
+                    <form action="<?php echo e(route('quotes.update', $quote)); ?>" method="POST">
+                        <?php echo csrf_field(); ?>
+                        <?php echo method_field('PATCH'); ?> 
+
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-2">
+                            
+                            <div class="md:col-span-2">
+                                <label for="quote_number" class="block text-sm font-medium text-gray-700">見積番号<span class="text-red-500">*</span></label>
+                                <input type="text" name="quote_number" id="quote_number" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" value="<?php echo e(old('quote_number', $quote->quote_number)); ?>" required>
+                                <?php $__errorArgs = ['quote_number'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+
+                            
+                            <div class="md:col-span-6">
+                                <label for="project_id" class="block text-sm font-medium text-gray-700">関連イベント<span class="text-red-500">*</span></label>
+                                <select name="project_id" id="project_id" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                    data-project-client-map='<?php echo json_encode($projectClientMap, 15, 512) ?>'
+                                    data-all-clients-map='<?php echo json_encode($allClientsMap, 15, 512) ?>' required>
+                                    <option value="">イベントを選択</option>
+                                    <?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
+                                            $dateSuffix = $project->start_date
+                                                ? ' (' . \Carbon\Carbon::parse($project->start_date)->format('n/j') . '～)'
+                                                : '';
+                                        ?>
+                                        <option value="<?php echo e($project->id); ?>" data-client-id="<?php echo e($project->client_id); ?>" <?php echo e(old('project_id', $quote->project_id) == $project->id ? 'selected' : ''); ?>>
+                                            <?php echo e($project->name . $dateSuffix); ?>
+
+                                        </option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </select>
+                                <?php $__errorArgs = ['project_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+
+                            
+                            <div class="md:col-span-4">
+                                <label for="client_name_display" class="block text-sm font-medium text-gray-700">顧客</label>
+                                <input type="text" id="client_name_display" class="block w-full py-1.5 border-gray-300 bg-gray-100 rounded-md focus:ring-opacity-50 text-sm cursor-not-allowed" readonly placeholder="イベントを選択してください">
+                                <input type="hidden" name="client_id" id="client_id_hidden">
+                                <?php $__errorArgs = ['client_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-2">
+                            
+                            <div class="md:col-span-8">
+                                <label for="subject" class="block text-sm font-medium text-gray-700">件名<span class="text-red-500">*</span></label>
+                                <input type="text" id="subject" name="subject" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" value="<?php echo e(old('subject', $quote->subject)); ?>" required>
+                                <?php $__errorArgs = ['subject'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+
+                            
+                            <div class="md:col-span-2">
+                                <label for="expiry_date" class="block text-sm font-medium text-gray-700">有効期限</label>
+                                <input type="text" name="expiry_date" id="expiry_date" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="<?php echo e(old('expiry_date', $quote->expiry_date)); ?>">
+                                <?php $__errorArgs = ['expiry_date'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+
+                            
+                            <div class="md:col-span-2">
+                                <label for="issue_date" class="block text-sm font-medium text-gray-700">
+                                    発行日<span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <input type="text" name="issue_date" id="issue_date" class="flatpickr block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" value="<?php echo e(old('issue_date', $quote->issue_date)); ?>" required>
+                                    <!-- カレンダーアイコン -->
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mb-1" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10m-10 4h10m-6 4h6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <?php $__errorArgs = ['issue_date'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-2">
+                            
+                            <div class="md:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-4">
+                                
+                                <div class="md:col-span-2">
+                                    <label for="delivery_date" class="block text-sm font-medium text-gray-700">納入予定日</label>
+                                    <div class="relative">
+                                        <input type="text" name="delivery_date" id="delivery_date" class="flatpickr block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="<?php echo e(old('delivery_date', $quote->delivery_date)); ?>">
+                                        <!-- カレンダーアイコン -->
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mb-1" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10m-10 4h10m-6 4h6M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <?php $__errorArgs = ['delivery_date'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                
+                                <div class="md:col-span-7">
+                                    <label for="delivery_location" class="block text-sm font-medium text-gray-700">納入場所</label>
+                                    <input type="text" name="delivery_location" id="delivery_location" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="<?php echo e(old('delivery_location', $quote->delivery_location)); ?>" maxlength="255">
+                                    <?php $__errorArgs = ['delivery_location'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                
+                                <div class="md:col-span-3">
+                                    <label for="payment_terms" class="block text-sm font-medium text-gray-700">お支払条件</label>
+                                    <input type="text" name="payment_terms" id="payment_terms" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="<?php echo e(old('payment_terms', $quote->payment_terms)); ?>" maxlength="255">
+                                    <?php $__errorArgs = ['payment_terms'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-2">
+                            
+                            <div class="md:col-span-12">
+                                <label for="notes" class="block text-sm font-medium text-gray-700">備考</label>
+                                <textarea name="notes" id="notes" rows="3" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm"><?php echo e(old('notes', $quote->notes)); ?></textarea>
+                                <?php $__errorArgs = ['notes'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="text-red-500 text-xs"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        
+                        <h4 class="font-bold text-lg ml-1 text-sm">明細</h4>
+                        <div id="items-container" class="space-y-4 border p-2 rounded-md">
+                            <div class="space-y-4">
+                                <?php $__currentLoopData = old('items', $quote->items); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
+                                        // $itemがEloquentモデルの場合と配列の場合の両方に対応
+                                        $itemId = $item->id ?? ($item['id'] ?? null);
+                                        $itemName = $item->item_name ?? ($item['item_name'] ?? '');
+                                        $itemPrice = $item->price ?? ($item['price'] ?? '');
+                                        $itemQuantity = $item->quantity ?? ($item['quantity'] ?? '1');
+                                        $itemUnit = $item->unit ?? ($item['unit'] ?? '');
+                                        $itemTaxRate = $item->tax_rate ?? ($item['tax_rate'] ?? '10');
+                                    ?>
+                                    <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end relative">
+                                        <input type="hidden" name="items[<?php echo e($index); ?>][id]" value="<?php echo e($itemId); ?>">
+                                        <div class="md:col-span-5"> 
+                                            <label for="item_name_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700">品名<span class="text-red-500">*</span></label>
+                                            <input type="text" name="items[<?php echo e($index); ?>][item_name]" id="item_name_<?php echo e($index); ?>" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" value="<?php echo e($itemName); ?>" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="price_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700">単価</label>
+                                            <input type="number" step="1"
+                                                name="items[<?php echo e($index); ?>][price]"
+                                                id="price_<?php echo e($index); ?>"
+                                                class="item-price text-right block w-full py-1.5 border-gray-300 rounded-md
+                                                        focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm no-spin"
+                                                value="<?php echo e($item['price'] ?? ''); ?>">
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="quantity_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700">数量</label>
+                                            <input type="number" min="1" step="1" name="items[<?php echo e($index); ?>][quantity]" id="quantity_<?php echo e($index); ?>" class="text-right block w-full sm:pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-quantity" value="<?php echo e($itemQuantity); ?>" >
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="unit_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700">単位</label>
+                                            <input type="text" name="items[<?php echo e($index); ?>][unit]" id="unit_<?php echo e($index); ?>" class="text-right block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm" value="<?php echo e($itemUnit); ?>">
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="tax_rate_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700">税率 (%)<span class="text-red-500">*</span></label>
+                                            <input type="number" step="1" name="items[<?php echo e($index); ?>][tax_rate]" id="tax_rate_<?php echo e($index); ?>" class="text-right block w-full sm:pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-tax-rate" value="<?php echo e(old('items.' . $index . '.tax_rate', isset($itemTaxRate) ? intval($itemTaxRate) : 0)); ?>" >
+                                        </div>
+                                        <div class="md:col-span-2"> 
+                                            <label for="subtotal_<?php echo e($index); ?>" class="block text-sm font-medium text-gray-700item-subtotal">小計</label>
+                                            <?php
+                                                $itemPrice = $item['price'] ?? 0;
+                                                $itemQuantity = $item['quantity'] ?? 1;
+                                                $itemTaxRate = $item['tax_rate'] ?? 10;
+
+                                                $rowSubtotal = $itemPrice * $itemQuantity;
+                                                $rowTax = $rowSubtotal * ($itemTaxRate / 100);
+                                                $rowTotal = round($rowSubtotal + $rowTax);
+                                            ?>
+                                            <input type="text" id="subtotal_<?php echo e($index); ?>" class="block w-full py-1.5 border-gray-300 rounded-md bg-gray-100 text-sm cursor-not-allowed item-subtotal" value="<?php echo e($rowTotal); ?>" readonly>
+
+                                        </div>
+                                        <button type="button" class="absolute top-6 right-1 text-red-500 hover:text-red-700 remove-item-row">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                
+                                <?php if($quote->items->isEmpty() && !old('items')): ?>
+                                    <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md relative">
+                                        <div class="md:col-span-5"> 
+                                            <label for="item_name_0" class="block text-sm font-medium text-gray-700">項目名<span class="text-red-500">*</span></label>
+                                            <input type="text" name="items[0][item_name]" id="item_name_0" class=" block w-full rounded-md border-gray-300 shadow-sm" value="" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label for="price_0" class="block text-sm font-medium text-gray-700">単価</label>
+                                            <input  type="number"
+                                                    name="items[0][price]"
+                                                    id="price_0"
+                                                    class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-right item-price"
+                                                    value=""
+                                                    inputmode="numeric"
+                                                    pattern="[0-9]*"
+                                                    min="0"
+                                                    step="1"
+                                            >
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="quantity_0" class="block text-sm font-medium text-gray-700">数量</label>
+                                            <input type="number" min="1" step="1" name="items[0][quantity]" id="quantity_0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-quantity" value="1">
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="unit_0" class="block text-sm font-medium text-gray-700">単位</label>
+                                            <input type="text" name="items[0][unit]" id="unit_0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm unit-no-spin" value="">
+                                        </div>
+                                        <div class="md:col-span-1"> 
+                                            <label for="tax_rate_0" class="block text-sm font-medium text-gray-700">税率 (%)</label>
+                                            <input type="number" step="1" name="items[0][tax_rate]" id="tax_rate_0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm item-tax-rate" value="10">
+                                        </div>
+                                        <div class="md:col-span-2"> 
+                                            <label for="subtotal_0" class="block text-sm font-medium text-gray-700">小計</label>
+                                            <input type="text" id="subtotal_0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed item-subtotal" value="0" readonly>
+                                        </div>
+                                        <button type="button" class="absolute top-2 right-2 text-red-500 hover:text-red-700 remove-item-row">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="mx-2 my-4">
+                            <button type="button" id="add-item-button" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-1 text-sm rounded-md mb-2 ml-auto block">
+                                ＋行
+                            </button>
+
+                            
+                            <div class="flex justify-end items-center mb-3 mr-1">
+                                <p class="text-xl font-bold text-gray-800">合計金額: <span id="display-total-amount">¥0</span></p>
+                                <input type="hidden" name="total_amount" id="total_amount_input" value="0">
+                            </div>
+
+                            <div class="flex justify-end space-x-2">
+                                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">
+                                    更新
+                                </button>
+                                <a href="<?php echo e(route('quotes.index')); ?>" class="bg-gray-500 hover:bg-gray-700 text-white font-bold pt-2 pb-1.5 pr-2 pl-2 text-sm rounded-md">
+                                    キャンセル
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <?php $__env->startPush('scripts'); ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('.flatpickr', {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+            });
+        });
+
+        // console.logは本番環境で無効化済みの前提です
+
+        // 指定した行の小計を計算し表示する関数
+        const calculateRowTotal = (row) => {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const taxRateInput = row.querySelector('.item-tax-rate');
+            const subtotalInput = row.querySelector('.item-subtotal');
+
+            if (!priceInput || !quantityInput || !taxRateInput || !subtotalInput) return;
+
+            // 空文字・カンマを排除して数値化
+            const price = parseFloat(priceInput.value.replace(/,/g, '')) || 0;
+            const quantity = parseInt(quantityInput.value.replace(/,/g, '')) || 1; // 数量は最低1
+            const taxRate = parseFloat(taxRateInput.value.replace(/,/g, '')) || 0;
+
+            const subtotal = price * quantity;
+            const tax = subtotal * (taxRate / 100);
+            const rowTotal = Math.round(subtotal + tax);
+
+            subtotalInput.value = rowTotal; // 小計は数値のみ
+            calculateTotals();
+        };
+
+
+        function calculateTotals() {
+            let grandTotal = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const quantity = parseInt(row.querySelector('.item-quantity').value) || 0;
+                const taxRate = parseFloat(row.querySelector('.item-tax-rate').value) || 0;
+
+                const subtotal = price * quantity;
+                const tax = subtotal * (taxRate / 100);
+                grandTotal += subtotal + tax;
+            });
+
+            grandTotal = Math.round(grandTotal);
+
+            document.getElementById('display-total-amount').textContent = '¥' + grandTotal.toLocaleString();
+            document.getElementById('total_amount_input').value = grandTotal;
+        }
+
+
+        // 1行分のイベントリスナーをまとめて設定する関数
+        function attachEventListenersToRow(row) {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const taxRateInput = row.querySelector('.item-tax-rate');
+            const subtotalInput = row.querySelector('.item-subtotal');
+
+            if (!priceInput || !quantityInput || !taxRateInput || !subtotalInput) {
+                console.error("Missing input elements in row:", row);
+                return;
+            }
+
+            // 入力変化時に小計を計算し、合計を更新
+            priceInput.addEventListener('input', () => { calculateRowTotal(row); });
+            quantityInput.addEventListener('input', () => { calculateRowTotal(row); });
+            taxRateInput.addEventListener('input', () => { calculateRowTotal(row); });
+
+            // 行削除ボタンのクリック時処理
+            const removeButton = row.querySelector('.remove-item-row');
+            if (removeButton) {
+                removeButton.addEventListener('click', () => {
+                    row.remove();
+                    calculateTotals();
+                });
+            }
+
+            // 初期計算
+            calculateRowTotal(row);
+        }
+
+        // ----------------------------
+        // 追加ボタンの click 処理をここに追加する！
+        // ----------------------------
+
+        let itemIndex = document.querySelectorAll('.item-row').length || 0;
+
+        document.getElementById('add-item-button').addEventListener('click', () => {
+        const newRowHtml = `
+        <div class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-end relative">
+            <div class="md:col-span-5">
+                <label for="item_name_${itemIndex}" class="block text-sm font-medium text-gray-700">品名<span class="text-red-500">*</span></label>
+                <input type="text" name="items[${itemIndex}][item_name]" id="item_name_${itemIndex}" class="block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-sm" required>
+            </div>
+            <div class="md:col-span-2">
+                <label for="price_${itemIndex}" class="block text-sm font-medium text-gray-700">単価</label>
+                <input type="number" name="items[${itemIndex}][price]" id="price_${itemIndex}" class="text-right block w-full py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm text-right no-spin item-price">
+            </div>
+            <div class="md:col-span-1">
+                <label for="quantity_${itemIndex}" class="block text-sm font-medium text-gray-700">数量</label>
+                <input type="number" name="items[${itemIndex}][quantity]" id="quantity_${itemIndex}" class="text-right block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-quantity" value="1">
+            </div>
+            <div class="md:col-span-1">
+                <label for="unit_${itemIndex}" class="block text-sm font-medium text-gray-700">単位</label>
+                <input type="text" name="items[${itemIndex}][unit]" id="unit_${itemIndex}" class="block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm unit-no-spin">
+            </div>
+            <div class="md:col-span-1">
+                <label for="tax_rate_${itemIndex}" class="block text-sm font-medium text-gray-700">税率 (%)</label>
+                <input type="number" name="items[${itemIndex}][tax_rate]" id="tax_rate_${itemIndex}" class="text-right block w-full pr-0 py-1.5 border-gray-300 rounded-md focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm item-tax-rate" value="10">
+            </div>
+            <div class="md:col-span-2">
+                <label for="subtotal_${itemIndex}" class="block text-sm font-medium text-gray-700">小計</label>
+                <input type="text" id="subtotal_${itemIndex}" class="block w-full py-1.5 border-gray-300 rounded-md bg-gray-100 text-sm cursor-not-allowed item-subtotal" value="0" readonly>
+            </div>
+            <button type="button" class="absolute top-6 right-1 text-red-500 hover:text-red-700 remove-item-row">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        `;
+
+        document.getElementById('items-container').insertAdjacentHTML('beforeend', newRowHtml);
+
+        const newRow = document.querySelectorAll('.item-row')[document.querySelectorAll('.item-row').length - 1];
+        attachEventListenersToRow(newRow);
+
+        itemIndex++;
+    });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.item-row').forEach(row => {
+                attachEventListenersToRow(row);
+            });
+
+            const projectSelect = document.getElementById('project_id');
+            const clientNameDisplay = document.getElementById('client_name_display');
+            const clientIdHidden = document.getElementById('client_id_hidden');
+
+            const projectClientMap = JSON.parse(projectSelect.dataset.projectClientMap || '{}');
+            const allClientsMap = JSON.parse(projectSelect.dataset.allClientsMap || '{}');
+
+            function updateClientName() {
+                const selectedProjectId = projectSelect.value;
+                if (selectedProjectId && projectClientMap[selectedProjectId]) {
+                    const clientId = projectClientMap[selectedProjectId];
+                    clientIdHidden.value = clientId;
+                    clientNameDisplay.value = allClientsMap[clientId] || '不明な顧客';
+                } else {
+                    clientIdHidden.value = '';
+                    clientNameDisplay.value = 'イベントを選択してください';
+                }
+            }
+
+            updateClientName();
+
+            projectSelect.addEventListener('change', updateClientName);
+        });
+
+    </script>
+    <?php $__env->stopPush(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\xampp\htdocs\project-manager\resources\views/quotes/edit.blade.php ENDPATH**/ ?>

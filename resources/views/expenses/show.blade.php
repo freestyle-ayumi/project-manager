@@ -130,7 +130,7 @@
                 @endif
 
                     <div class="flex flex-col gap-3">
-                        <a href="{{ route('expenses.edit', $expense) }}" class="text-center py-3 text-xs text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm">
+                        <a href="{{ route('expenses.edit', $expense) }}" class="text-center py-3 text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm">
                             修正
                         </a>
                     </div>

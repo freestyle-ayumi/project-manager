@@ -1,7 +1,9 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+
 return new class extends Migration
 {
     public function up(): void
@@ -12,11 +14,23 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // role_id（外部キー）
+            $table->foreignId('role_id')
+                  ->nullable()
+                  ->constrained('roles')
+                  ->nullOnDelete();
+
+            // ★ developer を追加
+            $table->boolean('developer')
+                  ->default(0)
+                  ->comment('管理者権限');
+
             $table->rememberToken();
             $table->timestamps();
-            $table->unsignedBigInteger('role_id')->nullable();
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('users');

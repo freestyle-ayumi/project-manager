@@ -95,33 +95,7 @@
                 {{ $task->description ?? '詳細情報は登録されていません。' }}
             </p>
 
-            <!-- 関連URL -->
-            @unless($task->urls->isEmpty())
-            <div>
-                <ul class="space-y-1 mt-1">
-                    @foreach($task->urls as $url)
-                        <li class="group flex items-center gap-1 bg-white rounded-md hover:border-indigo-300 hover:shadow-sm transition-all">
-                            <!-- リンクマーク（先頭） -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                            </svg>
-
-                            <!-- クリック可能なURL（別ウィンドウ） -->
-                            <a href="{{ $url->url }}" target="_blank" rel="noopener noreferrer"
-                            class="text-indigo-600 hover:text-indigo-800 flex-1 break-all text-xs">
-                                {{ $url->title ?: $url->url }}
-                            </a>
-
-                            <!-- メモ（存在する場合） -->
-                            @if($url->memo)
-                                <span class="text-xs text-gray-500 italic ml-auto">
-                                    {{ $url->memo }}
-                                </span>
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
+            
         @endunless
 
             <hr class="mt-3 mb-3 border-gray-200">
@@ -196,5 +170,6 @@
                 });
             });
         });
+        console.log('fetch開始: URL = ' + '{{ route("attendance.store") }}');
     </script>
 </x-app-layout>

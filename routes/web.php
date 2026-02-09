@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ExpenseStatusController;
+use App\Http\Controllers\Admin\LocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,9 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
 
     // ダッシュボード
-    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, '__invoke'])->middleware(['auth'])->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+        ->middleware(['auth'])
+        ->name('dashboard');
 
     // プロフィール
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -102,6 +105,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
     });
 
+    // ロケーション管理
+    Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+        Route::resource('locations', LocationController::class);
+    });
+    Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])
+        ->name('attendance.store')
+        ->middleware('auth');
+
+    Route::get('/attendance/recent', [App\Http\Controllers\AttendanceController::class, 'recent'])
+        ->name('attendance.recent')
+        ->middleware('auth');
 });
 
 // 認証ルート

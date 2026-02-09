@@ -5,12 +5,11 @@ namespace App\Models;
 // Carbonをuseしない場合は、日付のフォーマットにCarbon::parseが使えないので注意
 // use Carbon\Carbon; // 必要であれば追加
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
@@ -58,6 +57,23 @@ class User extends Authenticatable implements MustVerifyEmail
     public function tasks()
     {
         return $this->belongsToMany(Task::class, 'task_user', 'user_id', 'task_id');
+    }
+    // ユーザーが登録できる勤務地（多対多）
+    public function locations()
+    {
+        return $this->belongsToMany(Location::class, 'user_locations');
+    }
+
+    // ユーザーの打刻記録
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    // ユーザー出張判定
+    public function businessTrips()
+    {
+        return $this->hasMany(BusinessTrip::class);
     }
 }
 

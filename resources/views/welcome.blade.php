@@ -16,8 +16,8 @@
     @else
         <!-- 本番：ビルド済みアセット -->
         <?php $version = time(); ?>
-        <link rel="stylesheet" href="{{ asset('build/assets/app-DoV7GPdk.css') }}?v={{ $version }}">
-        <script type="module" src="{{ asset('build/assets/app-KTi7UBEu.js') }}?v={{ $version }}" defer></script>
+        <link rel="stylesheet" href="{{ asset('build/assets/app-dKeCdml8.css') }}?v={{ $version }}">
+        <script type="module" src="{{ asset('build/assets/app-DRVRqlT5.js') }}?v={{ $version }}" defer></script>
     @endif
 
     <!-- ファビコン -->

@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // projects テーブル作成
         Schema::create('projects', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('client_id')->nullable();
@@ -18,24 +17,20 @@ return new class extends Migration
             $table->date('start_date')->nullable()->comment('開始日');
             $table->date('end_date')->nullable()->comment('終了日');
             $table->string('venue')->nullable()->comment('催事場所');
-            $table->tinyInteger('color')->unsigned()->default(1)->comment('=colors.id');
+
+            // ★ 最初から color_id
+            $table->foreignId('color_id')
+                ->constrained('colors')
+                ->restrictOnDelete()
+                ->comment('colors.id');
+
             $table->timestamps();
         });
 
-        // quotes テーブルの project_id にユニーク制約追加
-        Schema::table('quotes', function (Blueprint $table) {
-            $table->unique('project_id');
-        });
     }
 
     public function down(): void
     {
-        // quotes テーブルのユニーク制約削除
-        Schema::table('quotes', function (Blueprint $table) {
-            $table->dropUnique(['project_id']);
-        });
-
-        // projects テーブル削除
         Schema::dropIfExists('projects');
     }
 };

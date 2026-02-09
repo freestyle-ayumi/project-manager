@@ -84,7 +84,7 @@
             margin-bottom: 0.75rem;
         }
 
-        /* 御見積書タイトル */
+        /* 御請求書タイトル */
         .flex-col-cont { 
             display: flex;
             flex-direction: column;
@@ -126,7 +126,7 @@
         .info-table .bdr-4-w {
             border: 4px solid #fff;
         }
-    /* 御見積金額合計セクション */
+    /* 御請求金額合計セクション */
         .quote-total-table {
             width: 100%;
             margin: 0.5rem 0 .5rem 0;
@@ -253,7 +253,7 @@
                 <a href="#log-section"
                 class="bg-slate-400 hover:bg-slate-300 text-white font-bold text-xs px-4 py-2 rounded-md">
                     log</a>
-                <a href="<?php echo e(route('quotes.edit', $quote)); ?>"
+                <a href="<?php echo e(route('quotes.edit', $invoice)); ?>"
                 class="bg-indigo-600 hover:bg-indigo-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                     編集
                 </a>
@@ -261,7 +261,7 @@
                 class="bg-green-600 hover:bg-green-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                     一覧に戻る
                 </a>
-                <a href="<?php echo e(route('quotes.downloadPdfMpdf', $quote)); ?>" class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
+                <a href="<?php echo e(route('quotes.downloadPdfMpdf', $invoice)); ?>" class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                     PDF出力
                 </a>
             </div>
@@ -269,7 +269,7 @@
                 <div class="divider"></div>
                 
                 <div class="flex-col-cont">
-                    <h1 class="main-title">御見積書</h1>
+                    <h1 class="main-title">御請求書</h1>
                 </div>
                 
                 
@@ -277,11 +277,11 @@
                 <table style="width: 100%; border-collapse: collapse; padding-left: 0.75rem;">
                     <tr>
                         <td style="width: 60%; font-size: 1.2rem; font-weight: 500;">
-                            <?php echo e($quote->client->name ?? 'N/A'); ?> 御中
+                            <?php echo e($invoice->client->name ?? 'N/A'); ?> 御中
                         </td>
                         <td style="width: 40%; font-size: 0.875rem; text-align: right;" class="p-xy">
-                            <p style="margin-bottom: 0.25rem;">見積番号：<?php echo e($quote->quote_number); ?></p>
-                            <p>発行日：<?php echo e(\Carbon\Carbon::parse($quote->issue_date)->format('Y年m月d日')); ?></p>
+                            <p style="margin-bottom: 0.25rem;">請求番号：<?php echo e($invoice->quote_number); ?></p>
+                            <p>発行日：<?php echo e(\Carbon\Carbon::parse($invoice->issue_date)->format('Y年m月d日')); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -292,39 +292,39 @@
                         
                         <td class="p-xy" style="width: 60%; vertical-align: top;">
                         
-                            <p>下記のとおり、御見積申し上げます。</p>
+                            <p>下記のとおり、御請求申し上げます。</p>
                             <table class="quote-total-table">
                                 <tr>
                                     <td class="quote-total-label">
-                                        御見積金額<br>(消費税込)
+                                        御請求金額<br>(消費税込)
                                     </td>
                                     <td class="quote-total-value">
-                                        ¥<?php echo e(number_format($quote->total_amount)); ?>
+                                        ¥<?php echo e(number_format($invoice->total_amount)); ?>
 
                                     </td>                            </tr>
                             </table>
-                            <p><?php echo e($quote->project->name ?? 'N/A'); ?></p>
+                            <p><?php echo e($invoice->project->name ?? 'N/A'); ?></p>
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tbody>
                                     <tr style="border: 4px solid #fff;">
                                         <th class="p-xy" style="text-align: center; background: #f0fdf4; width: 25%; padding: 0.375rem">件名</th>
-                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($quote->subject); ?></td>
+                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($invoice->subject); ?></td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
                                         <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納入予定日</th>
-                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($quote->delivery_date ? \Carbon\Carbon::parse($quote->delivery_date)->format('Y年m月d日') : '未設定'); ?></td>
+                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($invoice->delivery_date ? \Carbon\Carbon::parse($invoice->delivery_date)->format('Y年m月d日') : '未設定'); ?></td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
                                         <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">有効期限</th>
-                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($quote->expiry_date); ?></td>
+                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($invoice->expiry_date); ?></td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
                                         <th class="p-xy" style="text-align: center; background: #f0fdf4; padding: 0.375rem">納入場所</th>
-                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($quote->delivery_location ?: '未設定'); ?></td>
+                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($invoice->delivery_location ?: '未設定'); ?></td>
                                     </tr>
                                     <tr style="border: 4px solid #fff;">
                                         <th class="" style="text-align: center; background: #f0fdf4; padding: 0.375rem">お支払条件</th>
-                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($quote->payment_terms ?: '未設定'); ?></td>
+                                        <td style="text-align: left; width: 75%; padding: 0.375rem 1rem;"><?php echo e($invoice->payment_terms ?: '未設定'); ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -363,7 +363,7 @@
                                 $totalSubtotal = 0;
                                 $totalTax = 0;
                             ?>
-                            <?php $__currentLoopData = $quote->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $invoice->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <?php
                                     $itemSubtotal = $item->price * $item->quantity;
                                     $itemTax = $itemSubtotal * ($item->tax_rate / 100);
@@ -396,7 +396,7 @@
                             <tr>
                                 <td colspan="4" class="ftr-cell"></td> 
                                 <td class="ftr-cell ftr-lbl-txt lbl-bg">合計金額 (税込)</td>
-                                <td class="ftr-cell ftr-grnd-total-txt val-bg-w">¥<?php echo e(number_format($quote->total_amount)); ?></td>
+                                <td class="ftr-cell ftr-grnd-total-txt val-bg-w">¥<?php echo e(number_format($invoice->total_amount)); ?></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -405,13 +405,13 @@
                 
                 <div class="notes-sec">
                     <p class="notes-hdr">備考</p>
-                    <p class="notes-cont"><?php echo e($quote->notes ?: '-'); ?></p>
+                    <p class="notes-cont"><?php echo e($invoice->notes ?: '-'); ?></p>
                 </div>
                 <div class="divider"></div> 
 
                 
                 <div class="flex justify-end mt-4 space-x-4">
-                    <a href="<?php echo e(route('quotes.edit', $quote)); ?>"
+                    <a href="<?php echo e(route('quotes.edit', $invoice)); ?>"
                     class="bg-indigo-600 hover:bg-indigo-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                         編集
                     </a>
@@ -419,7 +419,7 @@
                     class="bg-green-600 hover:bg-green-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                         一覧に戻る
                     </a>
-                    <a href="<?php echo e(url('/quotes/' . $quote->id . '/pdf-mpdf')); ?>"
+                    <a href="<?php echo e(url('/quotes/' . $invoice->id . '/pdf-mpdf')); ?>"
                     class="bg-red-600 hover:bg-red-400 text-white font-bold text-xs px-4 py-2 rounded-md">
                         PDF出力
                     </a>
@@ -440,7 +440,7 @@
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <?php $__currentLoopData = $quote->logs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $__currentLoopData = $invoice->logs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-2" style="font-size:0.75em;"><?php echo $log->action; ?></td>
                                     <td class="px-6 py-2" style="font-size:0.75em;"><?php echo e($log->user->name ?? '不明'); ?></td>
@@ -464,4 +464,4 @@
 <?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
 <?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
 <?php endif; ?>
-<?php /**PATH C:\xampp\htdocs\project-manager\resources\views/quotes/show.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\project-manager\resources\views/invoices/show.blade.php ENDPATH**/ ?>

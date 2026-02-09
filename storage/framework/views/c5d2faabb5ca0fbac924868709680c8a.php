@@ -5,15 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>イベント管理ツール</title>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
     <!-- Viteアセット読み込み -->
     <?php if(app()->environment('local')): ?>
         <!-- ローカル（開発）：Viteホットリロード（第2引数なし） -->
-        <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+        <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js'], 'build/.vite'); ?>
     <?php else: ?>
-        <!-- 本番：ビルド済みアセット（手動で最新ハッシュに更新） -->
+        <!-- 本番：ビルド済みアセット -->
         <?php $version = time(); ?>
-        <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-最新ハッシュ.css')); ?>?v=<?php echo e($version); ?>">
-        <script type="module" src="<?php echo e(asset('build/assets/app-最新ハッシュ.js')); ?>?v=<?php echo e($version); ?>" defer></script>
+        <link rel="stylesheet" href="<?php echo e(asset('build/assets/app-dKeCdml8.css')); ?>?v=<?php echo e($version); ?>">
+        <script type="module" src="<?php echo e(asset('build/assets/app-DRVRqlT5.js')); ?>?v=<?php echo e($version); ?>" defer></script>
     <?php endif; ?>
 
     <!-- ファビコン -->
