@@ -33,7 +33,11 @@ return new class extends Migration
             $table->integer('distance')->nullable();
 
             $table->boolean('is_valid');
+            $table->boolean('is_business_trip')->default(false)->after('is_valid');
             $table->text('note')->nullable();
+            if (!Schema::hasColumn('attendance_records', 'work_minutes')) {
+                $table->integer('work_minutes')->nullable()->after('note');
+            }
             $table->timestamps();
         });
     }

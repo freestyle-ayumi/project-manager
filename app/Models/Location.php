@@ -27,4 +27,9 @@ class Location extends Model
     {
         return $this->hasMany(AttendanceRecord::class);
     }
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'allowed_radius' => 'float',
+    ];
 }

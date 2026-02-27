@@ -70,10 +70,5 @@ class User extends Authenticatable
         return $this->hasMany(AttendanceRecord::class);
     }
 
-    // ユーザー出張判定
-    public function businessTrips()
-    {
-        return $this->hasMany(BusinessTrip::class);
-    }
 }
 
