@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
         ->middleware(['auth'])
         ->name('dashboard');
+    Route::post('/attendance/fix-missing', [AttendanceController::class, 'fixMissing'])->name('attendance.fix-missing');
 
     // 打刻履歴
     Route::get('/attendance/history', [AttendanceController::class, 'history'])

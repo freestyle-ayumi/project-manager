@@ -251,34 +251,60 @@ class AttendanceController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-
         $selectedMonth = $request->input('month', now()->format('Y-m'));
 
         $startOfMonth = Carbon::parse($selectedMonth . '-01')->startOfMonth();
         $endOfMonth   = $startOfMonth->copy()->endOfMonth();
 
+        $monthDates = [];
+        for ($date = $startOfMonth->copy(); $date->lte($endOfMonth); $date->addDay()) {
+            $monthDates[$date->format('Y-m-d')] = [
+                'check_in' => '---',
+                'break_start' => '---',
+                'break_end' => '---',
+                'check_out' => '---',
+                'work_hours' => '---',
+                'location' => null,
+                'is_business_trip' => false,
+            ];
+        }
+
         $attendances = $user->attendanceRecords()
             ->whereBetween('timestamp', [$startOfMonth, $endOfMonth])
             ->with('location')
-            ->orderBy('timestamp', 'desc')
+            ->orderBy('timestamp', 'asc')
             ->get();
 
-        $dailyRecords = $attendances->groupBy(function ($record) {
+        $grouped = $attendances->groupBy(function ($record) {
             return $record->timestamp->format('Y-m-d');
-        })->map(function ($dayRecords, $date) use ($user) {
-            $checkIn = $dayRecords->firstWhere('type', 'check_in');
+        });
+
+        foreach ($grouped as $date => $dayRecords) {
+            // ★修正：出勤レコード または 出張開始レコードを取得
+            $checkIn = $dayRecords->whereIn('type', ['check_in', 'business_trip_start'])->first();
+            
             $breakStart = $dayRecords->firstWhere('type', 'break_start');
             $breakEnd = $dayRecords->firstWhere('type', 'break_end');
-            $checkOut = $dayRecords->firstWhere('type', 'check_out');
+            
+            // ★修正：退勤レコード または 出張終了レコードを取得
+            $checkOut = $dayRecords->whereIn('type', ['check_out', 'business_trip_end'])->first();
+            
+            $mainRecord = $dayRecords->whereIn('type', ['check_in', 'business_trip_start'])->first();
 
-            return [
+            $monthDates[$date] = [
                 'check_in' => $checkIn ? $checkIn->timestamp->format('H:i') : '---',
                 'break_start' => $breakStart ? $breakStart->timestamp->format('H:i') : '---',
                 'break_end' => $breakEnd ? $breakEnd->timestamp->format('H:i') : '---',
                 'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : '---',
                 'work_hours' => AttendanceRecord::calculateDailyWorkHours($date, $user->id),
+                'location' => ($mainRecord && $mainRecord->location) ? $mainRecord->location->name : null,
+                'is_business_trip' => $mainRecord ? (bool)$mainRecord->is_business_trip : false,
+                // 出張中かどうかを判断しやすくするためにメモも渡すならここに追加（任意）
+                'note' => $mainRecord ? $mainRecord->note : null,
             ];
-        });
+        }
+
+        $dailyRecords = collect($monthDates);
 
         $months = [];
         for ($i = 0; $i < 12; $i++) {
@@ -286,11 +312,35 @@ class AttendanceController extends Controller
             $months[$month->format('Y-m')] = $month->format('Y年n月');
         }
 
-        return view('attendance.history', compact(
-            'dailyRecords',
-            'selectedMonth',
-            'months',
-            'user'
-        ));
+        return view('attendance.history', compact('dailyRecords', 'selectedMonth', 'months', 'user'));
+    }
+
+    public function fixMissing(Request $request)
+    {
+        $request->validate([
+            'record_id' => 'required|exists:attendance_records,id',
+            'time' => 'required',
+        ]);
+
+        $oldRecord = AttendanceRecord::findOrFail($request->record_id);
+        
+        // 前日の日付と入力された時間を結合
+        $checkoutTimestamp = Carbon::parse($oldRecord->timestamp->format('Y-m-d') . ' ' . $request->time);
+
+        // 新しい退勤レコードを作成
+        AttendanceRecord::create([
+            'user_id' => Auth::id(),
+            // 出張中なら business_trip_end、通常なら check_out
+            'type' => (strpos($oldRecord->type, 'business_trip') !== false) ? 'business_trip_end' : 'check_out',
+            'timestamp' => $checkoutTimestamp,
+            'is_business_trip' => $oldRecord->is_business_trip,
+            'note' => '未打刻のため手入力', 
+            'is_valid' => true,
+        ]);
+
+        // 勤務時間の再計算
+        AttendanceRecord::calculateDailyWorkHours($oldRecord->timestamp->format('Y-m-d'), Auth::id());
+
+        return response()->json(['success' => true]);
     }
 }

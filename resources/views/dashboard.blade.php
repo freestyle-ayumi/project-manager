@@ -87,13 +87,13 @@
                         <table class="min-w-full divide-y divide-gray-200 text-left text-gray-500 text-xs">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-2 py-1 uppercase tracking-wider">日付</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">地点</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">出社</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">中抜け</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">戻り</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">退社</th>
-                                    <th class="px-2 py-1 uppercase tracking-wider">勤務</th>
+                                    <th class="w-[12%] px-2 py-1 uppercase tracking-wider">日付</th>
+                                    <th class="w-[33%] px-2 py-1 uppercase tracking-wider">地点</th>
+                                    <th class="w-[11%] px-2 py-1 uppercase tracking-wider">出社</th>
+                                    <th class="w-[11%] px-2 py-1 uppercase tracking-wider">中抜け</th>
+                                    <th class="w-[11%] px-2 py-1 uppercase tracking-wider">戻り</th>
+                                    <th class="w-[11%] px-2 py-1 uppercase tracking-wider">退社</th>
+                                    <th class="w-[11%] px-2 py-1 uppercase tracking-wider">勤務</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-xs">
@@ -103,7 +103,20 @@
                                             {{ $records['date_formatted'] ?? $date }}  <!-- ← $records['date_formatted'] を優先 -->
                                         </td>
                                         <td class="px-2 py-1 whitespace-nowrap">
-                                            {{ $records['location'] ?? '---' }}
+                                            @if($records['location'] && $records['location'] !== '---')
+                                                @if($records['is_business_trip'] ?? false)
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded border border-purple-200 font-bold">
+                                                            出張
+                                                        </span>
+                                                        <span class="text-gray-700">{{ $records['location'] }}</span>
+                                                    </div>
+                                                @else
+                                                    <span class="text-gray-600 font-medium">本社</span>
+                                                @endif
+                                            @else
+                                                <span class="text-gray-400">---</span>
+                                            @endif
                                         </td>
                                         <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_in'] ?? '---' }}</td>
                                         <td class="px-2 py-1 whitespace-nowrap">{{ $records['break_start'] ?? '---' }}</td>
@@ -225,6 +238,116 @@
         </div>
     </div>
 
+    @if($needsFix)
+    <div id="fix-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div id="modal-content" class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            
+            <div id="fix-form-section">
+                <h3 class="text-lg font-bold text-red-600 mb-2 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <g fill="none">
+                            <path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/>
+                            <path fill="currentColor" d="m13.299 3.148l8.634 14.954a1.5 1.5 0 0 1-1.299 2.25H3.366a1.5 1.5 0 0 1-1.299-2.25l8.634-14.954c.577-1 2.02-1 2.598 0M12 15a1 1 0 1 0 0 2a1 1 0 0 0 0-2m0-7a1 1 0 0 0-.993.883L11 9v4a1 1 0 0 0 1.993.117L13 13V9a1 1 0 0 0-1-1"/>
+                        </g>
+                    </svg>
+                    <span>退勤漏れがあります</span>
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    {{ $unclosedRecord->timestamp->format('m月d日') }} の退勤記録がありません。<br>
+                    退勤時刻を入力してください。
+                </p>
+                
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-500 mb-1 font-bold">{{ $unclosedRecord->timestamp->format('m月d日') }} 退勤時刻</label>
+                    <input type="time" id="manual-checkout-time" class="w-full border-gray-300 rounded-md focus:ring-indigo-500 shadow-sm">
+                </div>
+
+                <button id="submit-fix-btn" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-950 transition font-bold">
+                    退勤時刻を登録して再開
+                </button>
+            </div>
+
+            <div id="fix-success-section" class="hidden text-center py-4">
+                <div class="mb-4 text-green-500 flex justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
+                        <path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M21.546 5.111a1.5 1.5 0 0 1 0 2.121L10.303 18.475a1.6 1.6 0 0 1-2.263 0L2.454 12.89a1.5 1.5 0 1 1 2.121-2.121l4.596 4.596L19.424 5.111a1.5 1.5 0 0 1 2.122 0"/></g>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">登録完了</h3>
+                <p class="text-sm text-gray-600 mb-6">前日の退勤を記録しました。</p>
+                <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition font-bold">
+                    ダッシュボードを更新
+                </button>
+            </div>
+
+        </div>
+    </div>
+    @endif
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // PHPからの変数をJSにセット
+        const needsFix = {{ $needsFix ? 'true' : 'false' }};
+        const unclosedId = {{ $unclosedRecord ? $unclosedRecord->id : 'null' }};
+
+        if (needsFix) {
+            // 1. 打刻ボタンを全て無効化（修正が終わるまで操作不能にする）
+            const allButtons = document.querySelectorAll('button[id$="-btn"]');
+            allButtons.forEach(btn => {
+                if (btn.id !== 'submit-fix-btn') {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            // 2. 登録ボタンのクリックイベント
+            const submitBtn = document.getElementById('submit-fix-btn');
+            submitBtn.addEventListener('click', async () => {
+                const time = document.getElementById('manual-checkout-time').value;
+                
+                if (!time) {
+                    alert('時刻を入力してください');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerText = '登録中...';
+
+                try {
+                    const response = await fetch('{{ route("attendance.fix-missing") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            record_id: unclosedId,
+                            time: time
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // ★ここがポイント：alertを出さずに表示を切り替える
+                        document.getElementById('fix-form-section').classList.add('hidden');
+                        document.getElementById('fix-success-section').classList.remove('hidden');
+                    } else {
+                        alert('エラー: ' + data.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = '退勤を登録して再開';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('通信に失敗しました。');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = '退勤を登録して再開';
+                }
+            });
+        }
+    });
+    </script>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('打刻スクリプト読み込み完了');
@@ -285,7 +408,9 @@
                 data.forEach(log => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="px-2 py-1 whitespace-nowrap">${log.timestamp || '-'}</td>
+                        <td class="px-2 py-1 whitespace-nowrap">
+                            ${log.timestamp || '-'}
+                        </td>
                         <td class="px-2 py-1 whitespace-nowrap">
                             <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeClass(log.type)}">
                                 ${log.type_label}

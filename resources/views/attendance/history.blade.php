@@ -13,16 +13,25 @@
                     <!-- 月選択フォーム -->
                     <form method="GET" action="{{ route('attendance.history') }}" class="mb-6">
                         <div class="flex flex-col sm:flex-row sm:items-end gap-3">
-                            <select name="month" id="month" class="mt-1 block w-full sm:w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-600">
-                                @foreach($months ?? [] as $value => $label)
-                                    <option value="{{ $value }}" {{ ($selectedMonth ?? '') === $value ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-500 focus:ring-indigo-500 active:bg-indigo-600 transition">
-                                表示
-                            </button>
+                            <div>
+                                <select name="month" id="month" class="block w-full sm:w-48 rounded-md border-gray-300 px-2 py-1 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-600">
+                                    @foreach($months ?? [] as $value => $label)
+                                        <option value="{{ $value }}" {{ ($selectedMonth ?? '') === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button type="submit" class="inline-flex items-center px-4 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-500 focus:ring-indigo-500 active:bg-indigo-600 transition">
+                                    表示
+                                </button>
+
+                                <a href="{{ route('attendance.history') }}" class="inline-flex items-center px-4 py-1 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 focus:outline-none transition">
+                                    今月
+                                </a>
+                            </div>
                         </div>
                     </form>
 
@@ -30,39 +39,45 @@
                     <table class="min-w-full divide-y divide-gray-200 text-left text-gray-500 text-xs">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-2 py-1 uppercase tracking-wider">日付</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">地点</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">出社</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">中抜け</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">戻り</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">退社</th>
-                                <th class="px-2 py-1 uppercase tracking-wider">勤務</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">日付</th>
+                                <th class="w-[28%] px-2 py-1 uppercase tracking-wider">場所</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">出社</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">中抜け</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">戻り</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">退社</th>
+                                <th class="w-[12%] px-2 py-1 uppercase tracking-wider">勤務</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 text-xs">
                             @foreach($dailyRecords as $dateKey => $records)
-                                <tr>
+                                @php
+                                    $carbonDate = \Carbon\Carbon::parse($dateKey);
+                                    // 土日の背景色
+                                    $rowBg = '';
+                                    if($carbonDate->isSaturday()) $rowBg = 'bg-blue-50';
+                                    if($carbonDate->isSunday()) $rowBg = 'bg-red-50';
+                                @endphp
+                                <tr class="{{ $rowBg }}">
                                     <td class="px-2 py-1 whitespace-nowrap font-medium">
-                                        {{ \Carbon\Carbon::parse($dateKey)->format('m/d (D)') }}
+                                        {{ $carbonDate->format('m/d') }} 
+                                        <span class="text-[10px]">{{ ['日','月','火','水','木','金','土'][$carbonDate->dayOfWeek] }}</span>
                                     </td>
-                                    <td class="px-2 py-1 whitespace-nowrap">
-                                        <!-- ★新規：地点表示★ -->
-                                        @if($records['location'])
-                                            @if($records['is_business_trip'])
-                                                出張: {{ $records['location'] }}
-                                            @else
-                                                本社
-                                            @endif
+                                    <td class="px-2 py-1">
+                                        @if($records['is_business_trip'])
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded border border-purple-200 text-[10px] bg-purple-100 text-purple-800 mr-1">出張</span>
+                                            <span class="text-gray-600">{{ $records['note'] ?? '出張先未入力' }}</span>
+                                        @elseif($records['location'])
+                                            <span class="text-gray-600">{{ $records['location'] }}</span>
                                         @else
-                                            ---
+                                            <span class="text-gray-300">---</span>
                                         @endif
                                     </td>
                                     <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_in'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap">{{ $records['break_start'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap">{{ $records['break_end'] }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-gray-400">{{ $records['break_start'] }}</td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-gray-400">{{ $records['break_end'] }}</td>
                                     <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_out'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap font-medium text-indigo-600">
-                                        {{ $records['work_hours'] }}
+                                    <td class="px-2 py-1 whitespace-nowrap font-bold text-indigo-600">
+                                        {{ $records['work_hours'] != '0:00' ? $records['work_hours'] : '---' }}
                                     </td>
                                 </tr>
                             @endforeach

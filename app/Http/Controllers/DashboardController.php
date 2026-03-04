@@ -220,6 +220,21 @@ class DashboardController extends Controller
         // 前週を上、今週を下に結合（各週内は古い→新しい）
         $dashboardDailyRecords = $previousWeekDates + $currentWeekDates;
 
+        // 1. 最新のレコードを取得
+        $latestRecord = $user->attendanceRecords()->latest('timestamp')->first();
+
+        // 2. 「前日の退勤忘れ」があるか判定
+        // 条件：最新レコードが出勤系（in, break_start, business_trip_start）かつ、日付が今日より前
+        $needsFix = false;
+        $unclosedRecord = null;
+
+        if ($latestRecord && !in_array($latestRecord->type, ['check_out', 'business_trip_end'])) {
+            if ($latestRecord->timestamp->format('Y-m-d') < now()->toDateString()) {
+                $needsFix = true;
+                $unclosedRecord = $latestRecord;
+            }
+        }
+
         // ビューに渡す
         return view('dashboard', compact(
             'attendanceRecords',
@@ -230,7 +245,9 @@ class DashboardController extends Controller
             'dashboardDailyRecords',
             'isBusinessTrip',
             'todayClockedIn',
-            'todayClockedOut'
+            'todayClockedOut',
+            'needsFix',
+            'unclosedRecord'
         ));
     }
 }
