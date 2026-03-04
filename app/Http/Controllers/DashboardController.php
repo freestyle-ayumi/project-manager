@@ -152,15 +152,12 @@ class DashboardController extends Controller
                     ?? $dayRecords->first();
 
                 if ($locationInfo && $locationInfo->is_business_trip) {
-                    // address があれば優先、それ以外は note + 座標
+                    // address があれば優先、それ以外は note のみを表示（座標を削除）
                     if ($locationInfo->address) {
                         $location = $locationInfo->address;
                     } else {
-                        $note = $locationInfo->note ? trim($locationInfo->note) : '出張';
-                        $lat = $locationInfo->latitude ? round($locationInfo->latitude, 5) : null;
-                        $lng = $locationInfo->longitude ? round($locationInfo->longitude, 5) : null;
-                        $coord = ($lat && $lng) ? " ({$lat}, {$lng})" : " (位置不明)";
-                        $location = $note . $coord;
+                        // ★ ここを修正：座標 ($coord) の作成と結合をやめる
+                        $location = $locationInfo->note ? trim($locationInfo->note) : '出張';
                     }
                 } else {
                     $location = $locationInfo && $locationInfo->location 

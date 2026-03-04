@@ -88,7 +88,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="w-[12%] px-2 py-1 uppercase tracking-wider">日付</th>
-                                    <th class="w-[33%] px-2 py-1 uppercase tracking-wider">地点</th>
+                                    <th class="w-[33%] px-2 py-1 uppercase tracking-wider">場所</th>
                                     <th class="w-[11%] px-2 py-1 uppercase tracking-wider">出社</th>
                                     <th class="w-[11%] px-2 py-1 uppercase tracking-wider">中抜け</th>
                                     <th class="w-[11%] px-2 py-1 uppercase tracking-wider">戻り</th>
@@ -98,31 +98,41 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-xs">
                                 @forelse($dashboardDailyRecords as $date => $records)
-                                    <tr>
-                                        <td class="px-2 py-1 whitespace-nowrap font-medium">
+                                    <tr class="text-gray-500">
+                                        <td class="px-2 py-1 whitespace-nowrap">
                                             {{ $records['date_formatted'] ?? $date }}  <!-- ← $records['date_formatted'] を優先 -->
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap">
+                                        <td class="px-2 py-1 whitespace-nowrap ">
                                             @if($records['location'] && $records['location'] !== '---')
                                                 @if($records['is_business_trip'] ?? false)
                                                     <div class="flex items-center gap-1">
-                                                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded border border-purple-200 font-bold">
-                                                            出張
+                                                        <span class="text-purple-500">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24">
+                                                                <g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"/><path fill="currentColor" d="M12.868 5a3 3 0 0 1 2.572 1.457l2.167 3.611l2.641.33A2 2 0 0 1 22 12.383V15a3 3 0 0 1-2.128 2.872A3.001 3.001 0 0 1 14.17 18H9.829a3.001 3.001 0 0 1-5.7-.128A3 3 0 0 1 2 15v-3.807a2 2 0 0 1 .143-.743l1.426-3.564A3 3 0 0 1 6.354 5zM7 16a1 1 0 1 0 0 2a1 1 0 0 0 0-2m10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-4.132-9H11v3h4.234l-1.509-2.514A1 1 0 0 0 12.868 7M9 7H6.354a1 1 0 0 0-.928.629L4.477 10H9z"/></g>
+                                                            </svg>
                                                         </span>
-                                                        <span class="text-gray-700">{{ $records['location'] }}</span>
+                                                        {{ $records['location'] }}
                                                     </div>
                                                 @else
-                                                    <span class="text-gray-600 font-medium">本社</span>
+                                                    本社
                                                 @endif
                                             @else
-                                                <span class="text-gray-400">---</span>
+                                                <span class="text-gray-200">---</span>
                                             @endif
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_in'] ?? '---' }}</td>
-                                        <td class="px-2 py-1 whitespace-nowrap">{{ $records['break_start'] ?? '---' }}</td>
-                                        <td class="px-2 py-1 whitespace-nowrap">{{ $records['break_end'] ?? '---' }}</td>
-                                        <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_out'] ?? '---' }}</td>
-                                        <td class="px-2 py-1 whitespace-nowrap font-medium text-indigo-600">
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_in'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['check_in'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_start'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['break_start'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_end'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['break_end'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_out'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['check_out'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-600 font-bold' }}">
                                             {{ $records['work_hours'] ?? '---' }}
                                         </td>
                                     </tr>
