@@ -37,14 +37,12 @@ class AttendanceController extends Controller
         $message = '';
 
         $today = now()->format('Y-m-d');
-
         $isBusinessTripDay = false;
 
         if ($type === 'business_trip_start') {
             if (empty($note)) {
                 return response()->json(['success' => false, 'message' => '出張時はメモを入力してください'], 422);
             }
-
             $message = '出張を開始しました';
             $dbType = 'business_trip_start';
             $isBusinessTripDay = true;
@@ -52,40 +50,17 @@ class AttendanceController extends Controller
             $message = '出張を終了しました';
             $dbType = 'business_trip_end';
         } else {
-            // 通常打刻 or 出張中打刻
-
-            // ★最優先補完1★ 1つ前のレコードが終了打刻なら強制false
-            $previousRecord = $user->attendanceRecords()
-                ->latest('timestamp')
-                ->first();
-
-            if ($previousRecord && $previousRecord->type === 'business_trip_end') {
-                $isBusinessTripDay = false;
-            }
-
-            // ★最優先補完2★ 今日の終了打刻があれば強制false
-            $endedToday = $user->attendanceRecords()
-                ->whereDate('timestamp', $today)
-                ->where('type', 'business_trip_end')
-                ->exists();
-
-            if ($endedToday) {
-                $isBusinessTripDay = false;
-            }
-
-            // ★最優先補完3★ 最新レコードのフラグを直接使う
-            $latestRecord = $user->attendanceRecords()
-                ->latest('timestamp')
-                ->first();
-
+            // 出張中判定ロジック
+            $latestRecord = $user->attendanceRecords()->latest('timestamp')->first();
             if ($latestRecord) {
                 $isBusinessTripDay = $latestRecord->is_business_trip;
             }
+            // 今日の終了打刻があればfalse
+            if ($user->attendanceRecords()->whereDate('timestamp', $today)->where('type', 'business_trip_end')->exists()) {
+                $isBusinessTripDay = false;
+            }
 
             if ($isBusinessTripDay) {
-                // 出張中 → 位置チェックなし
-                $matchedLocation = null;
-                $distance = null;
                 $message = '打刻成功！（出張中）';
                 $dbType = match($type) {
                     'in' => 'check_in',
@@ -94,46 +69,54 @@ class AttendanceController extends Controller
                     'break_end' => 'break_end',
                 };
             } else {
-                // 通常 → 位置チェック必須
                 if (is_null($latitude) || is_null($longitude)) {
                     return response()->json(['success' => false, 'message' => '位置情報が取得できませんでした'], 422);
                 }
 
-                $lat = (float) $latitude;
-                $lng = (float) $longitude;
-
                 $locations = Location::all();
-
-                $matchedLocation = null;
-                $distance = null;
+                $minDistance = INF;
 
                 foreach ($locations as $location) {
-                    $locLat = (float) $location->latitude;
-                    $locLng = (float) $location->longitude;
-                    $allowed = (float) $location->allowed_radius;
-
-                    $dist = $this->haversineDistance($lat, $lng, $locLat, $locLng);
-                    Log::debug("距離計算: 勤務地={$location->name}, 計算距離={$dist}m, 許容={$allowed}m");
-
-                    if ($dist <= $allowed + 100) {  // テスト用に緩和
+                    $dist = $this->haversineDistance((float)$latitude, (float)$longitude, (float)$location->latitude, (float)$location->longitude);
+                    if ($dist < $minDistance) {
+                        $minDistance = $dist;
                         $matchedLocation = $location;
-                        $distance = round($dist);
-                        break;
                     }
                 }
 
-                $isValid = $matchedLocation !== null;
                 $dbType = match($type) {
                     'in' => 'check_in',
                     'out' => 'check_out',
                     'break_start' => 'break_start',
                     'break_end' => 'break_end',
                 };
-                $message = $isValid ? '打刻成功！' : '勤務地範囲外です。打刻できません。';
+
+                if ($matchedLocation) {
+                    $distance = round($minDistance);
+                    $allowed = (float)$matchedLocation->allowed_radius; // ここで確実に定義
+                    
+                    // 判定ロジック：500km離れていれば必ず false になるはずです
+                    $isValid = ($distance <= ($allowed + 100));
+                    
+                    // 【重要】ログに出力して確認
+                    Log::info("打刻判定ログ: 拠点={$matchedLocation->name}, 距離={$distance}m, 許容={$allowed}m, 結果=" . ($isValid ? 'OK' : 'NG'));
+                } else {
+                    $isValid = false;
+                }
+                
+                if (!$isValid) {
+                    $message = '勤務地範囲外です。';
+                    if ($type === 'in') {
+                        $message .= '「出社」は登録地点で行ってください。';
+                    }
+                } else {
+                    $message = '打刻成功！';
+                }
             }
         }
 
-        AttendanceRecord::create([
+        // DB保存（isValidがfalseでも保存される）
+        $createdRecord = AttendanceRecord::create([
             'user_id' => $user->id,
             'location_id' => $matchedLocation ? $matchedLocation->id : null,
             'type' => $dbType,
@@ -146,54 +129,27 @@ class AttendanceController extends Controller
             'is_business_trip' => $isBusinessTripDay,
         ]);
 
-        // 勤務時間の保存
+        // 勤務時間計算
         if (in_array($dbType, ['check_out', 'business_trip_end'])) {
-            Log::info("退勤系打刻検知: type={$dbType}, user_id={$user->id}");
-
-            $today = now()->format('Y-m-d');
-            Log::info("今日の日付: {$today}");
-
+            // その日の勤務時間を取得（"08:30" などの形式で返ってくる想定）
             $workHours = AttendanceRecord::calculateDailyWorkHours($today, $user->id);
-            Log::info("計算結果 workHours: {$workHours}");
 
             if ($workHours !== '0:00' && $workHours !== '---') {
-                Log::info("計算値が有効: {$workHours} → 分に変換開始");
+                // "H:i" 形式を分解して「分」に変換
+                $parts = explode(':', $workHours);
+                $totalMinutes = ((int)$parts[0] * 60) + (int)$parts[1];
 
-                [$h, $m] = explode(':', $workHours);
-                $workMinutes = ((int)$h * 60) + (int)$m;
-                Log::info("変換後 workMinutes: {$workMinutes}");
-
-                // 最新レコードをfreshで取得（キャッシュ回避）
-                $latestRecord = AttendanceRecord::where('user_id', $user->id)
-                    ->whereDate('timestamp', $today)
-                    ->latest('timestamp')
-                    ->first();
-
-                if ($latestRecord) {
-                    Log::info("保存対象レコード発見: id={$latestRecord->id}, type={$latestRecord->type}");
-
-                    // Model update が効かない場合の回避策: DBファサードで直接更新
-                    \DB::table('attendance_records')
-                        ->where('id', $latestRecord->id)
-                        ->update(['work_minutes' => $workMinutes]);
-
-                    Log::info("work_minutes 保存成功: {$workMinutes}分 (id={$latestRecord->id})");
-
-                    // 念のためモデルをリフレッシュして確認
-                    $latestRecord->refresh();
-                    Log::info("保存後確認: work_minutes = " . ($latestRecord->work_minutes ?? 'null'));
-                } else {
-                    Log::warning("今日のレコードが見つかりません: {$today}");
-                }
-            } else {
-                Log::info("計算値が無効のため保存スキップ: {$workHours}");
+                // クエリビルダではなく、モデルインスタンスを直接更新して保存
+                $createdRecord->work_minutes = $totalMinutes;
+                $createdRecord->save();
+                
+                // ログに出力して保存されたか確認（デバッグ用）
+                Log::info("勤務時間を保存しました: ID={$createdRecord->id}, 分={$totalMinutes}");
             }
-        } else {
-            Log::info("退勤系打刻ではないため保存スキップ: type={$dbType}");
         }
 
         return response()->json([
-            'success' => true,
+            'success' => $isValid,
             'message' => $message,
         ]);
     }

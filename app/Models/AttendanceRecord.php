@@ -19,8 +19,9 @@ class AttendanceRecord extends Model
         'longitude',
         'distance',
         'is_valid',
-        'is_business_trip',  // ← 追加
         'note',
+        'is_business_trip',
+        'work_minutes',
     ];
 
     protected function casts(): array
@@ -208,5 +209,79 @@ class AttendanceRecord extends Model
     public function setTimestampAttribute($value)
     {
         $this->attributes['timestamp'] = Carbon::parse($value)->setTimezone('Asia/Tokyo');
+    }
+
+    public static function calculateExcelSplit($date, $userId)
+    {
+        $records = self::where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        $inRecord = $records->whereIn('type', ['check_in', 'business_trip_start'])->first();
+        $outRecord = $records->whereIn('type', ['check_out', 'business_trip_end'])->first();
+
+        if (!$inRecord || !$outRecord) {
+            return null;
+        }
+
+        // 30分単位の丸め処理（前回同様）
+        $start = $inRecord->timestamp->copy();
+        if ($start->minute > 0 && $start->minute <= 30) {
+            $start->minute(30);
+        } elseif ($start->minute > 30) {
+            $start->addHour()->minute(0);
+        }
+        $start->second(0);
+
+        $end = $outRecord->timestamp->copy();
+        if ($end->minute > 0 && $end->minute < 30) {
+            $end->minute(0);
+        } elseif ($end->minute >= 30) {
+            $end->minute(30);
+        }
+        $end->second(0);
+
+        if ($start->gte($end)) {
+            return null;
+        }
+
+        $results = ['early' => 0, 'basic' => 0, 'over' => 0, 'night' => 0, 'total' => 0];
+
+        // 新しい時間区分ルール
+        $rules = [
+            'night_prev' => ['00:00', '07:00', 'night'], // 早朝（深夜業）
+            'early'      => ['07:00', '09:00', 'early'], // 早出
+            'basic'      => ['09:00', '18:00', 'basic'], // 基本
+            'over'       => ['18:00', '21:00', 'over'],  // 残業
+            'night_next' => ['21:00', '24:00', 'night'], // 深夜
+        ];
+
+        foreach ($rules as $range) {
+            $pStart = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $range[0] . ':00');
+            $pEnd   = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $range[1] . ':00');
+            
+            if ($range[1] === '24:00') {
+                $pEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' 00:00:00')->addDay();
+            }
+
+            $overlapStart = $start->gt($pStart) ? $start : $pStart;
+            $overlapEnd   = $end->lt($pEnd) ? $end : $pEnd;
+
+            if ($overlapStart->lt($overlapEnd)) {
+                $results[$range[2]] += $overlapStart->diffInMinutes($overlapEnd);
+            }
+        }
+
+        // 休憩60分（基本就業時間 09:00-18:00 の中からのみ引く）
+        if ($results['basic'] > 0) {
+            // 基本時間が60分以下の場合は0に、それ以上の場合は60分引く
+            $results['basic'] = max(0, $results['basic'] - 60);
+        }
+        
+        // 合計の再集計
+        $results['total'] = $results['early'] + $results['basic'] + $results['over'] + $results['night'];
+
+        return $results;
     }
 }

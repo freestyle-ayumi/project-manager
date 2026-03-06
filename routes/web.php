@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ExpenseStatusController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Admin\SummaryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,110 +24,80 @@ use App\Http\Controllers\AttendanceController;
 |--------------------------------------------------------------------------
 */
 
-// トップページ
 Route::get('/', function () {
     return view('welcome');
 });
 
-// 認証済みユーザーのみアクセス可能
+// 認証済みユーザーのみ
 Route::middleware('auth')->group(function () {
 
-    // ダッシュボード
-    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
-        ->middleware(['auth'])
-        ->name('dashboard');
+    // ダッシュボード・プロフィール
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/attendance/fix-missing', [AttendanceController::class, 'fixMissing'])->name('attendance.fix-missing');
-
-    // 打刻履歴
-    Route::get('/attendance/history', [AttendanceController::class, 'history'])
-    ->name('attendance.history')
-    ->middleware('auth');
-
-    // プロフィール
+    Route::get('/attendance/history', [AttendanceController::class, 'history'])->name('attendance.history');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // プロジェクト
+    // 業務管理系（プロジェクト、タスク、見積、納品、請求、経費、顧客）
     Route::resource('projects', ProjectController::class);
-
-    // プロジェクトキーワード
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('keyword_flags', ProjectKeywordFlagController::class);
     });
-    // キーワードテンプレートのマッチ検索（AJAX）
-    Route::get('/admin/keyword_flags/match', [App\Http\Controllers\ProjectKeywordFlagController::class, 'match'])->name('admin.keyword_flags.match');
-    Route::patch('/projects/{project}/checklists/{checklist}/toggle-status', [ProjectController::class, 'toggleChecklistStatus'])
-    ->name('projects.checklists.toggleStatus');
+    Route::get('/admin/keyword_flags/match', [ProjectKeywordFlagController::class, 'match'])->name('admin.keyword_flags.match');
+    Route::patch('/projects/{project}/checklists/{checklist}/toggle-status', [ProjectController::class, 'toggleChecklistStatus'])->name('projects.checklists.toggleStatus');
     Route::patch('/projects/{project}/checklists/{checklist}/update-link', [ProjectController::class, 'updateChecklistLink']);
     Route::post('/quotes/{quote}/downloadPdfMpdf', [QuoteController::class, 'downloadPdfMpdf'])->name('quotes.downloadPdfMpdf');
 
-
-    // タスク
-    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
-    Route::get('/tasks/weekly', [TaskController::class, 'weeklyIndex'])->name('tasks.weekly');
-    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
-    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::resource('tasks', TaskController::class);
+    Route::get('/tasks/weekly', [TaskController::class, 'weeklyIndex'])->name('tasks.weekly');
     Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
 
-
-    // 見積書
     Route::resource('quotes', QuoteController::class);
     Route::get('/quotes/{quote}/pdf-mpdf', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdfMpdf');
-    Route::patch('/quotes/{quote}/toggle-status', [App\Http\Controllers\QuoteController::class, 'toggleStatus'])->name('quotes.toggleStatus');
+    Route::patch('/quotes/{quote}/toggle-status', [QuoteController::class, 'toggleStatus'])->name('quotes.toggleStatus');
 
-    // 納品書
     Route::resource('deliveries', DeliveryController::class);
     Route::get('/deliveries/{delivery}/pdf-mpdf', [DeliveryController::class, 'downloadPdf'])->name('deliveries.downloadPdfMpdf');
     Route::patch('/deliveries/{delivery}/toggle-status', [DeliveryController::class, 'toggleStatus'])->name('deliveries.toggleStatus');
 
-    // 請求書
     Route::resource('invoices', InvoiceController::class);
     Route::patch('/invoices/{invoice}/toggle-status', [InvoiceController::class, 'toggleStatus'])->name('invoices.toggleStatus');
     Route::get('/invoices/{invoice}/pdf-mpdf', [InvoiceController::class, 'downloadPdfMpdf'])->name('invoices.downloadPdfMpdf');
 
-    // 経費
     Route::resource('expenses', ExpenseController::class);
-    Route::patch('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
-
-    // 経費ステータス
     Route::resource('expense-statuses', ExpenseStatusController::class);
     Route::patch('/expenses/{expense}/status', [ExpenseController::class, 'updateStatus'])->name('expenses.updateStatus');
 
-    // 顧客
     Route::resource('clients', ClientController::class);
-    Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
-    Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
 
-    // ユーザー管理（一覧・編集・更新・削除のみ）
-    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
-
-    // ロール管理
-    Route::prefix('roles')->name('roles.')->group(function () {
-    Route::get('/', [RoleController::class, 'index'])->name('index');
-    Route::get('/create', [RoleController::class, 'create'])->name('create'); // ←必要
-    Route::post('/', [RoleController::class, 'store'])->name('store');
-    Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
-    Route::put('/{role}', [RoleController::class, 'update'])->name('update');
-    Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+    // --- 勤怠管理 (SummaryController側で 11 or developer の制限をかけます) ---
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/summary', [SummaryController::class, 'index'])->name('summary.index');
+        Route::get('/summary/user/{user}', [SummaryController::class, 'show'])->name('summary.show');
+        Route::get('/summary/user/{user}/download', [SummaryController::class, 'download'])->name('summary.download');
     });
 
-    // ロケーション管理
-    Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    // --- 管理者機能 (UserController/RoleController/LocationController側で developer のみの制限をかけます) ---
+    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', [RoleController::class, 'index'])->name('index');
+        Route::get('/create', [RoleController::class, 'create'])->name('create');
+        Route::post('/', [RoleController::class, 'store'])->name('store');
+        Route::get('/{role}/edit', [RoleController::class, 'edit'])->name('edit');
+        Route::put('/{role}', [RoleController::class, 'update'])->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('locations', LocationController::class);
     });
-        // 打刻関連
-        Route::post('/attendance', [AttendanceController::class, 'store'])
-            ->name('attendance.store')
-            ->middleware('auth');
 
-        Route::get('/attendance/recent', [AttendanceController::class, 'recent'])
-            ->name('attendance.recent')
-            ->middleware('auth');
+    // 打刻関連
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/attendance/recent', [AttendanceController::class, 'recent'])->name('attendance.recent');
 });
 
-// 認証ルート
 require __DIR__.'/auth.php';
 
 Route::get('/check-db', function() {

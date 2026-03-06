@@ -7,6 +7,16 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    // ページ表示制限
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (auth()->check() && auth()->user()->developer == 1) {
+                return $next($request);
+            }
+            abort(403, '開発者専用の機能です。');
+        });
+    }
     /**
      * ユーザー一覧を表示する
      */

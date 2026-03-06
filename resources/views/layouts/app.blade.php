@@ -17,8 +17,8 @@
     @else
         <!-- 本番：ビルド済みアセット -->
         <?php $version = time(); ?>
-        <link rel="stylesheet" href="{{ asset('build/assets/app-DCMixztQ.css') }}?v={{ $version }}">
-        <script type="module" src="{{ asset('build/assets/app-aPOnF3vo.js') }}?v={{ $version }}" defer></script>
+        <link rel="stylesheet" href="{{ asset('build/assets/app-BRKEHGrb.css') }}?v={{ $version }}">
+        <script type="module" src="{{ asset('build/assets/app-CRp5BAWX.js') }}?v={{ $version }}" defer></script>
     @endif
 
 

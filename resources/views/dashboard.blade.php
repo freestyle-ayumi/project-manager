@@ -61,24 +61,24 @@
                                     data-type="business_trip_end">
                                 出張終了
                             </button>
-                        <!-- メモ入力エリア（最初は非表示） -->
-                        <div id="business-trip-form" class="mt-6 hidden bg-gray-50 p-6 rounded-lg border border-gray-200">
-                            <label for="business-note" class="block text-xs text-gray-700 mb-2">
-                                出張メモ（必須）<br><span class="text-red-600">*出張先や目的を必ず入力してください</span>
-                            </label>
-                            <textarea id="business-note" rows="1" class="w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="例 : アイドルプロデュース。宮城出張"></textarea>
+                            <!-- メモ入力エリア（最初は非表示） -->
+                            <div id="business-trip-form" class="mt-6 hidden bg-gray-50 p-6 rounded-lg border border-gray-200">
+                                <label for="business-note" class="block text-xs text-gray-700 mb-2">
+                                    出張メモ（必須）<br><span class="text-red-600">*出張先や目的を必ず入力してください</span>
+                                </label>
+                                <textarea id="business-note" rows="1" class="w-full border-gray-300 rounded-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="例 : アイドルプロデュース。宮城出張"></textarea>
 
-                            <div class="mt-2 flex justify-end space-x-2 text-xs">
-                                <button id="cancel-business" class="text-center py-2 px-3 text-white bg-slate-400 border border-gray-200 hover:bg-slate-700  transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    キャンセル
-                                </button>
-                                <button id="confirm-business" class="text-center py-2 px-3 text-indigo-600 bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                    出張申請
-                                </button>
+                                <div class="mt-2 flex justify-end space-x-2 text-xs">
+                                    <button id="cancel-business" class="text-center py-2 px-3 text-white bg-slate-400 border border-gray-200 hover:bg-slate-700  transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                        キャンセル
+                                    </button>
+                                    <button id="confirm-business" class="text-center py-2 px-3 text-indigo-600 bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        出張申請
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        </div>
-                    <div id="status-message" class="mt-4 text-center text-lg font-medium"></div>
+                    <div id="status-message" class="mt-4 text-center font-normal text-base"></div>
                 </div>
 
                 <div class="md:col-span-1 lg:col-span-2 bg-white p-3 rounded-lg border border-gray-200">
@@ -132,7 +132,7 @@
                                         <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_out'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
                                             {{ $records['check_out'] ?? '---' }}
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-600 font-bold' }}">
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-500 font-bold' }}">
                                             {{ $records['work_hours'] ?? '---' }}
                                         </td>
                                     </tr>
@@ -272,7 +272,7 @@
                     <input type="time" id="manual-checkout-time" class="w-full border-gray-300 rounded-md focus:ring-indigo-500 shadow-sm">
                 </div>
 
-                <button id="submit-fix-btn" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-950 transition font-bold">
+                <button id="submit-fix-btn" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-950 transition">
                     退勤時刻を登録して再開
                 </button>
             </div>
@@ -285,7 +285,7 @@
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 mb-2">登録完了</h3>
                 <p class="text-sm text-gray-600 mb-6">前日の退勤を記録しました。</p>
-                <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition font-bold">
+                <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition">
                     ダッシュボードを更新
                 </button>
             </div>
@@ -474,7 +474,7 @@
         // 初期状態でボタン制御
         updateButtons();
 
-        // 通常打刻処理（変更なし）
+        // 通常打刻処理
         async function handleCheck(type) {
             console.log(`打刻開始: ${type}`);
 
@@ -517,15 +517,22 @@
 
                         const data = await response.json();
 
-                        if (response.ok) {
+                        // --- ここから修正 ---
+                        if (data.success) {
+                            // 判定が OK の場合のみリロードして画面を更新
                             statusMessage.innerHTML = `<span class="text-green-600">${data.message || '打刻成功！'}</span>`;
-                            location.reload();  // 状態更新
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000); // メッセージを見せるために1秒待つ
                         } else {
-                            statusMessage.innerHTML = `<span class="text-red-600">エラー: ${data.message || '不明'}</span>`;
+                            // 判定が NG (範囲外) の場合はリロードさせず、赤いエラーメッセージを表示し続ける
+                            statusMessage.innerHTML = `<span class="text-red-600 font-bold">【打刻失敗】${data.message || '範囲外です'}</span>`;
+                            btn.disabled = false; // 再試行できるようにボタンを戻す
                         }
+                        // --- ここまで修正 ---
+
                     } catch (error) {
                         statusMessage.innerHTML = `<span class="text-red-600">通信エラー: ${error.message}</span>`;
-                    } finally {
                         btn.disabled = false;
                     }
                 },
@@ -533,7 +540,7 @@
                     statusMessage.innerHTML = '<span class="text-red-600">位置情報の取得に失敗しました</span>';
                     btn.disabled = false;
                 },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                { enableHighAccuracy: true } // 精度を高めるオプション（任意）
             );
         }
 

@@ -24,11 +24,11 @@
                             </div>
                             
                             <div class="flex gap-2">
-                                <button type="submit" class="inline-flex items-center px-4 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-500 focus:ring-indigo-500 active:bg-indigo-600 transition">
+                                <button type="submit" class="inline-flex items-center px-2 py-1 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 focus:outline-none focus:border-indigo-500 focus:ring-indigo-500 active:bg-indigo-600 transition">
                                     表示
                                 </button>
 
-                                <a href="{{ route('attendance.history') }}" class="inline-flex items-center px-4 py-1 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 focus:outline-none transition">
+                                <a href="{{ route('attendance.history') }}" class="inline-flex items-center px-2 py-1 bg-gray-200 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-300 focus:outline-none transition">
                                     今月
                                 </a>
                             </div>
@@ -78,13 +78,21 @@
                                             <span class="text-gray-200">---</span>
                                         @endif
                                     </td>
-                                    <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_in'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap text-gray-400">{{ $records['break_start'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap text-gray-400">{{ $records['break_end'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap">{{ $records['check_out'] }}</td>
-                                    <td class="px-2 py-1 whitespace-nowrap text-indigo-600">
-                                        {{ $records['work_hours'] != '0:00' ? $records['work_hours'] : '---' }}
-                                    </td>
+                                    <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_in'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['check_in'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_start'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['break_start'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_end'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['break_end'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_out'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
+                                            {{ $records['check_out'] ?? '---' }}
+                                        </td>
+                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-500 font-bold' }}">
+                                            {{ $records['work_hours'] ?? '---' }}
+                                        </td>
                                 </tr>
                             @endforeach
                         </tbody>

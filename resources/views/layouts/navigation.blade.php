@@ -1,7 +1,7 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between sm:justify-start h-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4">
+        <div class="flex justify-between sm:justify-center h-12">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
@@ -11,7 +11,7 @@
                 </div>
 
                 <!-- Navigation Links (PCのみ表示) -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-8 sm:flex">
+                <div class="hidden space-x-8 sm:-my-px sm:ms-8 sm:flex sm:justify-center">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
@@ -51,6 +51,7 @@
                             </x-nav-link>
                         @endif
                     @endauth
+
                 </div>
             </div>
 
@@ -75,12 +76,21 @@
 
                     <x-slot name="content">
                         @auth
-                            @if(Auth::user()->developer == 1)
-                                <x-dropdown-link :href="route('admin.locations.index')" :active="request()->routeIs('admin.locations.index')">
-                                    勤務地登録管理
+                            {{-- 管理者・開発者・経理向けのメニュー --}}
+                            @if(Auth::user()->developer == 1 || Auth::user()->role_id == 11)
+                                {{-- 勤務地登録はデベロッパーのみにするならここをさらに分ける --}}
+                                @if(Auth::user()->developer == 1)
+                                    <x-dropdown-link :href="route('admin.locations.index')" :active="request()->routeIs('admin.locations.index')">
+                                        勤務地登録管理
+                                    </x-dropdown-link>
+                                @endif
+
+                                <x-dropdown-link :href="route('admin.summary.index')" :active="request()->routeIs('admin.summary.*')">
+                                    {{ __('勤務集計') }}
                                 </x-dropdown-link>
                             @endif
 
+                            {{-- 全ログインユーザー共通のメニュー --}}
                             <x-dropdown-link :href="route('attendance.history')" :active="request()->routeIs('attendance.history')">
                                 タイムカード
                             </x-dropdown-link>
@@ -96,7 +106,9 @@
                                     {{ __('Log Out') }}
                                 </x-dropdown-link>
                             </form>
+
                         @else
+                            {{-- ゲスト（未ログイン）向けのメニュー --}}
                             <x-dropdown-link :href="route('login')">
                                 {{ __('Log in') }}
                             </x-dropdown-link>
@@ -156,12 +168,21 @@
             </x-responsive-nav-link>
 
             @auth
-                @if(in_array(Auth::user()->role->name, ['master', 'developer']) || Auth::user()->developer == 1)
-                    <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                        {{ __('ユーザー管理') }}
+                {{-- デベロッパー または 経理(11) --}}
+                @if(Auth::user()->developer == 1 || Auth::user()->role_id == 11)
+                    {{-- ユーザー管理はデベロッパーだけにするなら条件を分ける --}}
+                    @if(Auth::user()->developer == 1)
+                        <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                            {{ __('ユーザー管理') }}
+                        </x-responsive-nav-link>
+                    @endif
+                    
+                    <x-responsive-nav-link :href="route('admin.summary.index')" :active="request()->routeIs('admin.summary.*')">
+                        {{ __('勤務集計') }}
                     </x-responsive-nav-link>
                 @endif
             @endauth
+            
         </div>
     </div>
 </nav>
