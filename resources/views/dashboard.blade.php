@@ -23,10 +23,10 @@
                             <!-- 出勤 -->
                             <button id="check-in-btn" 
                                     class="text-center py-3 text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    data-type="in">
-                                出勤
+                                    data-type="in"
+                                    {{ $status !== 'can_check_in' ? 'disabled' : '' }}>
+                                    出勤
                             </button>
-
                             <!-- 中抜け / 戻り（横並び） -->
                             <div class="grid grid-cols-2 gap-4 mt-6">
                                 <button id="break-start-btn" 
@@ -98,7 +98,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-xs">
                                 @forelse($dashboardDailyRecords as $date => $records)
-                                    <tr class="text-gray-500">
+                                    <tr class="text-gray-500 hover:bg-slate-50 transition-colors duration-150">
                                         <td class="px-2 py-1 whitespace-nowrap">
                                             {{ $records['date_formatted'] ?? $date }}  <!-- ← $records['date_formatted'] を優先 -->
                                         </td>
@@ -114,8 +114,12 @@
                                                         {{ $records['location'] }}
                                                     </div>
                                                 @else
-                                                    本社
+                                                    {{-- ここは拠点IDが紐づいている場合 --}}
+                                                    {{ $records['location'] }}
                                                 @endif
+                                            @elseif(isset($records['check_in']) && $records['check_in'] !== '---')
+                                                {{-- ここがポイント：出勤時間は入っているが場所が無い場合＝範囲外 --}}
+                                                <span class="text-red-500 font-bold">範囲外</span>
                                             @else
                                                 <span class="text-gray-200">---</span>
                                             @endif

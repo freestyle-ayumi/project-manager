@@ -14,9 +14,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ExpenseStatusController;
-use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\SummaryController;
+use App\Http\Controllers\Admin\AttendanceLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/summary', [SummaryController::class, 'index'])->name('summary.index');
         Route::get('/summary/user/{user}', [SummaryController::class, 'show'])->name('summary.show');
         Route::get('/summary/user/{user}/download', [SummaryController::class, 'download'])->name('summary.download');
+        Route::get('/attendance/log', [AttendanceController::class, 'logIndex'])->name('attendance.log');
+        Route::get('/attendance/log/user/{user}', [AttendanceController::class, 'logShow'])->name('attendance.log.show');
     });
 
     // --- 管理者機能 (UserController/RoleController/LocationController側で developer のみの制限をかけます) ---
@@ -90,6 +93,16 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('admin')->name('admin.')->group(function () {
+        // 勤務集計
+        Route::get('/summary', [SummaryController::class, 'index'])->name('summary.index');
+        Route::get('/summary/user/{user}', [SummaryController::class, 'show'])->name('summary.show');
+        Route::get('/summary/user/{user}/download', [SummaryController::class, 'download'])->name('summary.download');
+
+        // 勤怠ログ（こちらを優先して使う）
+        Route::get('/attendance/log', [AttendanceLogController::class, 'index'])->name('attendance.log');
+        Route::get('/attendance/log/user/{user}', [AttendanceLogController::class, 'show'])->name('attendance.log.show');
+
+        // 勤務地登録
         Route::resource('locations', LocationController::class);
     });
 

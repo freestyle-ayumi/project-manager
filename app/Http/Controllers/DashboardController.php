@@ -18,14 +18,14 @@ class DashboardController extends Controller
         $user = Auth::user();
         $today = Carbon::today();
 
-        // 1. 自分の打刻履歴（最新20件、降順） - 既存のまま
+        // 1. 自分の打刻履歴（最新20件、降順）
         $attendanceRecords = AttendanceRecord::where('user_id', $user->id)
             ->with('location')
             ->orderBy('timestamp', 'desc')
             ->take(20)
             ->get();
 
-        // 2. 今後のプロジェクト（開催前・開催中：今日を含む） - 既存のまま
+        // 2. 今後のプロジェクト
         $upcomingProjects = Project::where(function ($query) use ($today) {
             $query->where('start_date', '>', $today)
                 ->orWhere(function ($q) use ($today) {
@@ -42,7 +42,7 @@ class DashboardController extends Controller
         ->limit(5)
         ->get();
 
-        // 3. 未承認の経費 - 既存のまま
+        // 3. 未承認の経費
         $pendingExpenses = Expense::where('user_id', $user->id)
             ->whereHas('status', function ($query) {
                 $query->whereIn('name', ['申請中', '差し戻し']);
@@ -52,7 +52,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. 割り当てられた未完了タスク - 既存のまま
+        // 4. 割り当てられた未完了タスク
         $assignedTasks = Task::whereHas('users', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })
@@ -62,123 +62,114 @@ class DashboardController extends Controller
         ->limit(5)
         ->get();
 
-        // 現在の出張状態を取得（最新のフラグ）
+        // --- ここからボタン判定ロジック（is_validを考慮） ---
+
+        // 現在の出張状態を取得（有効な最新フラグ）
         $isBusinessTrip = $user->attendanceRecords()
-            ->where('user_id', $user->id)
+            ->where('is_valid', true) // ← 有効な打刻のみ
             ->latest('timestamp')
             ->first()?->is_business_trip ?? false;
 
         // 今日の出勤済みフラグ
         $todayClockedIn = $user->attendanceRecords()
+            ->where('is_valid', true) // ← 有効な打刻のみ
             ->whereDate('timestamp', now()->toDateString())
-            ->whereIn('type', ['check_in', 'business_trip_end'])  // ← 出張終了も出勤扱い
+            ->whereIn('type', ['check_in', 'business_trip_end'])
             ->exists();
 
         // 退社済み判定
         $todayClockedOut = $user->attendanceRecords()
+            ->where('is_valid', true) // ← 有効な打刻のみ
             ->whereDate('timestamp', now()->toDateString())
             ->where('type', 'check_out')
             ->exists();
 
-        // 今週 + 前週の全日付を先に作成
-        $dashboardDailyRecords = [];
+        // 最新の有効なレコードを取得（退勤忘れ判定用）
+        $latestRecord = $user->attendanceRecords()
+            ->where('is_valid', true) // ← 有効な打刻のみ
+            ->latest('timestamp')
+            ->first();
 
+        // 前日の退勤忘れがあるか判定
+        $needsFix = false;
+        $unclosedRecord = null;
+
+        if ($latestRecord && !in_array($latestRecord->type, ['check_out', 'business_trip_end'])) {
+            if ($latestRecord->timestamp->format('Y-m-d') < now()->toDateString()) {
+                $needsFix = true;
+                $unclosedRecord = $latestRecord;
+            }
+        }
+
+        // Bladeで使うボタン状態変数の生成
+        $status = 'can_check_in';
+        if ($needsFix) {
+            $status = 'needs_fix';
+        } elseif ($todayClockedOut) {
+            $status = 'already_checked_out';
+        } elseif ($todayClockedIn || $isBusinessTrip) {
+            $status = 'already_checked_in';
+        }
+        
+        // --- ここまで判定ロジック ---
+
+        // 今週 + 前週の履歴表示用データ作成
+        $dashboardDailyRecords = [];
         $currentWeekStart = $today->copy()->startOfWeek()->startOfDay();
         $previousWeekStart = $currentWeekStart->copy()->subWeek()->startOfDay();
-
         $weeks = [$currentWeekStart, $previousWeekStart];
 
         foreach ($weeks as $weekStart) {
             $weekEnd = $weekStart->copy()->endOfWeek()->endOfDay();
 
-            // 全日付を先に作成（古い日付から新しい日付へ）
             $currentDate = $weekStart->copy();
             while ($currentDate->lte($weekEnd)) {
                 $dateKey = $currentDate->toDateString();
-                $dateFormatted = $currentDate->format('m/d (D)');
-
                 $dashboardDailyRecords[$dateKey] = [
-                    'date_formatted' => $dateFormatted,
-                    'check_in' => '---',
-                    'break_start' => '---',
-                    'break_end' => '---',
-                    'check_out' => '---',
-                    'work_hours' => '---',
-                    'location' => '---',
+                    'date_formatted' => $currentDate->format('m/d (D)'),
+                    'check_in' => '---', 'break_start' => '---', 'break_end' => '---',
+                    'check_out' => '---', 'work_hours' => '---', 'location' => '---',
                     'is_business_trip' => false,
                 ];
-
                 $currentDate = $currentDate->addDay();
             }
 
-            // 打刻データ取得（範囲を広めに）
             $weekRecords = AttendanceRecord::where('user_id', $user->id)
-                ->where('timestamp', '>=', $weekStart->subDay()->startOfDay())
-                ->where('timestamp', '<=', $weekEnd->addDay()->endOfDay())
+                ->where('is_valid', true) // ← ここを追加！無効なデータは履歴に出さない
+                ->where('timestamp', '>=', $weekStart->copy()->subDay()->startOfDay())
+                ->where('timestamp', '<=', $weekEnd->copy()->addDay()->endOfDay())
                 ->with('location')
                 ->get();
 
-            Log::info('取得した週レコード数: ' . $weekRecords->count());
-            Log::info('weekStart: ' . $weekStart->toDateTimeString() . ' ~ ' . $weekEnd->toDateTimeString());
-
-            // groupBy
-            $grouped = $weekRecords->groupBy(function ($record) {
-                return $record->timestamp->format('Y-m-d');
-            });
-
-            Log::info('groupBy キー: ' . implode(', ', $grouped->keys()->toArray()));
+            $grouped = $weekRecords->groupBy(fn($record) => $record->timestamp->format('Y-m-d'));
 
             foreach ($grouped as $dateString => $dayRecords) {
-                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateString)) {
-                    Log::warning('不正な日付キー: ' . $dateString);
-                    continue;
-                }
+                if (!isset($dashboardDailyRecords[$dateString])) continue;
 
                 $dateCarbon = Carbon::parse($dateString);
-
-                // 出社欄：check_in または business_trip_start を優先
                 $checkIn = $dayRecords->firstWhere('type', 'check_in') ?? $dayRecords->firstWhere('type', 'business_trip_start');
-
-                // 退社欄：check_out または business_trip_end を優先
                 $checkOut = $dayRecords->firstWhere('type', 'check_out') ?? $dayRecords->firstWhere('type', 'business_trip_end');
-
                 $breakStart = $dayRecords->firstWhere('type', 'break_start');
                 $breakEnd = $dayRecords->firstWhere('type', 'break_end');
 
-                // 地点情報（出張時はメモ + 緯度経度を表示）
-                $locationInfo = $dayRecords->firstWhere('type', 'business_trip_start') 
-                    ?? $dayRecords->firstWhere('type', 'business_trip_end') 
-                    ?? $dayRecords->firstWhere('type', 'check_in') 
-                    ?? $dayRecords->first();
+                $locationInfo = $dayRecords->whereIn('type', ['business_trip_start', 'business_trip_end', 'check_in'])->first() ?? $dayRecords->first();
 
                 if ($locationInfo && $locationInfo->is_business_trip) {
-                    // address があれば優先、それ以外は note のみを表示（座標を削除）
-                    if ($locationInfo->address) {
-                        $location = $locationInfo->address;
-                    } else {
-                        // ★ ここを修正：座標 ($coord) の作成と結合をやめる
-                        $location = $locationInfo->note ? trim($locationInfo->note) : '出張';
-                    }
+                    $location = $locationInfo->address ?: ($locationInfo->note ? trim($locationInfo->note) : '出張');
                 } else {
-                    $location = $locationInfo && $locationInfo->location 
-                        ? $locationInfo->location->name 
-                        : '本社';
+                    $location = $locationInfo?->location?->name ?? '本社';
                 }
 
                 $hasEnd = $dayRecords->contains(fn($r) => in_array($r->type, ['check_out', 'business_trip_end']));
-
                 $workHours = '---';
 
                 if ($hasEnd) {
-                    // 保存値があれば優先（最後の退勤レコードから取得）
-                    $lastRecord = $dayRecords->last();
-                    if ($lastRecord && $lastRecord->work_minutes !== null) {
-                        $minutes = $lastRecord->work_minutes;
-                        $h = floor($minutes / 60);
-                        $m = $minutes % 60;
+                    $lastRec = $dayRecords->last();
+                    if ($lastRec && $lastRec->work_minutes !== null) {
+                        $h = floor($lastRec->work_minutes / 60);
+                        $m = $lastRec->work_minutes % 60;
                         $workHours = sprintf('%d:%02d', $h, $m);
                     } else {
-                        // 保存値がない場合は計算（古いデータ対応）
                         $workHours = AttendanceRecord::calculateDailyWorkHours($dateString, $user->id);
                     }
                 }
@@ -196,55 +187,15 @@ class DashboardController extends Controller
             }
         }
 
-        // 1. すべての日付をキー（Y-m-d）でソート（古い→新しい）
         ksort($dashboardDailyRecords);
-
-        // 2. 今週と前週を分離（古い週を上、新しい週を下にしたいので前週を先頭に）
-        $previousWeekDates = [];
-        $currentWeekDates = [];
-
-        $currentWeekStartStr = $currentWeekStart->toDateString();
-        $previousWeekStartStr = $previousWeekStart->toDateString();
-
-        foreach ($dashboardDailyRecords as $dateKey => $data) {
-            if ($dateKey < $currentWeekStartStr) {
-                $previousWeekDates[$dateKey] = $data;  // 前週を先頭に
-            } else {
-                $currentWeekDates[$dateKey] = $data;   // 今週を後ろに
-            }
-        }
-
-        // 前週を上、今週を下に結合（各週内は古い→新しい）
+        $previousWeekDates = array_filter($dashboardDailyRecords, fn($k) => $k < $currentWeekStart->toDateString(), ARRAY_FILTER_USE_KEY);
+        $currentWeekDates = array_filter($dashboardDailyRecords, fn($k) => $k >= $currentWeekStart->toDateString(), ARRAY_FILTER_USE_KEY);
         $dashboardDailyRecords = $previousWeekDates + $currentWeekDates;
 
-        // 1. 最新のレコードを取得
-        $latestRecord = $user->attendanceRecords()->latest('timestamp')->first();
-
-        // 2. 「前日の退勤忘れ」があるか判定
-        // 条件：最新レコードが出勤系（in, break_start, business_trip_start）かつ、日付が今日より前
-        $needsFix = false;
-        $unclosedRecord = null;
-
-        if ($latestRecord && !in_array($latestRecord->type, ['check_out', 'business_trip_end'])) {
-            if ($latestRecord->timestamp->format('Y-m-d') < now()->toDateString()) {
-                $needsFix = true;
-                $unclosedRecord = $latestRecord;
-            }
-        }
-
-        // ビューに渡す
         return view('dashboard', compact(
-            'attendanceRecords',
-            'upcomingProjects',
-            'pendingExpenses',
-            'assignedTasks',
-            'today',
-            'dashboardDailyRecords',
-            'isBusinessTrip',
-            'todayClockedIn',
-            'todayClockedOut',
-            'needsFix',
-            'unclosedRecord'
+            'attendanceRecords', 'upcomingProjects', 'pendingExpenses', 'assignedTasks', 'today',
+            'dashboardDailyRecords', 'isBusinessTrip', 'todayClockedIn', 'todayClockedOut',
+            'needsFix', 'unclosedRecord', 'status'
         ));
     }
 }

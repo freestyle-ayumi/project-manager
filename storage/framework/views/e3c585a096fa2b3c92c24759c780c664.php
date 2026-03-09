@@ -9,7 +9,17 @@
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
      <?php $__env->slot('header', null, []); ?> 
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">勤務集計表</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                <?php echo e(__('勤務集計')); ?>
+
+            </h2>
+            <div class="space-x-2">
+                <a href="<?php echo e(route('admin.attendance.log')); ?>" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded text-xs">
+                    勤怠log
+                </a>
+            </div>
+        </div>
      <?php $__env->endSlot(); ?>
 
     <div class="py-4">
@@ -25,19 +35,20 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 text-xs text-left font-medium">
                         <tr>
-                            <th class="px-2 py-2 uppercase">氏名</th>
-                            <th class="px-2 py-2 uppercase">出勤日数</th>
-                            <th class="px-2 py-2 uppercase">合計勤務時間</th>
-                            <th class="px-2 py-2 uppercase text-center">操作</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">氏名</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">出勤日数</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">合計勤務時間</th>
+                            <th class="w-[25%] px-2 py-2 uppercase text-center">操作</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
+                    <tbody class="divide-y divide-gray-200 bg-white text-gray-600">
                         <?php $__currentLoopData = $summaryData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $data): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
                             <td class="px-2 py-2 whitespace-nowrap">
-                                <span class="text-gray-900"><?php echo e($data['name']); ?></span>
+                                <?php echo e($data['name']); ?>
+
                             </td>
-                            <td class="px-2 py-2 whitespace-nowrap text-gray-600"><?php echo e($data['days_worked']); ?> 日</td>
+                            <td class="px-2 py-2 whitespace-nowrap"><?php echo e($data['days_worked']); ?> 日</td>
                             <td class="px-2 py-2 whitespace-nowrap font-bold text-indigo-500"><?php echo e($data['total_hours']); ?></td>
                             <td class="px-2 py-2 whitespace-nowrap text-center">
                                 <div class="flex justify-center gap-1">

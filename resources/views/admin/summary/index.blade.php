@@ -1,6 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">勤務集計表</h2>
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('勤務集計') }}
+            </h2>
+            <div class="space-x-2">
+                <a href="{{ route('admin.attendance.log') }}" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded text-xs">
+                    勤怠log
+                </a>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-4">
@@ -16,19 +25,19 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 text-xs text-left font-medium">
                         <tr>
-                            <th class="px-2 py-2 uppercase">氏名</th>
-                            <th class="px-2 py-2 uppercase">出勤日数</th>
-                            <th class="px-2 py-2 uppercase">合計勤務時間</th>
-                            <th class="px-2 py-2 uppercase text-center">操作</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">氏名</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">出勤日数</th>
+                            <th class="w-[25%] px-2 py-2 uppercase">合計勤務時間</th>
+                            <th class="w-[25%] px-2 py-2 uppercase text-center">操作</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
+                    <tbody class="divide-y divide-gray-200 bg-white text-gray-600">
                         @foreach($summaryData as $data)
                         <tr>
                             <td class="px-2 py-2 whitespace-nowrap">
-                                <span class="text-gray-900">{{ $data['name'] }}</span>
+                                {{ $data['name'] }}
                             </td>
-                            <td class="px-2 py-2 whitespace-nowrap text-gray-600">{{ $data['days_worked'] }} 日</td>
+                            <td class="px-2 py-2 whitespace-nowrap">{{ $data['days_worked'] }} 日</td>
                             <td class="px-2 py-2 whitespace-nowrap font-bold text-indigo-500">{{ $data['total_hours'] }}</td>
                             <td class="px-2 py-2 whitespace-nowrap text-center">
                                 <div class="flex justify-center gap-1">

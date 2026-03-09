@@ -120,9 +120,10 @@ class AttendanceRecord extends Model
     public static function calculateDailyWorkHours($date, $userId)
     {
         $records = self::where('user_id', $userId)
-            ->whereDate('timestamp', $date)
-            ->orderBy('timestamp')
-            ->get();
+                ->whereDate('timestamp', $date)
+                ->where('is_valid', true) // ★ ここを追加
+                ->orderBy('timestamp')
+                ->get();
 
         if ($records->isEmpty()) {
             return '0:00';

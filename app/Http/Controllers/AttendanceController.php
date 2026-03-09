@@ -51,7 +51,10 @@ class AttendanceController extends Controller
             $dbType = 'business_trip_end';
         } else {
             // 出張中判定ロジック
-            $latestRecord = $user->attendanceRecords()->latest('timestamp')->first();
+            $latestRecord = $user->attendanceRecords()
+                ->where('is_valid', true) // ★ここが重要
+                ->latest('timestamp')
+                ->first();
             if ($latestRecord) {
                 $isBusinessTripDay = $latestRecord->is_business_trip;
             }
@@ -93,29 +96,31 @@ class AttendanceController extends Controller
 
                 if ($matchedLocation) {
                     $distance = round($minDistance);
-                    $allowed = (float)$matchedLocation->allowed_radius; // ここで確実に定義
+                    $allowed = (float)$matchedLocation->allowed_radius;
                     
-                    // 判定ロジック：500km離れていれば必ず false になるはずです
-                    $isValid = ($distance <= ($allowed + 100));
-                    
-                    // 【重要】ログに出力して確認
-                    Log::info("打刻判定ログ: 拠点={$matchedLocation->name}, 距離={$distance}m, 許容={$allowed}m, 結果=" . ($isValid ? 'OK' : 'NG'));
+                    // 距離判定（100mのバッファ）
+                    $isInRange = ($distance <= ($allowed + 100));
+
+                    if (!$isInRange) {
+                        // 【重要】範囲外なら変数を null に上書きする
+                        $matchedLocation = null; 
+                        $isValid = false;
+                        $message = '勤務地範囲外です。';
+                    } else {
+                        $isValid = true;
+                        $message = '打刻成功！';
+                    }
+
+
+                    Log::info("打刻判定ログ: " . ($matchedLocation ? "拠点: {$matchedLocation->name}" : "【範囲外】") . " 距離: {$distance}m, 結果=" . ($isValid ? 'OK' : 'NG'));
                 } else {
                     $isValid = false;
-                }
-                
-                if (!$isValid) {
-                    $message = '勤務地範囲外です。';
-                    if ($type === 'in') {
-                        $message .= '「出社」は登録地点で行ってください。';
-                    }
-                } else {
-                    $message = '打刻成功！';
+                    $message = '勤務地が見つかりません。';
                 }
             }
         }
 
-        // DB保存（isValidがfalseでも保存される）
+        // DB保存（ここで一度だけ実行）
         $createdRecord = AttendanceRecord::create([
             'user_id' => $user->id,
             'location_id' => $matchedLocation ? $matchedLocation->id : null,
@@ -131,19 +136,13 @@ class AttendanceController extends Controller
 
         // 勤務時間計算
         if (in_array($dbType, ['check_out', 'business_trip_end'])) {
-            // その日の勤務時間を取得（"08:30" などの形式で返ってくる想定）
             $workHours = AttendanceRecord::calculateDailyWorkHours($today, $user->id);
 
             if ($workHours !== '0:00' && $workHours !== '---') {
-                // "H:i" 形式を分解して「分」に変換
                 $parts = explode(':', $workHours);
                 $totalMinutes = ((int)$parts[0] * 60) + (int)$parts[1];
-
-                // クエリビルダではなく、モデルインスタンスを直接更新して保存
                 $createdRecord->work_minutes = $totalMinutes;
                 $createdRecord->save();
-                
-                // ログに出力して保存されたか確認（デバッグ用）
                 Log::info("勤務時間を保存しました: ID={$createdRecord->id}, 分={$totalMinutes}");
             }
         }
@@ -236,16 +235,16 @@ class AttendanceController extends Controller
         });
 
         foreach ($grouped as $date => $dayRecords) {
-            // ★修正：出勤レコード または 出張開始レコードを取得
-            $checkIn = $dayRecords->whereIn('type', ['check_in', 'business_trip_start'])->first();
+            // ★ 修正：is_valid が true のレコードの中から「出勤」系を探す
+            $validDayRecords = $dayRecords->where('is_valid', true);
+
+            $checkIn = $validDayRecords->whereIn('type', ['check_in', 'business_trip_start'])->first();
+            $breakStart = $validDayRecords->firstWhere('type', 'break_start');
+            $breakEnd = $validDayRecords->firstWhere('type', 'break_end');
+            $checkOut = $validDayRecords->whereIn('type', ['check_out', 'business_trip_end'])->first();
             
-            $breakStart = $dayRecords->firstWhere('type', 'break_start');
-            $breakEnd = $dayRecords->firstWhere('type', 'break_end');
-            
-            // ★修正：退勤レコード または 出張終了レコードを取得
-            $checkOut = $dayRecords->whereIn('type', ['check_out', 'business_trip_end'])->first();
-            
-            $mainRecord = $dayRecords->whereIn('type', ['check_in', 'business_trip_start'])->first();
+            // 表示の基準となるメインレコードも有効なものから選ぶ
+            $mainRecord = $checkIn; 
 
             $monthDates[$date] = [
                 'check_in' => $checkIn ? $checkIn->timestamp->format('H:i') : '---',
@@ -253,9 +252,9 @@ class AttendanceController extends Controller
                 'break_end' => $breakEnd ? $breakEnd->timestamp->format('H:i') : '---',
                 'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : '---',
                 'work_hours' => AttendanceRecord::calculateDailyWorkHours($date, $user->id),
-                'location' => ($mainRecord && $mainRecord->location) ? $mainRecord->location->name : null,
+                // 有効なレコードがない場合は location を null にする
+                'location' => $mainRecord ? $mainRecord->display_location : null,
                 'is_business_trip' => $mainRecord ? (bool)$mainRecord->is_business_trip : false,
-                // 出張中かどうかを判断しやすくするためにメモも渡すならここに追加（任意）
                 'note' => $mainRecord ? $mainRecord->note : null,
             ];
         }
@@ -298,5 +297,25 @@ class AttendanceController extends Controller
         AttendanceRecord::calculateDailyWorkHours($oldRecord->timestamp->format('Y-m-d'), Auth::id());
 
         return response()->json(['success' => true]);
+    }
+
+    public static function getButtonStatus($user)
+    {
+        // 有効な打刻（失敗していない打刻）の中で最新のものを取得
+        $latest = $user->attendanceRecords()
+            ->where('is_valid', true)
+            ->latest('timestamp')
+            ->first();
+
+        if (!$latest) {
+            return 'can_check_in'; // 打刻が一つもない＝出社可能
+        }
+
+        // 最新の有効な打刻タイプによって、次に押せるボタンを判定
+        return match ($latest->type) {
+            'check_in', 'break_end', 'business_trip_start' => 'can_check_out', // 出勤中＝退勤・中抜けが可能
+            'break_start' => 'can_break_end', // 中抜け中＝戻りが可能
+            default => 'can_check_in', // 退勤済み＝出社が可能
+        };
     }
 }

@@ -33,10 +33,10 @@
                             <!-- 出勤 -->
                             <button id="check-in-btn" 
                                     class="text-center py-3 text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                    data-type="in">
-                                出勤
+                                    data-type="in"
+                                    <?php echo e($status !== 'can_check_in' ? 'disabled' : ''); ?>>
+                                    出勤
                             </button>
-
                             <!-- 中抜け / 戻り（横並び） -->
                             <div class="grid grid-cols-2 gap-4 mt-6">
                                 <button id="break-start-btn" 
@@ -108,7 +108,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-xs">
                                 <?php $__empty_1 = true; $__currentLoopData = $dashboardDailyRecords; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $records): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                    <tr class="text-gray-500">
+                                    <tr class="text-gray-500 hover:bg-slate-50 transition-colors duration-150">
                                         <td class="px-2 py-1 whitespace-nowrap">
                                             <?php echo e($records['date_formatted'] ?? $date); ?>  <!-- ← $records['date_formatted'] を優先 -->
                                         </td>
@@ -125,8 +125,13 @@
 
                                                     </div>
                                                 <?php else: ?>
-                                                    本社
+                                                    
+                                                    <?php echo e($records['location']); ?>
+
                                                 <?php endif; ?>
+                                            <?php elseif(isset($records['check_in']) && $records['check_in'] !== '---'): ?>
+                                                
+                                                <span class="text-red-500 font-bold">範囲外</span>
                                             <?php else: ?>
                                                 <span class="text-gray-200">---</span>
                                             <?php endif; ?>
