@@ -16,12 +16,14 @@ class TaskController extends Controller
     $holidays = [];
 
     // ログインユーザーのタスク（絞り込みなし、全件）
-    $myTasks = Task::whereExists(function($query) {
-        $query->select('*')
-            ->from('task_user')
-            ->whereColumn('task_user.task_id', 'tasks.id')
-            ->where('task_user.user_id', auth()->id());
-    })->with(['project', 'assignees'])->get();
+    $myTasks = Task::where(function($query) {
+        $query->where('user_id', auth()->id())
+              ->orWhereHas('assignees', function($q) {
+                  $q->where('users.id', auth()->id());
+              });
+    })
+    ->with(['project', 'assignees'])
+    ->get();
 
     // 他のユーザー（tasksも絞り込みなし、全件）
     $userQuery = User::with(['tasks' => function($query) {

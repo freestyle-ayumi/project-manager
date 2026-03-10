@@ -96,82 +96,70 @@
                         </thead>
                         <tbody>
                             <tr class="border-b">
-                                <td class="px-2 py-1 border bg-gray-50">&nbsp;</td>
+                                <td class="px-2 py-1 border bg-gray-50 text-xs text-gray-400 text-center">タスク</td>
                                 @foreach($headerDays as $hd)
                                     @php
                                         $taskBgClass = $hd['day']->dayOfWeek === 0 || $hd['isHoliday']
                                             ? 'bg-pink-50'
                                             : ($hd['day']->dayOfWeek === 6 ? 'bg-blue-50' : 'bg-white');
 
-                                        // ★ここを修正：その日のみに該当するタスクだけを抽出
                                         $currentDay = $hd['day'];
 
-                                        $tasksForDay = $myTasks->filter(function ($task) use ($currentDay) {
-                                            // Carbonで安全にパース（nullの場合はスキップ）
+                                        // ① まず、その日の日付に該当するタスクを「一つの塊」として抽出
+                                        $allTasksForDay = $myTasks->filter(function ($task) use ($currentDay) {
                                             $start = $task->start_date ? Carbon::parse($task->start_date) : null;
                                             $due   = $task->due_date   ? Carbon::parse($task->due_date)   : null;
                                             $plans = $task->plans_date ? Carbon::parse($task->plans_date) : null;
 
-                                            // 条件1: 開始日がその日
-                                            if ($start && $start->isSameDay($currentDay)) {
-                                                return true;
-                                            }
-
-                                            // 条件2: 期限日がその日
-                                            if ($due && $due->isSameDay($currentDay)) {
-                                                return true;
-                                            }
-
-                                            // 条件3: 予定日がその日
-                                            if ($plans && $plans->isSameDay($currentDay)) {
-                                                return true;
-                                            }
-
-                                            // 条件4: 期間内に含まれる（start_date 〜 due_date）
-                                            if ($start && $due && $currentDay->between($start, $due)) {
-                                                return true;
-                                            }
-
-                                            // 上記のどれにも該当しなければ表示しない
+                                            if ($start && $start->isSameDay($currentDay)) return true;
+                                            if ($due && $due->isSameDay($currentDay)) return true;
+                                            if ($plans && $plans->isSameDay($currentDay)) return true;
+                                            if ($start && $due && $currentDay->between($start, $due)) return true;
                                             return false;
+                                        });
+
+                                        // ② 抽出された「当日分のタスク」を、さらにプロジェクト名でグループ化する
+                                        $groupedByProject = $allTasksForDay->groupBy(function($task) {
+                                            return $task->project->name ?? 'イベントなし';
                                         });
                                     @endphp
 
-                                    <td class="px-2 py-1 border {{ $taskBgClass }}">
-                                        @if ($tasksForDay->isNotEmpty())
-                                            <ul class="m-0 p-0 text-xs">
-                                                @foreach ($tasksForDay as $task)
-                                                    <li class="flex items-start gap-1 mb-1">
-                                                        <span class="text-black">•</span>
-                                                        <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline">
-                                                            {{ $task->name }}
-                                                            @if($task->start_time)
-                                                                <span class="text-gray-500">({{ \Carbon\Carbon::parse($task->start_time)->format('H:i') }})</span>
-                                                            @endif
-                                                        </a>
-
-                                                        <!-- ステータスバッジ（頭1文字だけ表示） -->
-                                                        @php
-                                                            $status = $task->status ?? '未完了';
-
-                                                            // 頭1文字だけ取得（日本語なので mb_substr で安全に）
-                                                            $firstChar = mb_substr($status, 0, 1);
-
-                                                            // 色は show.blade.php に合わせたまま
-                                                            $statusClass = match($status) {
-                                                                '完了'   => 'bg-green-300 text-stone-800',
-                                                                '修正'   => 'bg-amber-500 text-white',
-                                                                '無効'   => 'bg-gray-500 text-white',
-                                                                default  => 'bg-red-500 text-white',
-                                                            };
-                                                        @endphp
-
-                                                        <span class="inline-flex items-center px-0.5 py-0.2 rounded-sm text-xs {{ $statusClass }}">
-                                                            {{ $firstChar }}
-                                                        </span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                    <td class="px-1 py-1 border {{ $taskBgClass }} align-top">
+                                        @if ($groupedByProject->isNotEmpty())
+                                            {{-- イベント（プロジェクト）ごとにループ --}}
+                                            @foreach ($groupedByProject as $projectName => $tasks)
+                                                <div class="last:mb-0">
+                                                    {{-- イベント名（小さく表示） --}}
+                                                    <div class="text-[9px] text-white text-left leading-tight bg-slate-500 pt-0.5 pb-0 px-1 mb-0.5">
+                                                        {{ $projectName }}
+                                                    </div>
+                                                    
+                                                    {{-- そのイベントに該当するタスク --}}
+                                                    <ul class="m-0 p-0 text-[11px]">
+                                                        @foreach ($tasks as $task)
+                                                            <li class="flex items-start gap-1 mb-0.5 leading-snug text-left">
+                                                                <span class="text-black text-[9px] mt-0.5">・</span>
+                                                                <a href="{{ route('tasks.show', $task->id) }}" class="text-blue-600 hover:underline flex-1">
+                                                                    {{ $task->name }}
+                                                                </a>
+                                                                @php
+                                                                    $status = $task->status ?? '未完了';
+                                                                    $firstChar = mb_substr($status, 0, 1);
+                                                                    $statusClass = match($status) {
+                                                                        '完了'   => 'bg-green-300 text-stone-800',
+                                                                        '修正'   => 'bg-amber-500 text-white',
+                                                                        '無効'   => 'bg-gray-500 text-white',
+                                                                        default  => 'bg-red-500 text-white',
+                                                                    };
+                                                                @endphp
+                                                                <span class="inline-flex px-0.5 rounded-sm text-[8px] scale-90 origin-right {{ $statusClass }}">
+                                                                    {{ $firstChar }}
+                                                                </span>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endforeach
                                         @endif
                                     </td>
                                 @endforeach
@@ -298,12 +286,28 @@
                                                 ? 'bg-pink-50'
                                                 : ($hd['day']->dayOfWeek === 6 ? 'bg-blue-50' : 'bg-white');
 
-                                            // フィルタ完全削除（コントローラーで取得済み全タスクを表示）
-                                            $tasksForDay = $user->tasks;
+                                            // ★修正ポイント：そのユーザーのタスクの中から、表示中の日付($currentDay)に該当するものだけを抽出
+                                            $currentDay = $hd['day'];
+                                            $tasksForDay = $user->tasks->filter(function ($task) use ($currentDay) {
+                                                $start = $task->start_date ? \Carbon\Carbon::parse($task->start_date) : null;
+                                                $due   = $task->due_date   ? \Carbon\Carbon::parse($task->due_date)   : null;
+                                                $plans = $task->plans_date ? \Carbon\Carbon::parse($task->plans_date) : null;
+
+                                                // 1. 開始日がその日
+                                                if ($start && $start->isSameDay($currentDay)) return true;
+                                                // 2. 期限日がその日
+                                                if ($due && $due->isSameDay($currentDay)) return true;
+                                                // 3. 予定日がその日
+                                                if ($plans && $plans->isSameDay($currentDay)) return true;
+                                                // 4. 期間内（開始〜期限）に含まれる
+                                                if ($start && $due && $currentDay->between($start, $due)) return true;
+
+                                                return false;
+                                            });
                                         @endphp
 
                                         <td class="px-2 py-1 border align-top {{ $taskBgClass }}">
-                                            <div class="flex justify-between items-center">
+                                            <div class="flex flex-col h-full justify-between">
                                                 @if ($tasksForDay->isNotEmpty())
                                                     <ul class="m-0 p-0 text-xs">
                                                         @foreach ($tasksForDay as $task)
@@ -318,15 +322,16 @@
                                                             </li>
                                                         @endforeach
                                                     </ul>
-                                                @else
-                                                    <span class="text-gray-400 text-xs"></span>
                                                 @endif
 
-                                                <a href="{{ route('tasks.create', ['user_id' => $user->id, 'date' => $hd['day']->format('Y-m-d')]) }}"
-                                                class="text-green-600 hover:text-green-800"
-                                                title="タスク追加">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm4 7a1 1 0 0 1 1-1h3V8a1 1 0 1 1 2 0v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 0 1-1-1"/></g></svg>
-                                                </a>
+                                                {{-- タスク追加ボタンを右下に配置 --}}
+                                                <div class="flex justify-end mt-1">
+                                                    <a href="{{ route('tasks.create', ['user_id' => $user->id, 'date' => $hd['day']->format('Y-m-d')]) }}"
+                                                    class="text-green-600 hover:text-green-800"
+                                                    title="タスク追加">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm4 7a1 1 0 0 1 1-1h3V8a1 1 0 1 1 2 0v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 0 1-1-1"/></g></svg>
+                                                    </a>
+                                                </div>
                                             </div>
                                         </td>
                                     @endforeach

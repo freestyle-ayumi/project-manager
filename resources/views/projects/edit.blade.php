@@ -1,4 +1,5 @@
 <x-app-layout>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <x-slot name="header">
         <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
             {{ __('イベント編集') }}
@@ -36,26 +37,35 @@
                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                             </div>
 
-                            {{-- カラー --}}
-                            <div class="col-span-1" x-data="{ open: false, selectedColor: {{ old('color', $project->color ?? $colors->first()->id) }}, selectedHex: '{{ optional($colors->firstWhere('id', (int) old('color', $project->color ?? $colors->first()->id)))->hex_code ?? '#3B82F6' }}' }" x-cloak>
+                            {{-- カラー選択部分 --}}
+                            <div class="col-span-1" 
+                                x-data="{ 
+                                    open: false, 
+                                    {{-- color ではなく color_id を直接参照する --}}
+                                    selectedColor: {{ (int) old('color_id', $project->color_id) }}, 
+                                    selectedHex: '{{ $colors->firstWhere('id', (int) old('color_id', $project->color_id))->hex_code ?? '#3B82F6' }}' 
+                                }">
                                 <x-input-label>カラー</x-input-label>
-                                <div class="relative">
-                                    <button type="button" @click="open = !open" class="w-full border border-gray-300 rounded-md px-3 py-1.5 flex items-center justify-between focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                                <div class="relative" @click.outside="open = false">
+                                    <button type="button" @click="open = !open" 
+                                            class="w-full border border-gray-300 rounded-md px-3 py-1.5 flex items-center justify-between bg-white text-sm">
                                         <span :style="'color:' + selectedHex">■</span>
                                         <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     </button>
-                                    <ul x-show="open" @click.outside="open = false" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-auto">
+
+                                    <ul x-show="open" style="display: none;" 
+                                        class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-auto">
                                         @foreach ($colors as $color)
-                                            <li @click="selectedColor={{ $color->id }}; selectedHex='{{ $color->hex_code }}'; open=false"
+                                            <li @click="selectedColor = {{ $color->id }}; selectedHex = '{{ $color->hex_code }}'; open = false"
                                                 class="cursor-pointer px-3 py-1.5 hover:bg-gray-100 text-center"
-                                                :style="'color:' + '{{ $color->hex_code }}'">■</li>
+                                                style="color: {{ $color->hex_code }};">■</li>
                                         @endforeach
                                     </ul>
-                                    <input type="hidden" name="color" :value="selectedColor">
+                                    {{-- :value で Alpine.js の変数と同期させる --}}
+                                    <input type="hidden" name="color_id" :value="selectedColor">
                                 </div>
-                                <x-input-error :messages="$errors->get('color')" class="mt-2" />
                             </div>
 
                             {{-- 顧客 --}}
@@ -81,7 +91,13 @@
                         </div>
 
                         {{-- 2段目: 担当者チップ --}}
-                        <div class="grid grid-cols-12 gap-4 mb-2" x-data="userChips({{ json_encode($users) }}, {{ json_encode(old('users', $projectUsers ?? [])) }})" x-init="init()" x-cloak>
+                        <div class="grid grid-cols-12 gap-4 mb-2"
+                            x-data="userChips(
+                                {{ json_encode($users) }}, 
+                                {{ json_encode(array_map('intval', (array) old('users', $project->users->pluck('id')->toArray()))) }}
+                            )" 
+                            x-init="init()" 
+                            x-cloak>
                             {{-- 左: 担当者チップ --}}
                             <div class="col-span-4">
                                 <x-input-label value="担当者" />
@@ -353,7 +369,6 @@
         }
     }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         window.EDIT_CHECKLISTS = @json($checklists);
     </script>

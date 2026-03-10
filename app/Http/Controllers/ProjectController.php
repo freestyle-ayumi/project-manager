@@ -140,8 +140,8 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name'=>'required|string|max:255',
-            'color'=>'required|integer|exists:colors,id',
             'client_id'=>'required|integer|exists:clients,id',
+            'color_id' => 'required|integer|exists:colors,id',
             'venue'=>'required|string|max:255',
             'start_date'=>'required|date',
             'end_date'=>'nullable|date|after_or_equal:start_date',
@@ -159,7 +159,7 @@ class ProjectController extends Controller
         // プロジェクト作成
         $project = Project::create([
             'name'=>$request->name,
-            'color'=>$request->color,
+            'color_id' => $request->color_id,
             'client_id'=>$request->client_id,
             'venue'=>$request->venue,
             'start_date'=>$request->start_date,
@@ -207,7 +207,7 @@ class ProjectController extends Controller
         $users = User::all();
 
         // プロジェクトに紐づく担当者IDを取得
-        $projectUsers = $project->users()->pluck('id')->toArray();
+        $projectUsers = $project->users()->pluck('users.id')->toArray();
 
         // プロジェクトに紐づくチェックリストを取得
         $checklists = $project->checklists()->get();
@@ -227,8 +227,8 @@ class ProjectController extends Controller
     {
         $request->validate([
             'name'=>'required|string|max:255',
-            'color'=>'required|integer|exists:colors,id',
             'client_id'=>'required|integer|exists:clients,id',
+            'color_id' => 'required|integer|exists:colors,id',
             'venue'=>'required|string|max:255',
             'start_date'=>'required|date',
             'end_date'=>'nullable|date|after_or_equal:start_date',
@@ -247,7 +247,7 @@ class ProjectController extends Controller
         // プロジェクト更新
         $project->update([
             'name'=>$request->name,
-            'color'=>$request->color,
+            'color_id' => $request->color_id,
             'client_id'=>$request->client_id,
             'venue'=>$request->venue,
             'start_date'=>$request->start_date,

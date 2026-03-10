@@ -451,7 +451,6 @@
         calendar.render();
         console.log("✅ カレンダー描画完了（Blade版）");
 
-        // ✅ カレンダー描画後に「＋新規」ボタンを右上に追加
         const toolbar = el.querySelector('.fc-header-toolbar .fc-toolbar-chunk:last-child');
         if (toolbar) {
             const btn = document.createElement('a');

@@ -42,12 +42,19 @@
                             </div>
 
                             {{-- カラー --}}
-                            <div class="col-span-3 sm:col-span-1" x-data="{ open: false, selectedColor: {{ old('color', $colors->first()->id) }}, selectedHex: '{{ optional($colors->firstWhere('id', (int) old('color', $colors->first()->id)))->hex_code ?? '#3B82F6' }}' }" x-cloak>
+                            <div class="col-span-3 sm:col-span-1" 
+                                x-data="{ 
+                                    open: false, 
+                                    {{-- color ではなく color_id を参照するように統一 --}}
+                                    selectedColor: {{ (int) old('color_id', $colors->first()->id) }}, 
+                                    selectedHex: '{{ $colors->firstWhere('id', (int) old('color_id', $colors->first()->id))->hex_code ?? '#3B82F6' }}' 
+                                }" 
+                                x-cloak>
                                 <x-input-label>カラー</x-input-label>
-                                <div class="relative">
+                                <div class="relative" @click.outside="open = false">
                                     <button type="button"
                                             @click="open = !open"
-                                            class="w-full border border-gray-300 rounded-md pl-3 pr-3 sm:pr-2 py-1.5 flex items-center justify-between focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
+                                            class="w-full border border-gray-300 rounded-md pl-3 pr-3 sm:pr-2 py-1.5 flex items-center justify-between bg-white focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-sm">
                                         <span :style="'color:' + selectedHex">■</span>
                                         <svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -55,20 +62,22 @@
                                     </button>
 
                                     <ul x-show="open"
-                                        @click.outside="open = false"
+                                        style="display: none;"
                                         class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-auto">
                                         @foreach ($colors as $color)
                                             <li @click="selectedColor={{ $color->id }}; selectedHex='{{ $color->hex_code }}'; open=false"
                                                 class="cursor-pointer px-3 py-1.5 hover:bg-gray-100 text-center"
-                                                :style="'color:' + '{{ $color->hex_code }}'">
+                                                style="color: {{ $color->hex_code }};">
                                                 ■
                                             </li>
                                         @endforeach
                                     </ul>
 
-                                    <input type="hidden" name="color" :value="selectedColor">
+                                    {{-- name 属性を color から color_id に変更 --}}
+                                    <input type="hidden" name="color_id" :value="selectedColor">
                                 </div>
-                                <x-input-error :messages="$errors->get('color')" class="mt-2" />
+                                {{-- エラーメッセージのキーも color_id に変更 --}}
+                                <x-input-error :messages="$errors->get('color_id')" class="mt-2" />
                             </div>
 
                             {{-- 顧客 --}}

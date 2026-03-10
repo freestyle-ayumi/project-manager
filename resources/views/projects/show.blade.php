@@ -269,9 +269,7 @@
                                             <a href="{{ route('invoices.show', $latestInvoice->id) }}" class="text-blue-600 hover:text-blue-800 hover:underline">
                                                 ¥{{ number_format($project->invoices_sum_total_amount) }}
                                             </a>
-                                            {{-- 請求書PDFダウンロードリンクアイコン --}}
                                             @if (isset($latestInvoice->pdf_path) && $latestInvoice->pdf_path)
-                                                {{-- TODO: 請求書PDFのパスを保存するロジックと、invoices.downloadPdf ルートの実装が必要です --}}
                                                 <a href="{{-- route('invoices.downloadPdf', $latestInvoice->id) --}}" target="_blank" class="ml-2 text-red-600 hover:text-red-800" title="PDFをダウンロード">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                         <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>

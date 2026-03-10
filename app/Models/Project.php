@@ -20,8 +20,8 @@ class Project extends Model
         'total_expenses',
         'net_profit',
         'user_id',
+        'color_id',
         'venue',
-        'color',
     ];
     public function client()
     {
