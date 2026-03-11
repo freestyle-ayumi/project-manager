@@ -1,9 +1,19 @@
-<x-app-layout>
-    <x-slot name="header">
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+     <?php $__env->slot('header', null, []); ?> 
         <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
-            {{ __('ダッシュボード') }}
+            <?php echo e(__('ダッシュボード')); ?>
+
         </h2>
-    </x-slot>
+     <?php $__env->endSlot(); ?>
     <style>
         @keyframes blink-bg {
             0%, 100% { background-color: rgb(252 165 165, 0.5); }
@@ -29,7 +39,7 @@
                             <button id="check-in-btn" 
                                     class="text-center py-3 text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                     data-type="in"
-                                    {{ $status !== 'can_check_in' ? 'disabled' : '' }}>
+                                    <?php echo e($status !== 'can_check_in' ? 'disabled' : ''); ?>>
                                     出勤
                             </button>
                             <!-- 中抜け / 戻り（横並び） -->
@@ -107,52 +117,59 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200 text-xs">
-                                @forelse($dashboardDailyRecords as $date => $records)
+                                <?php $__empty_1 = true; $__currentLoopData = $dashboardDailyRecords; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $records): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr class="text-gray-500 hover:bg-slate-50 transition-colors duration-150">
                                         <td class="px-2 py-1 whitespace-nowrap">
-                                            {{ $records['date_formatted'] ?? $date }}  <!-- ← $records['date_formatted'] を優先 -->
+                                            <?php echo e($records['date_formatted'] ?? $date); ?>  <!-- ← $records['date_formatted'] を優先 -->
                                         </td>
                                         <td class="px-2 py-1 whitespace-nowrap ">
-                                            @if($records['location'] && $records['location'] !== '---')
-                                                @if($records['is_business_trip'] ?? false)
+                                            <?php if($records['location'] && $records['location'] !== '---'): ?>
+                                                <?php if($records['is_business_trip'] ?? false): ?>
                                                     <div class="flex items-center gap-1">
                                                         <span class="text-purple-500">
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24">
                                                                 <g fill="none" fill-rule="evenodd"><path d="M0 0h24v24H0z"/><path fill="currentColor" d="M12.868 5a3 3 0 0 1 2.572 1.457l2.167 3.611l2.641.33A2 2 0 0 1 22 12.383V15a3 3 0 0 1-2.128 2.872A3.001 3.001 0 0 1 14.17 18H9.829a3.001 3.001 0 0 1-5.7-.128A3 3 0 0 1 2 15v-3.807a2 2 0 0 1 .143-.743l1.426-3.564A3 3 0 0 1 6.354 5zM7 16a1 1 0 1 0 0 2a1 1 0 0 0 0-2m10 0a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-4.132-9H11v3h4.234l-1.509-2.514A1 1 0 0 0 12.868 7M9 7H6.354a1 1 0 0 0-.928.629L4.477 10H9z"/></g>
                                                             </svg>
                                                         </span>
-                                                        {{ $records['location'] }}
+                                                        <?php echo e($records['location']); ?>
+
                                                     </div>
-                                                @else
-                                                    {{-- ここは拠点IDが紐づいている場合 --}}
-                                                    {{ $records['location'] }}
-                                                @endif
-                                            @elseif(isset($records['check_in']) && $records['check_in'] !== '---')
-                                                {{-- ここがポイント：出勤時間は入っているが場所が無い場合＝範囲外 --}}
+                                                <?php else: ?>
+                                                    
+                                                    <?php echo e($records['location']); ?>
+
+                                                <?php endif; ?>
+                                            <?php elseif(isset($records['check_in']) && $records['check_in'] !== '---'): ?>
+                                                
                                                 <span class="text-red-500 font-bold">範囲外</span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="text-gray-200">---</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_in'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
-                                            {{ $records['check_in'] ?? '---' }}
+                                        <td class="px-2 py-1 whitespace-nowrap <?php echo e(($records['check_in'] ?? '---') === '---' ? 'text-gray-200' : ''); ?>">
+                                            <?php echo e($records['check_in'] ?? '---'); ?>
+
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_start'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
-                                            {{ $records['break_start'] ?? '---' }}
+                                        <td class="px-2 py-1 whitespace-nowrap <?php echo e(($records['break_start'] ?? '---') === '---' ? 'text-gray-200' : ''); ?>">
+                                            <?php echo e($records['break_start'] ?? '---'); ?>
+
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['break_end'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
-                                            {{ $records['break_end'] ?? '---' }}
+                                        <td class="px-2 py-1 whitespace-nowrap <?php echo e(($records['break_end'] ?? '---') === '---' ? 'text-gray-200' : ''); ?>">
+                                            <?php echo e($records['break_end'] ?? '---'); ?>
+
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['check_out'] ?? '---') === '---' ? 'text-gray-200' : '' }}">
-                                            {{ $records['check_out'] ?? '---' }}
+                                        <td class="px-2 py-1 whitespace-nowrap <?php echo e(($records['check_out'] ?? '---') === '---' ? 'text-gray-200' : ''); ?>">
+                                            <?php echo e($records['check_out'] ?? '---'); ?>
+
                                         </td>
-                                        <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-500 font-bold' }}">
-                                            {{ $records['work_hours'] ?? '---' }}
+                                        <td class="px-2 py-1 whitespace-nowrap <?php echo e(($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-500 font-bold'); ?>">
+                                            <?php echo e($records['work_hours'] ?? '---'); ?>
+
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr><td colspan="7" class="text-center py-8 text-gray-500">打刻データがありません</td></tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -164,96 +181,105 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div class="bg-white p-3 rounded-lg border border-gray-200 text-sm">
                             <h3 class="font-bold text-xl mb-1 text-gray-800">イベント</h3>
-                            @if($upcomingProjects->isEmpty())
+                            <?php if($upcomingProjects->isEmpty()): ?>
                                 <p class="text-gray-600">開催前・開催中のイベントはありません。</p>
-                            @else
+                            <?php else: ?>
                                 <ul class="space-y-1">
-                                    @foreach($upcomingProjects as $project)
+                                    <?php $__currentLoopData = $upcomingProjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <li class="flex justify-between items-center bg-gray-50 p-2 rounded-md">
                                             <div class="text-xs">
-                                                <a href="{{ route('projects.show', $project) }}" class="text-sm text-blue-600 hover:underline">
-                                                    {{ $project->name }}
+                                                <a href="<?php echo e(route('projects.show', $project)); ?>" class="text-sm text-blue-600 hover:underline">
+                                                    <?php echo e($project->name); ?>
+
                                                 </a>
                                                 <p class="text-gray-500">
-                                                    {{ \Carbon\Carbon::parse($project->start_date)->format('m/d') }}
-                                                    @if($project->end_date)
-                                                        〜 {{ \Carbon\Carbon::parse($project->end_date)->format('m/d') }}
-                                                    @endif
-                                                    （{{ $project->client->abbreviation ?? '未設定' }}）
+                                                    <?php echo e(\Carbon\Carbon::parse($project->start_date)->format('m/d')); ?>
+
+                                                    <?php if($project->end_date): ?>
+                                                        〜 <?php echo e(\Carbon\Carbon::parse($project->end_date)->format('m/d')); ?>
+
+                                                    <?php endif; ?>
+                                                    （<?php echo e($project->client->abbreviation ?? '未設定'); ?>）
                                                 </p>
                                             </div>
                                             <span class="text-xs px-2 py-1 rounded-full
-                                                {{ $project->start_date > $today ? 'bg-red-200 text-red-800' : 'bg-amber-200 text-amber-800' }}">
-                                                {{ $project->start_date > $today ? '開催前' : '開催中' }}
+                                                <?php echo e($project->start_date > $today ? 'bg-red-200 text-red-800' : 'bg-amber-200 text-amber-800'); ?>">
+                                                <?php echo e($project->start_date > $today ? '開催前' : '開催中'); ?>
+
                                             </span>
                                         </li>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
-                            @endif
+                            <?php endif; ?>
                             <div class="mt-4 text-right">
-                                <a href="{{ route('projects.index') }}" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
+                                <a href="<?php echo e(route('projects.index')); ?>" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
                             </div>
                         </div>
 
                         <div class="bg-white p-3 rounded-lg border border-gray-200 text-sm">
                             <h3 class="font-bold text-xl mb-1 text-gray-800">未承認の経費</h3>
-                            @if($pendingExpenses->isEmpty())
+                            <?php if($pendingExpenses->isEmpty()): ?>
                                 <p class="text-gray-600">未承認の経費申請はありません。</p>
-                            @else
+                            <?php else: ?>
                                 <ul class="space-y-3">
-                                    @foreach($pendingExpenses as $expense)
+                                    <?php $__currentLoopData = $pendingExpenses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $expense): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <li class="rounded-md overflow-hidden
-                                            {{ $expense->status->name === '差し戻し' ? 'blink-red-bg' : 'bg-gray-50' }}">
-                                            <a href="{{ route('expenses.show', $expense) }}" class="block p-2 hover:bg-gray-100 transition-colors">
+                                            <?php echo e($expense->status->name === '差し戻し' ? 'blink-red-bg' : 'bg-gray-50'); ?>">
+                                            <a href="<?php echo e(route('expenses.show', $expense)); ?>" class="block p-2 hover:bg-gray-100 transition-colors">
                                                 <div class="flex justify-between items-center">
                                                     <div class="text-xs">
                                                         <div class="text-sm text-blue-600">
-                                                            {{ $expense->project->name ?? '未設定' }} <span class="text-[11px] text-gray-500 font-normal">({{ \Carbon\Carbon::parse($expense->date)->format('m/d') }})</span>
+                                                            <?php echo e($expense->project->name ?? '未設定'); ?> <span class="text-[11px] text-gray-500 font-normal">(<?php echo e(\Carbon\Carbon::parse($expense->date)->format('m/d')); ?>)</span>
                                                         </div>
                                                         <p class="text-gray-500">
-                                                            ¥{{ number_format($expense->amount) }}
+                                                            ¥<?php echo e(number_format($expense->amount)); ?>
+
                                                         </p>
                                                     </div>
                                                     <span class="px-2 py-1 rounded-full text-xs font-semibold
-                                                        {{ $expense->status->name === '差し戻し' ? 'bg-red-600 text-white' : 'bg-amber-200 text-amber-800' }}">
-                                                        {{ $expense->status->name }}
+                                                        <?php echo e($expense->status->name === '差し戻し' ? 'bg-red-600 text-white' : 'bg-amber-200 text-amber-800'); ?>">
+                                                        <?php echo e($expense->status->name); ?>
+
                                                     </span>
                                                 </div>
                                             </a>
                                         </li>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
-                            @endif
+                            <?php endif; ?>
                             <div class="mt-4 text-right">
-                                <a href="{{ route('expenses.index') }}" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
+                                <a href="<?php echo e(route('expenses.index')); ?>" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
                             </div>
                         </div>
 
                         <div class="bg-white p-3 rounded-lg border border-gray-200 text-xs">
                             <h3 class="font-bold text-xl mb-1 text-gray-800">あなたのタスク</h3>
-                            @if($assignedTasks->isEmpty())
+                            <?php if($assignedTasks->isEmpty()): ?>
                                 <p class="text-gray-600">現在タスクはありません。</p>
-                            @else
+                            <?php else: ?>
                                 <ul class="space-y-1">
-                                    @foreach($assignedTasks as $task)
+                                    <?php $__currentLoopData = $assignedTasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <li class="bg-gray-50 p-2 rounded-md text-xs text-gray-500">
                                             <p class="flex justify-between items-center">
-                                                {{ $task->project->name }}
+                                                <?php echo e($task->project->name); ?>
+
                                                 <span class="text-[11px] text-gray-500 font-normal">
-                                                    期限 : {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('m/d') : '未設定' }}
+                                                    期限 : <?php echo e($task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('m/d') : '未設定'); ?>
+
                                                 </span>
                                             </p>
                                             <p>
-                                                <a href="{{ route('tasks.show', $task) }}" class="text-blue-600 hover:underline block text-sm">
-                                                    {{ $task->name }}
+                                                <a href="<?php echo e(route('tasks.show', $task)); ?>" class="text-blue-600 hover:underline block text-sm">
+                                                    <?php echo e($task->name); ?>
+
                                                 </a>
                                             </p>
                                         </li>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
-                            @endif
+                            <?php endif; ?>
                             <div class="mt-4 text-right">
-                                <a href="{{ route('tasks.index') }}" class="text-sm text-indigo-600 hover:underline">すべてのタスク →</a>
+                                <a href="<?php echo e(route('tasks.index')); ?>" class="text-sm text-indigo-600 hover:underline">すべてのタスク →</a>
                             </div>
                         </div>
                     </div>
@@ -262,7 +288,7 @@
         </div>
     </div>
 
-    @if($needsFix)
+    <?php if($needsFix): ?>
     <div id="fix-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div id="modal-content" class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
             
@@ -277,12 +303,12 @@
                     <span>退勤漏れがあります</span>
                 </h3>
                 <p class="text-sm text-gray-600 mb-4">
-                    {{ $unclosedRecord->timestamp->format('m月d日') }} の退勤記録がありません。<br>
+                    <?php echo e($unclosedRecord->timestamp->format('m月d日')); ?> の退勤記録がありません。<br>
                     退勤時刻を入力してください。
                 </p>
                 
                 <div class="mb-4">
-                    <label class="block text-xs text-gray-500 mb-1 font-bold">{{ $unclosedRecord->timestamp->format('m月d日') }} 退勤時刻</label>
+                    <label class="block text-xs text-gray-500 mb-1 font-bold"><?php echo e($unclosedRecord->timestamp->format('m月d日')); ?> 退勤時刻</label>
                     <input type="time" id="manual-checkout-time" class="w-full border-gray-300 rounded-md focus:ring-indigo-500 shadow-sm">
                 </div>
 
@@ -306,13 +332,13 @@
 
         </div>
     </div>
-    @endif
+    <?php endif; ?>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // PHPからの変数をJSにセット
-        const needsFix = {{ $needsFix ? 'true' : 'false' }};
-        const unclosedId = {{ $unclosedRecord ? $unclosedRecord->id : 'null' }};
+        const needsFix = <?php echo e($needsFix ? 'true' : 'false'); ?>;
+        const unclosedId = <?php echo e($unclosedRecord ? $unclosedRecord->id : 'null'); ?>;
 
         if (needsFix) {
             // 1. 打刻ボタンを全て無効化（修正が終わるまで操作不能にする）
@@ -338,11 +364,11 @@
                 submitBtn.innerText = '登録中...';
 
                 try {
-                    const response = await fetch('{{ route("attendance.fix-missing") }}', {
+                    const response = await fetch('<?php echo e(route("attendance.fix-missing")); ?>', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
                         },
                         body: JSON.stringify({
                             record_id: unclosedId,
@@ -377,11 +403,11 @@
         console.log('打刻スクリプト読み込み完了');
 
         // 出張状態（Bladeから渡す）
-        let isBusinessTrip = {{ $isBusinessTrip ? 'true' : 'false' }};
+        let isBusinessTrip = <?php echo e($isBusinessTrip ? 'true' : 'false'); ?>;
 
         // 今日の出勤・退勤済みフラグ（Bladeから渡す）
-        const todayClockedIn = {{ $todayClockedIn ? 'true' : 'false' }};
-        const todayClockedOut = {{ $todayClockedOut ? 'true' : 'false' }};
+        const todayClockedIn = <?php echo e($todayClockedIn ? 'true' : 'false'); ?>;
+        const todayClockedOut = <?php echo e($todayClockedOut ? 'true' : 'false'); ?>;
 
         console.log('isBusinessTrip:', isBusinessTrip);
         console.log('todayClockedIn:', todayClockedIn);
@@ -404,7 +430,7 @@
         async function loadRecentLogs() {
             console.log('履歴読み込み開始');
             try {
-                const response = await fetch('{{ route("attendance.recent") }}');
+                const response = await fetch('<?php echo e(route("attendance.recent")); ?>');
                 if (!response.ok) throw new Error('履歴取得失敗');
 
                 const data = await response.json();
@@ -515,11 +541,11 @@
                     const lng = position.coords.longitude.toFixed(8);
 
                     try {
-                        const response = await fetch('{{ route("attendance.store") }}', {
+                        const response = await fetch('<?php echo e(route("attendance.store")); ?>', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                                 'Accept': 'application/json'
                             },
                             body: JSON.stringify({
@@ -591,11 +617,11 @@
                         const lng = position.coords.longitude.toFixed(8);
 
                         try {
-                            const response = await fetch('{{ route("attendance.store") }}', {
+                            const response = await fetch('<?php echo e(route("attendance.store")); ?>', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                                     'Accept': 'application/json'
                                 },
                                 body: JSON.stringify({
@@ -684,11 +710,11 @@
                                 return;
                             }
 
-                            const response = await fetch('{{ route("attendance.store") }}', {
+                            const response = await fetch('<?php echo e(route("attendance.store")); ?>', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                                     'Accept': 'application/json'
                                 },
                                 body: JSON.stringify({
@@ -743,4 +769,13 @@
         loadRecentLogs();
     });
     </script>
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?><?php /**PATH C:\xampp\htdocs\project-manager\resources\views/dashboard.blade.php ENDPATH**/ ?>

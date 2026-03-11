@@ -1,9 +1,19 @@
-<x-app-layout>
-    <x-slot name="header">
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+     <?php $__env->slot('header', null, []); ?> 
         <h2 class="font-semibold text-base sm:text-lg text-gray-800 leading-tight">
-            {{ __('イベント管理') }}
+            <?php echo e(__('イベント管理')); ?>
+
         </h2>
-    </x-slot>
+     <?php $__env->endSlot(); ?>
 
     <style>
     /* 日曜日の列 */
@@ -38,13 +48,14 @@
                                 <div class="bg-white border overflow-hidden shadow-sm sm:rounded-lg rounded-md shadow-sm mt-1 sm:mt-0">
                                     <div class="p-1 sm:p-4 sm:pt-3">
                                         <div class="text-right">
-                                            <a href="{{ route('projects.create') }}" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                {{ __('＋新規') }}
+                                            <a href="<?php echo e(route('projects.create')); ?>" class="inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                <?php echo e(__('＋新規')); ?>
+
                                             </a>
                                         </div>
 
-                                        {{-- 検索・フィルターフォーム --}}
-                                        <form action="{{ route('projects.index') }}" method="GET" class="mb-2 py-2 rounded-md shadow-sm bg-white">
+                                        
+                                        <form action="<?php echo e(route('projects.index')); ?>" method="GET" class="mb-2 py-2 rounded-md shadow-sm bg-white">
                                             <div class="grid grid-cols-12 gap-1">
                                                 <!-- キーワード検索 -->
                                                 <div class="relative col-span-8">
@@ -58,17 +69,17 @@
                                                     </div>
 
                                                     <!-- 検索入力 -->
-                                                    <input type="text" name="search" value="{{ request('search') }}" 
+                                                    <input type="text" name="search" value="<?php echo e(request('search')); ?>" 
                                                         placeholder="イベント名・顧客名・タスク名 など"
                                                         class="w-full pl-8 border box-border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                                                 </div>
 
                                                 <!-- ステータスフィルター -->
                                                 <select name="status" class="col-span-2 border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                                    <option value="" {{ request('status')=='' ? 'selected' : '' }}>すべて</option>
-                                                    <option value="upcoming" {{ request('status')=='upcoming' ? 'selected' : '' }}>開催前</option>
-                                                    <option value="ongoing" {{ request('status')=='ongoing' ? 'selected' : '' }}>開催中</option>
-                                                    <option value="finished" {{ request('status')=='finished' ? 'selected' : '' }}>終了</option>
+                                                    <option value="" <?php echo e(request('status')=='' ? 'selected' : ''); ?>>すべて</option>
+                                                    <option value="upcoming" <?php echo e(request('status')=='upcoming' ? 'selected' : ''); ?>>開催前</option>
+                                                    <option value="ongoing" <?php echo e(request('status')=='ongoing' ? 'selected' : ''); ?>>開催中</option>
+                                                    <option value="finished" <?php echo e(request('status')=='finished' ? 'selected' : ''); ?>>終了</option>
                                                 </select>
 
                                                 <!-- 検索ボタン -->
@@ -78,7 +89,7 @@
                                                 </button>
 
                                                 <!-- クリアボタン -->
-                                                <a href="{{ route('projects.index') }}"
+                                                <a href="<?php echo e(route('projects.index')); ?>"
                                                         class="col-span-1 rounded-md bg-gray-400 hover:bg-gray-500 text-white text-xs text-center transition text-center flex items-center justify-center transition">
                                                     クリア
                                                 </a>
@@ -87,9 +98,9 @@
                                         </form>
 
                                         <div class="overflow-x-auto max-h-[70vh] overflow-y-auto">
-                                            @if ($projects->isEmpty())
+                                            <?php if($projects->isEmpty()): ?>
                                                 <p class="mx-6">該当イベントが存在しません。</p>
-                                            @else
+                                            <?php else: ?>
                                                 <table class="min-w-full divide-y divide-gray-200 text-xs border-r border-gray-200">
                                                     <thead class="bg-gray-50 text-center">
                                                         <tr>
@@ -109,57 +120,62 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody class="bg-white divide-y divide-gray-200">
-                                                        @foreach ($projects as $project)
+                                                        <?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <tr class="hover:bg-gray-50 text-gray-500 text-xs">
                                                                 <td class="px-1 py-0.5 whitespace-nowrap bg-red-100 text-center">
-                                                                    {{-- 開始 --}}{{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('y/m/d') : 'N/A' }}
+                                                                    <?php echo e($project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('y/m/d') : 'N/A'); ?>
+
                                                                 </td>
                                                                 <td class="px-1 py-0.5 whitespace-nowrap bg-lime-200 text-center border-x border-gray-200">
-                                                                    {{-- 終了 --}}
-                                                                    {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('y/m/d') : '-' }}
+                                                                    
+                                                                    <?php echo e($project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('y/m/d') : '-'); ?>
+
                                                                 </td>
                                                                 <td class="px-1 py-0.5 whitespace-nowrap">
-                                                                    {{-- イベント名 --}}
-                                                                    <a href="{{ route('projects.show', $project) }}" 
+                                                                    
+                                                                    <a href="<?php echo e(route('projects.show', $project)); ?>" 
                                                                         class="text-blue-600 hover:text-fuchsia-600 hover:underline block"
-                                                                        title="{{ $project->name }} ({{ $project->client->abbreviation ?? 'N/A' }})">
-                                                                        {{ Str::limit($project->name, 42, '...') }}
+                                                                        title="<?php echo e($project->name); ?> (<?php echo e($project->client->abbreviation ?? 'N/A'); ?>)">
+                                                                        <?php echo e(Str::limit($project->name, 42, '...')); ?>
+
                                                                     </a>
                                                                 </td>
                                                                 <td class="px-1 py-0.5 whitespace-nowrap">
-                                                                    {{-- 顧客 --}}
-                                                                    {{ $project->client->abbreviation ?? 'N/A' }}
+                                                                    
+                                                                    <?php echo e($project->client->abbreviation ?? 'N/A'); ?>
+
                                                                 </td>
                                                                 <td class="px-1 py-0.5 whitespace-nowrap" style="font-size:0.7rem;">
-                                                                    {{-- 担当（複数対応） --}}
-                                                                    @if ($project->users && $project->users->count() > 0)
-                                                                        {{ $project->users->pluck('name')->join('、') }}
-                                                                    @else
+                                                                    
+                                                                    <?php if($project->users && $project->users->count() > 0): ?>
+                                                                        <?php echo e($project->users->pluck('name')->join('、')); ?>
+
+                                                                    <?php else: ?>
                                                                         －
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
-                                                                {{-- ステータス --}}
+                                                                
                                                                 <td class="px-0.5 whitespace-nowrap text-center w-12">
-                                                                    @if ($project->status === 'before')
+                                                                    <?php if($project->status === 'before'): ?>
                                                                         <span class="px-2 py-0.5 inline-flex leading-4 rounded-full bg-red-200 text-red-700">開催前</span>
-                                                                    @elseif ($project->status === 'progress')
+                                                                    <?php elseif($project->status === 'progress'): ?>
                                                                         <span class="px-2 py-0.5 inline-flex leading-4 rounded-full bg-amber-200 text-amber-700">開催中</span>
-                                                                    @else
+                                                                    <?php else: ?>
                                                                         <span class="px-2 py-0.5 inline-flex leading-4 rounded-full bg-slate-200 text-slate-700">終了</span>
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
 
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-center">
-                                                                    {{-- タスク --}} 
-                                                                    @if ($project->tasks->count() > 0)
+                                                                     
+                                                                    <?php if($project->tasks->count() > 0): ?>
                                                                         <div class="inline-flex items-center space-x-1">
-                                                                            <a href="{{ route('projects.show', $project) }}" class="text-blue-500 hover:text-blue-700">
-                                                                                {{ $project->tasks->count() }} 件
+                                                                            <a href="<?php echo e(route('projects.show', $project)); ?>" class="text-blue-500 hover:text-blue-700">
+                                                                                <?php echo e($project->tasks->count()); ?> 件
                                                                             </a>
 
                                                                             <!-- ▼/▲ボタン -->
                                                                             <button type="button" class="text-gray-400 hover:text-gray-600" 
-                                                                                    onclick="toggleTasks({{ $project->id }}, this)">
+                                                                                    onclick="toggleTasks(<?php echo e($project->id); ?>, this)">
                                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                                                                 </svg>
@@ -167,15 +183,16 @@
                                                                         </div>
 
                                                                         <!-- アコーディオン部分 -->
-                                                                        <div id="tasks-{{ $project->id }}" class="hidden text-left text-xs bg-gray-50 hover:bg-blue-100">
+                                                                        <div id="tasks-<?php echo e($project->id); ?>" class="hidden text-left text-xs bg-gray-50 hover:bg-blue-100">
                                                                             <ul class="list-disc list-inside">
-                                                                                @foreach ($project->tasks as $task)
+                                                                                <?php $__currentLoopData = $project->tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                                                     <li>
-                                                                                        <a href="{{ route('tasks.show', $task) }}" class="text-blue-500 hover:text-blue-700 hover:underline">
-                                                                                            {{ $task->name }}
+                                                                                        <a href="<?php echo e(route('tasks.show', $task)); ?>" class="text-blue-500 hover:text-blue-700 hover:underline">
+                                                                                            <?php echo e($task->name); ?>
+
                                                                                         </a>
                                                                                     </li>
-                                                                                @endforeach
+                                                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                                             </ul>
                                                                         </div>
 
@@ -193,40 +210,41 @@
                                                                                 </svg>` // 開いている時
                                                                         }
                                                                         </script>
-                                                                    @else
+                                                                    <?php else: ?>
                                                                         -
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
 
-                                                                @php
+                                                                <?php
                                                                     // 最新見積書を取得（存在しなければ null）
                                                                     $latestQuote = $latestQuotes[$project->id] ?? null;
 
                                                                     // PDF出力済みかどうか（quote_logsテーブルに「PDF出力」アクションがあれば true）
                                                                     $hasPdf = $latestQuote 
                                                                         && $latestQuote->logs()->where('action', 'like', '%PDF出力%')->exists();
-                                                                @endphp
+                                                                ?>
 
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right">
-                                                                    @php
+                                                                    <?php
                                                                         $latestQuote = $latestQuotes[$project->id] ?? null;
                                                                         $hasPdf = $latestQuote && $latestQuote->pdf_path;
                                                                         $statusChar = '';
                                                                         if ($latestQuote) {
                                                                             $statusChar = mb_substr($latestQuote->status, 0, 1);  // 1文字
                                                                         }
-                                                                    @endphp
-                                                                    @if ($latestQuote)
+                                                                    ?>
+                                                                    <?php if($latestQuote): ?>
                                                                         <div class="inline-flex items-center justify-end gap-1">
                                                                             <!-- 金額 -->
-                                                                            <a href="{{ route('quotes.show', $latestQuote->id) }}" class="text-blue-600 hover:text-blue-800 hover:underline">
-                                                                                ¥ {{ number_format($latestQuote->total_amount) }}
+                                                                            <a href="<?php echo e(route('quotes.show', $latestQuote->id)); ?>" class="text-blue-600 hover:text-blue-800 hover:underline">
+                                                                                ¥ <?php echo e(number_format($latestQuote->total_amount)); ?>
+
                                                                             </a>
 
                                                                             <!-- PDFアイコン -->
-                                                                            <a href="{{ route('quotes.downloadPdfMpdf', $latestQuote->id) }}" target="_blank"
-                                                                            class="{{ $hasPdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600' }} generate-pdf"
-                                                                            title="{{ $hasPdf ? 'PDFダウンロード' : 'PDF生成' }}">
+                                                                            <a href="<?php echo e(route('quotes.downloadPdfMpdf', $latestQuote->id)); ?>" target="_blank"
+                                                                            class="<?php echo e($hasPdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600'); ?> generate-pdf"
+                                                                            title="<?php echo e($hasPdf ? 'PDFダウンロード' : 'PDF生成'); ?>">
                                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
                                                                                     <path d="M4.603 12.087a.84.84 0 0 1-.438-.799c.075-.4.293-.678.623-.872l.06-.038c.28-.171.564-.4.96-.92.33-.414.68-1.133 1.02-1.968c.054-.13.128-.295.266-.445a.733.733 0 0 1 .793-.161c.07.053.175.148.243.27c.146.23.308.535.49.875c.217.412.438.828.596 1.257q.427.972 1.053 2.504c.28.705.326 1.007.065 1.187-.074.055-.118.065-.25.059q-.4-.027-.9-.166a2.72 2.72 0 0 1-.443-.24c-.109-.083-.25-.19-.363-.284l-.01-.007a.486.486 0 0 0-.083-.061c-.058-.042-.132-.118-.195-.178a.7.7 0 0 1-.153-.234c-.017-.065-.035-.12-.063-.193-.075-.197-.202-.456-.375-.76c-.147-.243-.3-.482-.464-.724a.5.5 0 0 0-.6-.096l-.007.004-.007.004-.005.002-.002.001a.5.5 0 0 0-.1.22z"/>
@@ -234,47 +252,51 @@
                                                                             </a>
 
                                                                             <!-- ステータス1文字 -->
-                                                                            @if ($statusChar)
+                                                                            <?php if($statusChar): ?>
                                                                                 <span class="px-0.5 py-0 text-xs font-bold rounded
-                                                                                    {{ $latestQuote->status === '作成済み' ? 'bg-green-200 text-green-800' : '' }}
-                                                                                    {{ $latestQuote->status === '発行済み' ? 'bg-amber-300 text-amber-800' : '' }}
-                                                                                    {{ $latestQuote->status === '送信済み' ? 'bg-gray-200 text-gray-800' : '' }}">
-                                                                                    {{ $statusChar }}
+                                                                                    <?php echo e($latestQuote->status === '作成済み' ? 'bg-green-200 text-green-800' : ''); ?>
+
+                                                                                    <?php echo e($latestQuote->status === '発行済み' ? 'bg-amber-300 text-amber-800' : ''); ?>
+
+                                                                                    <?php echo e($latestQuote->status === '送信済み' ? 'bg-gray-200 text-gray-800' : ''); ?>">
+                                                                                    <?php echo e($statusChar); ?>
+
                                                                                 </span>
-                                                                            @endif
+                                                                            <?php endif; ?>
                                                                         </div>
-                                                                    @else
+                                                                    <?php else: ?>
                                                                         <!-- 未作成 -->
-                                                                        <a href="{{ route('quotes.create', ['project_id' => $project->id]) }}" 
+                                                                        <a href="<?php echo e(route('quotes.create', ['project_id' => $project->id])); ?>" 
                                                                             class="text-green-600 hover:text-green-800" title="見積書を作成">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                 <path d="M8 4a.5.5 0 0 1 .5.5V7.5H11.5a.5.5 0 0 1 0 1H8.5V11.5a.5.5 0 0 1-1 0V8.5H4.5a.5.5 0 0 1 0-1H7.5V4.5A.5.5 0 0 1 8 4z"/>
                                                                             </svg>
                                                                         </a>
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
 
-                                                                {{-- 納品 --}}
+                                                                
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right">
-                                                                    @php
+                                                                    <?php
                                                                         $latestDelivery = $latestDeliveries[$project->id] ?? null;
                                                                         $hasDeliveryPdf = $latestDelivery && $latestDelivery->pdf_path;
                                                                         $deliveryStatusChar = '';
                                                                         if ($latestDelivery) {
                                                                             $deliveryStatusChar = mb_substr($latestDelivery->status, 0, 1);
                                                                         }
-                                                                    @endphp
-                                                                    @if ($latestDelivery)
+                                                                    ?>
+                                                                    <?php if($latestDelivery): ?>
                                                                         <div class="inline-flex items-center justify-end gap-1">
                                                                             <!-- 金額 -->
-                                                                            <a href="{{ route('deliveries.show', $latestDelivery->id) }}" class="text-blue-600 hover:text-blue-800 hover:underline">
-                                                                                ¥ {{ number_format($project->deliveries_sum_total_amount) }}
+                                                                            <a href="<?php echo e(route('deliveries.show', $latestDelivery->id)); ?>" class="text-blue-600 hover:text-blue-800 hover:underline">
+                                                                                ¥ <?php echo e(number_format($project->deliveries_sum_total_amount)); ?>
+
                                                                             </a>
 
                                                                             <!-- PDFアイコン -->
-                                                                            <a href="{{ route('deliveries.downloadPdfMpdf', $latestDelivery->id) }}" target="_blank"
-                                                                            class="{{ $hasDeliveryPdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600' }} generate-pdf"
-                                                                            title="{{ $hasDeliveryPdf ? 'PDFダウンロード' : '納品書PDF未出力（クリックで生成）' }}">
+                                                                            <a href="<?php echo e(route('deliveries.downloadPdfMpdf', $latestDelivery->id)); ?>" target="_blank"
+                                                                            class="<?php echo e($hasDeliveryPdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600'); ?> generate-pdf"
+                                                                            title="<?php echo e($hasDeliveryPdf ? 'PDFダウンロード' : '納品書PDF未出力（クリックで生成）'); ?>">
                                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
                                                                                     <path d="M4.603 12.087a.84.84 0 0 1-.438-.799c.075-.4.293-.678.623-.872l.06-.038c.28-.171.564-.4.96-.92.33-.414.68-1.133 1.02-1.968c.054-.13.128-.295.266-.445a.733.733 0 0 1 .793-.161c.07.053.175.148.243.27c.146.23.308.535.49.875c.217.412.438.828.596 1.257q.427.972 1.053 2.504c.28.705.326 1.007.065 1.187-.074.055-.118.065-.25.059q-.4-.027-.9-.166a2.72 2.72 0 0 1-.443-.24c-.109-.083-.25-.19-.363-.284l-.01-.007a.486.486 0 0 0-.083-.061c-.058-.042-.132-.118-.195-.178a.7.7 0 0 1-.153-.234c-.017-.065-.035-.12-.063-.193-.075-.197-.202-.456-.375-.76c-.147-.243-.3-.482-.464-.724a.5.5 0 0 0-.6-.096l-.007.004-.007.004-.005.002-.002.001a.5.5 0 0 0-.1.22z"/>
@@ -282,43 +304,47 @@
                                                                             </a>
 
                                                                             <!-- ステータス1文字 -->
-                                                                            @if ($deliveryStatusChar)
+                                                                            <?php if($deliveryStatusChar): ?>
                                                                                 <span class="px-0.5 py-0 text-xs font-bold rounded
-                                                                                    {{ $latestDelivery->status === '作成済み' ? 'bg-green-200 text-green-800' : '' }}
-                                                                                    {{ $latestDelivery->status === '発行済み' ? 'bg-amber-300 text-amber-800' : '' }}
-                                                                                    {{ $latestDelivery->status === '送信済み' ? 'bg-gray-200 text-gray-800' : '' }}">
-                                                                                    {{ $deliveryStatusChar }}
+                                                                                    <?php echo e($latestDelivery->status === '作成済み' ? 'bg-green-200 text-green-800' : ''); ?>
+
+                                                                                    <?php echo e($latestDelivery->status === '発行済み' ? 'bg-amber-300 text-amber-800' : ''); ?>
+
+                                                                                    <?php echo e($latestDelivery->status === '送信済み' ? 'bg-gray-200 text-gray-800' : ''); ?>">
+                                                                                    <?php echo e($deliveryStatusChar); ?>
+
                                                                                 </span>
-                                                                            @endif
+                                                                            <?php endif; ?>
                                                                         </div>
-                                                                    @else
+                                                                    <?php else: ?>
                                                                         <!-- 納品書未作成 -->
-                                                                        <a href="{{ route('deliveries.create', ['project_id' => $project->id]) }}" 
+                                                                        <a href="<?php echo e(route('deliveries.create', ['project_id' => $project->id])); ?>" 
                                                                         class="text-green-600 hover:text-green-800" title="納品書を作成">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                 <path d="M8 4a.5.5 0 0 1 .5.5V7.5H11.5a.5.5 0 0 1 0 1H8.5V11.5a.5.5 0 0 1-1 0V8.5H4.5a.5.5 0 0 1 0-1H7.5V4.5A.5.5 0 0 1 8 4z"/>
                                                                             </svg>
                                                                         </a>
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
-                                                                {{-- 請求 --}}
+                                                                
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right">
-                                                                    @php
+                                                                    <?php
                                                                         $latestInvoice = $latestInvoices[$project->id] ?? null;
                                                                         $hasInvoicePdf = $latestInvoice && $latestInvoice->pdf_path;
                                                                         $invoiceStatusChar = $latestInvoice ? mb_substr($latestInvoice->status, 0, 1) : '';
-                                                                    @endphp
-                                                                    @if ($latestInvoice)
+                                                                    ?>
+                                                                    <?php if($latestInvoice): ?>
                                                                         <div class="inline-flex items-center justify-end gap-1">
                                                                             <!-- 金額 -->
-                                                                            <a href="{{ route('invoices.show', $latestInvoice->id) }}" class="text-blue-600 hover:text-blue-800 hover:underline">
-                                                                                ¥ {{ number_format($project->invoices_sum_total_amount) }}
+                                                                            <a href="<?php echo e(route('invoices.show', $latestInvoice->id)); ?>" class="text-blue-600 hover:text-blue-800 hover:underline">
+                                                                                ¥ <?php echo e(number_format($project->invoices_sum_total_amount)); ?>
+
                                                                             </a>
 
                                                                             <!-- PDFアイコン -->
-                                                                            <a href="{{ route('invoices.downloadPdfMpdf', $latestInvoice->id) }}" target="_blank"
-                                                                            class="{{ $hasInvoicePdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600' }} generate-pdf"
-                                                                            title="{{ $hasInvoicePdf ? 'PDFダウンロード' : '請求書PDF未出力（クリックで生成）' }}">
+                                                                            <a href="<?php echo e(route('invoices.downloadPdfMpdf', $latestInvoice->id)); ?>" target="_blank"
+                                                                            class="<?php echo e($hasInvoicePdf ? 'text-red-600 hover:text-red-800' : 'text-gray-400 hover:text-gray-600'); ?> generate-pdf"
+                                                                            title="<?php echo e($hasInvoicePdf ? 'PDFダウンロード' : '請求書PDF未出力（クリックで生成）'); ?>">
                                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                     <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
                                                                                     <path d="M4.603 12.087a.84.84 0 0 1-.438-.799c.075-.4.293-.678.623-.872l.06-.038c.28-.171.564-.4.96-.92.33-.414.68-1.133 1.02-1.968c.054-.13.128-.295.266-.445a.733.733 0 0 1 .793-.161c.07.053.175.148.243.27c.146.23.308.535.49.875c.217.412.438.828.596 1.257q.427.972 1.053 2.504c.28.705.326 1.007.065 1.187-.074.055-.118.065-.25.059q-.4-.027-.9-.166a2.72 2.72 0 0 1-.443-.24c-.109-.083-.25-.19-.363-.284l-.01-.007a.486.486 0 0 0-.083-.061c-.058-.042-.132-.118-.195-.178a.7.7 0 0 1-.153-.234c-.017-.065-.035-.12-.063-.193-.075-.197-.202-.456-.375-.76c-.147-.243-.3-.482-.464-.724a.5.5 0 0 0-.6-.096l-.007.004-.007.004-.005.002-.002.001a.5.5 0 0 0-.1.22z"/>
@@ -326,53 +352,58 @@
                                                                             </a>
 
                                                                             <!-- ステータス1文字 -->
-                                                                            @if ($invoiceStatusChar)
+                                                                            <?php if($invoiceStatusChar): ?>
                                                                                 <span class="px-0.5 py-0 text-xs font-bold rounded
-                                                                                    {{ $latestInvoice->status === '作成済み' ? 'bg-green-200 text-green-800' : '' }}
-                                                                                    {{ $latestInvoice->status === '発行済み' ? 'bg-amber-300 text-amber-800' : '' }}
-                                                                                    {{ $latestInvoice->status === '送信済み' ? 'bg-gray-200 text-gray-800' : '' }}">
-                                                                                    {{ $invoiceStatusChar }}
+                                                                                    <?php echo e($latestInvoice->status === '作成済み' ? 'bg-green-200 text-green-800' : ''); ?>
+
+                                                                                    <?php echo e($latestInvoice->status === '発行済み' ? 'bg-amber-300 text-amber-800' : ''); ?>
+
+                                                                                    <?php echo e($latestInvoice->status === '送信済み' ? 'bg-gray-200 text-gray-800' : ''); ?>">
+                                                                                    <?php echo e($invoiceStatusChar); ?>
+
                                                                                 </span>
-                                                                            @endif
+                                                                            <?php endif; ?>
                                                                         </div>
-                                                                    @else
+                                                                    <?php else: ?>
                                                                         <!-- 未作成 -->
-                                                                        <a href="{{ route('invoices.create', ['project_id' => $project->id]) }}" 
+                                                                        <a href="<?php echo e(route('invoices.create', ['project_id' => $project->id])); ?>" 
                                                                         class="text-green-600 hover:text-green-800" title="請求書を作成">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="inline-block" viewBox="0 0 16 16">
                                                                                 <path d="M8 4a.5.5 0 0 1 .5.5V7.5H11.5a.5.5 0 0 1 0 1H8.5V11.5a.5.5 0 0 1-1 0V8.5H4.5a.5.5 0 0 1 0-1H7.5V4.5A.5.5 0 0 1 8 4z"/>
                                                                             </svg>
                                                                         </a>
-                                                                    @endif
+                                                                    <?php endif; ?>
                                                                 </td>
-                                                                {{-- 経費合計 --}}
+                                                                
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right">
-                                                                    ¥{{ number_format($project->total_approved_expenses_sum ?? 0) }}
+                                                                    ¥<?php echo e(number_format($project->total_approved_expenses_sum ?? 0)); ?>
+
                                                                 </td>
-                                                                {{-- 実利 --}}
+                                                                
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right">
-                                                                    @php
+                                                                    <?php
                                                                         $netProfit = ($project->invoices_sum_total_amount ?? 0) - ($project->total_approved_expenses_sum ?? 0);
-                                                                    @endphp
-                                                                    ¥{{ number_format($netProfit) }}
+                                                                    ?>
+                                                                    ¥<?php echo e(number_format($netProfit)); ?>
+
                                                                 </td>
-                                                                {{-- 操作ボタン --}}
+                                                                
                                                                 <td class="px-1 py-0.5 whitespace-nowrap text-right font-medium border-x border-gray-200 w-10">
                                                                     <div class="flex items-center gap-x-0.5">
-                                                                        {{-- 詳細 --}}
-                                                                        <a href="{{ route('projects.show', $project) }}" class="text-blue-600 hover:text-blue-400" title="詳細">
+                                                                        
+                                                                        <a href="<?php echo e(route('projects.show', $project)); ?>" class="text-blue-600 hover:text-blue-400" title="詳細">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M5 3a2 2 0 0 0-2 2v4.129a1.5 1.5 0 0 0-.861 1.665l1.72 8.598A2 2 0 0 0 5.819 21H18.18a2 2 0 0 0 1.961-1.608l1.72-8.598A1.5 1.5 0 0 0 21 9.13V7.5a2 2 0 0 0-2-2h-6.52l-1.399-1.75A2 2 0 0 0 9.52 3zm14.78 8H4.22l1.6 8h12.36zM5 9h14V7.5h-6.52a2 2 0 0 1-1.561-.75L9.519 5H5z"/></g></svg>
                                                                         </a>
 
-                                                                        {{-- 編集 --}}
-                                                                        <a href="{{ route('projects.edit', $project) }}" class="text-emerald-600 hover:text-emerald-400" title="編集">
+                                                                        
+                                                                        <a href="<?php echo e(route('projects.edit', $project)); ?>" class="text-emerald-600 hover:text-emerald-400" title="編集">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><g fill="none"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M13.896 3.03a2 2 0 0 1 2.829 0l4.242 4.242a2 2 0 0 1 0 2.83L10.653 20.415a2 2 0 0 1-1.414.586H3.996a1 1 0 0 1-1-1v-5.243a2 2 0 0 1 .586-1.414zM17 17a1 1 0 0 1 .946.677c.06.177.2.316.377.377a1 1 0 0 1 0 1.892a.6.6 0 0 0-.377.377a1 1 0 0 1-1.892 0a.6.6 0 0 0-.377-.377a1 1 0 0 1 0-1.892c.177-.06.316-.2.377-.377l.062-.146A1 1 0 0 1 17 17M13.584 6.17l4.243 4.243l1.726-1.726l-4.243-4.243zM5 0a1 1 0 0 1 .946.677l.13.378c.3.879.99 1.57 1.87 1.87l.377.129a1 1 0 0 1 0 1.892l-.378.13c-.879.3-1.57.99-1.87 1.87l-.129.377a1 1 0 0 1-1.892 0l-.13-.378a3 3 0 0 0-1.87-1.87l-.377-.129a1 1 0 0 1 0-1.892l.378-.13c.879-.3 1.57-.99 1.87-1.87l.129-.377C4.222.285 4.552 0 5 0m0 3.196A5 5 0 0 1 4.196 4q.449.355.804.803q.356-.447.803-.803A5 5 0 0 1 5 3.196m-.004 15.805H9.24l7.174-7.174l-4.243-4.243l-7.174 7.174z"/></g></svg>
                                                                         </a>
 
-                                                                        {{-- 削除 --}}
-                                                                        <form action="{{ route('projects.destroy', $project) }}" method="POST" class="inline-block" onsubmit="return confirm('本当にこのイベントを削除しますか？');">
-                                                                            @csrf
-                                                                            @method('DELETE')
+                                                                        
+                                                                        <form action="<?php echo e(route('projects.destroy', $project)); ?>" method="POST" class="inline-block" onsubmit="return confirm('本当にこのイベントを削除しますか？');">
+                                                                            <?php echo csrf_field(); ?>
+                                                                            <?php echo method_field('DELETE'); ?>
                                                                             <button type="submit" class="text-red-600 hover:text-red-400 mt-1" title="削除">
                                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><g fill="none"><path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M14.28 2a2 2 0 0 1 1.897 1.368L16.72 5H20a1 1 0 1 1 0 2l-.003.071l-.867 12.143A3 3 0 0 1 16.138 22H7.862a3 3 0 0 1-2.992-2.786L4.003 7.07L4 7a1 1 0 0 1 0-2h3.28l.543-1.632A2 2 0 0 1 9.721 2zm3.717 5H6.003l.862 12.071a1 1 0 0 0 .997.929h8.276a1 1 0 0 0 .997-.929zM10 10a1 1 0 0 1 .993.883L11 11v5a1 1 0 0 1-1.993.117L9 16v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m.28-6H9.72l-.333 1h5.226z"/></g></svg>
                                                                             </button>
@@ -381,11 +412,11 @@
                                                                 </td>
 
                                                             </tr>
-                                                        @endforeach
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                     </tbody>
                                                 </table>
                                             </div>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -395,11 +426,11 @@
             </div>
         </div>
     </div>
-        {{-- FullCalendar CSS & JS（cdnjs版） --}}
+        
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.8/index.global.min.js"></script>
 
-    @php
+    <?php
         $calendarEvents = $allProjects->map(fn($p) => [
             'title' => $p->name . ($p->client->abbreviation ? " ({$p->client->abbreviation})" : ''),
             'start' => $p->start_date,
@@ -407,7 +438,7 @@
             'url' => route('projects.show', $p->id),
             'color' => optional($colors?->firstWhere('id', $p->color_id))->hex_code ?? '#3B82F6',
         ]);
-    @endphp
+    ?>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -424,7 +455,7 @@
             return;
         }
 
-        const projects = @json($calendarEvents);
+        const projects = <?php echo json_encode($calendarEvents, 15, 512) ?>;
 
         const calendar = new FullCalendar.Calendar(el, {
             initialView: 'dayGridMonth',
@@ -454,7 +485,7 @@
         const toolbar = el.querySelector('.fc-header-toolbar .fc-toolbar-chunk:last-child');
         if (toolbar) {
             const btn = document.createElement('a');
-            btn.href = "{{ route('projects.create') }}";
+            btn.href = "<?php echo e(route('projects.create')); ?>";
             btn.textContent = "＋新規";
             btn.className = "inline-flex items-center pt-2 pb-1.5 pr-2 pl-1 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150";
             toolbar.appendChild(btn);
@@ -484,7 +515,7 @@
         </a>
 
         <!-- +新規 -->
-        <a href="{{ route('projects.create') }}" class="flex flex-col items-center justify-center flex-1 py-1 mx-1 text-white">
+        <a href="<?php echo e(route('projects.create')); ?>" class="flex flex-col items-center justify-center flex-1 py-1 mx-1 text-white">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -503,4 +534,13 @@
         });
     });
 </script>
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?><?php /**PATH C:\xampp\htdocs\project-manager\resources\views/projects/index.blade.php ENDPATH**/ ?>

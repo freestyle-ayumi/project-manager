@@ -61,8 +61,6 @@
 
             
             <div class="bg-white shadow-sm rounded-lg p-4 mx-1 sm:m-0">
-                <h3 class="absolute text-sm font-semibold pl-1">あなたのタスク</h3>
-
                 
                 <div class="flex flex-col items-center">
                     
@@ -105,8 +103,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b">
-                                <td class="px-2 py-1 border bg-gray-50 text-xs text-gray-400 text-center">タスク</td>
+                            <tr class="border-b text-xs">
+                                <td class="px-2 py-1 border bg-gray-50 text-gray-700">あなたのタスク</td>
                                 <?php $__currentLoopData = $headerDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $hd): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <?php
                                         $taskBgClass = $hd['day']->dayOfWeek === 0 || $hd['isHoliday']
@@ -134,7 +132,7 @@
                                         });
                                     ?>
 
-                                    <td class="px-1 py-1 border <?php echo e($taskBgClass); ?> align-top">
+                                    <td class="px-1 py-1 border <?php echo e($taskBgClass); ?> !align-top">
                                         <?php if($groupedByProject->isNotEmpty()): ?>
                                             
                                             <?php $__currentLoopData = $groupedByProject; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $projectName => $tasks): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -146,7 +144,7 @@
                                                     </div>
                                                     
                                                     
-                                                    <ul class="m-0 p-0 text-[11px]">
+                                                    <ul class="m-0 p-0">
                                                         <?php $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <li class="flex items-start gap-1 mb-0.5 leading-snug text-left">
                                                                 <span class="text-black text-[9px] mt-0.5">・</span>
@@ -164,7 +162,7 @@
                                                                         default  => 'bg-red-500 text-white',
                                                                     };
                                                                 ?>
-                                                                <span class="inline-flex px-0.5 rounded-sm text-[8px] scale-90 origin-right <?php echo e($statusClass); ?>">
+                                                                <span class="inline-flex px-0.5 rounded-sm <?php echo e($statusClass); ?>">
                                                                     <?php echo e($firstChar); ?>
 
                                                                 </span>

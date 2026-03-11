@@ -51,8 +51,6 @@
 
             {{-- あなたのタスク --}}
             <div class="bg-white shadow-sm rounded-lg p-4 mx-1 sm:m-0">
-                <h3 class="absolute text-sm font-semibold pl-1">あなたのタスク</h3>
-
                 {{-- 週送りナビゲーション --}}
                 <div class="flex flex-col items-center">
                     {{-- 期間表示 --}}
@@ -95,8 +93,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b">
-                                <td class="px-2 py-1 border bg-gray-50 text-xs text-gray-400 text-center">タスク</td>
+                            <tr class="border-b text-xs">
+                                <td class="px-2 py-1 border bg-gray-50 text-gray-700">あなたのタスク</td>
                                 @foreach($headerDays as $hd)
                                     @php
                                         $taskBgClass = $hd['day']->dayOfWeek === 0 || $hd['isHoliday']
@@ -124,7 +122,7 @@
                                         });
                                     @endphp
 
-                                    <td class="px-1 py-1 border {{ $taskBgClass }} align-top">
+                                    <td class="px-1 py-1 border {{ $taskBgClass }} !align-top">
                                         @if ($groupedByProject->isNotEmpty())
                                             {{-- イベント（プロジェクト）ごとにループ --}}
                                             @foreach ($groupedByProject as $projectName => $tasks)
@@ -135,7 +133,7 @@
                                                     </div>
                                                     
                                                     {{-- そのイベントに該当するタスク --}}
-                                                    <ul class="m-0 p-0 text-[11px]">
+                                                    <ul class="m-0 p-0">
                                                         @foreach ($tasks as $task)
                                                             <li class="flex items-start gap-1 mb-0.5 leading-snug text-left">
                                                                 <span class="text-black text-[9px] mt-0.5">・</span>
@@ -152,7 +150,7 @@
                                                                         default  => 'bg-red-500 text-white',
                                                                     };
                                                                 @endphp
-                                                                <span class="inline-flex px-0.5 rounded-sm text-[8px] scale-90 origin-right {{ $statusClass }}">
+                                                                <span class="inline-flex px-0.5 rounded-sm {{ $statusClass }}">
                                                                     {{ $firstChar }}
                                                                 </span>
                                                             </li>
