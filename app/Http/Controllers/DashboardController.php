@@ -64,29 +64,30 @@ class DashboardController extends Controller
 
         // --- ここからボタン判定ロジック（is_validを考慮） ---
 
+        // 今日の有効な打刻レコードをすべて取得（判定用）
+        $todayRecords = $user->attendanceRecords()
+            ->where('is_valid', true)
+            ->whereDate('timestamp', now()->toDateString())
+            ->get();
+
+        // ★追加：今日、休憩（30分または60分）を既に取っているか判定
+        $todayHasTakenBreak = $todayRecords->whereIn('type', ['break_30', 'break_60'])->isNotEmpty();
+
         // 現在の出張状態を取得（有効な最新フラグ）
         $isBusinessTrip = $user->attendanceRecords()
-            ->where('is_valid', true) // ← 有効な打刻のみ
+            ->where('is_valid', true)
             ->latest('timestamp')
             ->first()?->is_business_trip ?? false;
 
         // 今日の出勤済みフラグ
-        $todayClockedIn = $user->attendanceRecords()
-            ->where('is_valid', true) // ← 有効な打刻のみ
-            ->whereDate('timestamp', now()->toDateString())
-            ->whereIn('type', ['check_in', 'business_trip_end'])
-            ->exists();
+        $todayClockedIn = $todayRecords->whereIn('type', ['check_in', 'business_trip_end'])->isNotEmpty();
 
         // 退社済み判定
-        $todayClockedOut = $user->attendanceRecords()
-            ->where('is_valid', true) // ← 有効な打刻のみ
-            ->whereDate('timestamp', now()->toDateString())
-            ->where('type', 'check_out')
-            ->exists();
+        $todayClockedOut = $todayRecords->where('type', 'check_out')->isNotEmpty();
 
         // 最新の有効なレコードを取得（退勤忘れ判定用）
         $latestRecord = $user->attendanceRecords()
-            ->where('is_valid', true) // ← 有効な打刻のみ
+            ->where('is_valid', true)
             ->latest('timestamp')
             ->first();
 
@@ -135,7 +136,7 @@ class DashboardController extends Controller
             }
 
             $weekRecords = AttendanceRecord::where('user_id', $user->id)
-                ->where('is_valid', true) // ← ここを追加！無効なデータは履歴に出さない
+                ->where('is_valid', true)
                 ->where('timestamp', '>=', $weekStart->copy()->subDay()->startOfDay())
                 ->where('timestamp', '<=', $weekEnd->copy()->addDay()->endOfDay())
                 ->with('location')
@@ -160,19 +161,8 @@ class DashboardController extends Controller
                     $location = $locationInfo?->location?->name ?? '本社';
                 }
 
-                $hasEnd = $dayRecords->contains(fn($r) => in_array($r->type, ['check_out', 'business_trip_end']));
-                $workHours = '---';
-
-                if ($hasEnd) {
-                    $lastRec = $dayRecords->last();
-                    if ($lastRec && $lastRec->work_minutes !== null) {
-                        $h = floor($lastRec->work_minutes / 60);
-                        $m = $lastRec->work_minutes % 60;
-                        $workHours = sprintf('%d:%02d', $h, $m);
-                    } else {
-                        $workHours = AttendanceRecord::calculateDailyWorkHours($dateString, $user->id);
-                    }
-                }
+                $calc = AttendanceRecord::getUnifiedCalculation($dateString, $user->id);
+                $workHours = $calc ? $calc['actual_hours'] : '---';
 
                 $dashboardDailyRecords[$dateString] = [
                     'date_formatted' => $dateCarbon->format('m/d (D)'),
@@ -192,10 +182,11 @@ class DashboardController extends Controller
         $currentWeekDates = array_filter($dashboardDailyRecords, fn($k) => $k >= $currentWeekStart->toDateString(), ARRAY_FILTER_USE_KEY);
         $dashboardDailyRecords = $previousWeekDates + $currentWeekDates;
 
+        // return部分の重複を削除し、compactにまとめました
         return view('dashboard', compact(
             'attendanceRecords', 'upcomingProjects', 'pendingExpenses', 'assignedTasks', 'today',
             'dashboardDailyRecords', 'isBusinessTrip', 'todayClockedIn', 'todayClockedOut',
-            'needsFix', 'unclosedRecord', 'status'
+            'needsFix', 'unclosedRecord', 'status', 'todayHasTakenBreak'
         ));
     }
 }

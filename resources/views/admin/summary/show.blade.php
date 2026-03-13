@@ -93,11 +93,15 @@
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['day'] }}</td>
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['in'] }}</td>
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['out'] }}</td>
-                            <td class="px-2 py-1.5 whitespace-nowrap bg-blue-50/30 font-medium">{{ $data['basic'] }}</td>
+                            <td class="px-2 py-1.5 whitespace-nowrap bg-blue-50/30 font-medium">
+                                {{ $data['total'] }}
+                            </td>
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['early'] }}</td>
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['over'] }}</td>
                             <td class="px-2 py-1.5 whitespace-nowrap">{{ $data['night'] }}</td>
-                            <td class="px-2 py-1.5 whitespace-nowrap font-bold text-indigo-500">{{ $data['total'] }}</td>
+                            <td class="px-2 py-1.5 whitespace-nowrap font-bold text-indigo-500">
+                                {{ $data['total'] }}
+                            </td>
                             <td class="px-2 py-1.5 text-[10px] font-sans text-gray-400">{{ $data['note'] }}</td>
                         </tr>
                         @endforeach

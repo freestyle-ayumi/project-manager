@@ -104,11 +104,17 @@
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['day']); ?></td>
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['in']); ?></td>
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['out']); ?></td>
-                            <td class="px-2 py-1.5 whitespace-nowrap bg-blue-50/30 font-medium"><?php echo e($data['basic']); ?></td>
+                            <td class="px-2 py-1.5 whitespace-nowrap bg-blue-50/30 font-medium">
+                                <?php echo e($data['total']); ?>
+
+                            </td>
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['early']); ?></td>
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['over']); ?></td>
                             <td class="px-2 py-1.5 whitespace-nowrap"><?php echo e($data['night']); ?></td>
-                            <td class="px-2 py-1.5 whitespace-nowrap font-bold text-indigo-500"><?php echo e($data['total']); ?></td>
+                            <td class="px-2 py-1.5 whitespace-nowrap font-bold text-indigo-500">
+                                <?php echo e($data['total']); ?>
+
+                            </td>
                             <td class="px-2 py-1.5 text-[10px] font-sans text-gray-400"><?php echo e($data['note']); ?></td>
                         </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

@@ -49,6 +49,8 @@ class AttendanceRecord extends Model
                 'break_end'           => '戻り',
                 'business_trip_start' => '出張開始',
                 'business_trip_end'   => '出張終了',
+                'break_30'            => '休憩30分',
+                'break_60'            => '休憩1時間',
                 default               => $this->type ?? '不明',
             }
         );
@@ -117,65 +119,16 @@ class AttendanceRecord extends Model
     }
 
     // 1日の勤務時間を計算（出社から退社までの時間 - 中抜け時間）
-    public static function calculateDailyWorkHours($date, $userId)
-    {
-        $records = self::where('user_id', $userId)
-                ->whereDate('timestamp', $date)
-                ->where('is_valid', true) // ★ ここを追加
-                ->orderBy('timestamp')
-                ->get();
+    public static function calculateDailyWorkHours($date, $userId) {
+        $record = self::where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->whereIn('type', ['check_in', 'business_trip_start'])
+            ->first();
 
-        if ($records->isEmpty()) {
-            return '0:00';
-        }
+        if (!$record || is_null($record->work_minutes)) return '---';
 
-        // 出勤と退勤を特定
-        $startTypes = ['check_in', 'business_trip_start'];
-        $endTypes   = ['check_out', 'business_trip_end'];
-
-        $firstIn  = $records->first(fn($r) => in_array($r->type, $startTypes));
-        $lastOut  = $records->last(fn($r) => in_array($r->type, $endTypes));
-
-        if (!$firstIn || !$lastOut) {
-            return '0:00';
-        }
-
-        // タイムスタンプをUnix秒に変換（Carbonの比較問題を回避）
-        $startTs = strtotime($firstIn->timestamp);
-        $endTs   = strtotime($lastOut->timestamp);
-
-        // 開始 > 終了なら入れ替え
-        if ($startTs > $endTs) {
-            [$startTs, $endTs] = [$endTs, $startTs];
-        }
-
-        $totalSeconds = $endTs - $startTs;
-        $totalMinutes = floor($totalSeconds / 60);
-
-        if ($totalMinutes <= 0) {
-            return '0:00';
-        }
-
-        // 休憩合計（複数対応）
-        $breakMinutes = 0;
-        $breakStartTs = null;
-
-        foreach ($records as $record) {
-            $ts = strtotime($record->timestamp);
-            if ($record->type === 'break_start') {
-                $breakStartTs = $ts;
-            } elseif ($record->type === 'break_end' && $breakStartTs) {
-                $breakMinutes += floor(($ts - $breakStartTs) / 60);
-                $breakStartTs = null;
-            }
-        }
-
-        $workMinutes = max(0, $totalMinutes - $breakMinutes);
-
-        $hours   = floor($workMinutes / 60);
-        $minutes = $workMinutes % 60;
-
-        return sprintf('%d:%02d', $hours, $minutes);
+        $mins = $record->work_minutes;
+        return floor($mins / 60) . ':' . str_pad($mins % 60, 2, '0', STR_PAD_LEFT);
     }
 
     /* ★指定期間の全日付リストを作成（Y-m-d形式） */
@@ -284,5 +237,118 @@ class AttendanceRecord extends Model
         $results['total'] = $results['early'] + $results['basic'] + $results['over'] + $results['night'];
 
         return $results;
+    }
+    /**
+     * 社員向け：統一勤務計算ロジック
+     * 通常分 + 深夜分 = 実働時間 とし、8時間を超えた分を残業とする
+     */
+    public static function getUnifiedCalculation($date, $userId)
+    {
+        $records = self::where('user_id', $userId)
+            ->where('is_valid', true)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        if ($records->isEmpty()) return null;
+
+        $firstIn = $records->whereIn('type', ['check_in', 'business_trip_start'])->first();
+        $lastOut = $records->whereIn('type', ['check_out', 'business_trip_end'])->last();
+
+        if (!$firstIn || !$lastOut) return null;
+
+        $start = Carbon::parse($firstIn->timestamp);
+        $end = Carbon::parse($lastOut->timestamp);
+
+        // --- 30分単位の丸め処理 (計算用) ---
+        // 出勤時刻：30分単位で切り上げ
+        $startMinute = $start->minute;
+        $startRounded = ceil($startMinute / 30) * 30;
+
+        if ($startRounded === 60) {
+            $start->addHour()->minute(0)->second(0);
+        } else {
+            $start->minute($startRounded)->second(0);
+        }
+
+        // 退勤時刻：30分単位で切り捨て
+        $endMinute = $end->minute;
+        $endRounded = floor($endMinute / 30) * 30;
+
+        $end->minute($endRounded)->second(0);
+
+        // 1. 総拘束時間（分） ※丸めた後の時間で計算
+        $totalMinutes = (int)$start->diffInMinutes($end);
+
+        // 万が一、丸めた結果 出勤 > 退勤 になった場合は0分とする
+        if ($start->gt($end)) {
+            $totalMinutes = 0;
+        }
+
+        // 2. 中抜け時間の合計
+        $breakMinutes = 0;
+        $bStart = null;
+        foreach ($records as $r) {
+            if ($r->type === 'break_start') {
+                $bStart = Carbon::parse($r->timestamp)->second(0);
+            } elseif ($r->type === 'break_end' && $bStart) {
+                $breakMinutes += (int)$bStart->diffInMinutes(Carbon::parse($r->timestamp)->second(0));
+                $bStart = null;
+            }
+        }
+        
+        // ★固定休憩ボタン（30分/60分）の合計を計算
+        $fixedBreakMinutes = $records->whereIn('type', ['break_30', 'break_60'])
+            ->sum(function($r) {
+                return ($r->type === 'break_30') ? 30 : 60;
+            });
+
+        // 3. 実働時間（拘束 - 中抜け合計 - 固定休憩合計）
+        $actualWorkMinutes = $totalMinutes - $breakMinutes - $fixedBreakMinutes;
+        if ($actualWorkMinutes < 0) $actualWorkMinutes = 0;
+
+        // 4. 残業時間の計算（8時間 = 480分超え）
+        $overtimeMinutes = ($actualWorkMinutes > 480) ? ($actualWorkMinutes - 480) : 0;
+        
+        // 5. 基本時間の計算（実働 - 残業）
+        $basicWorkMinutes = $actualWorkMinutes - $overtimeMinutes;
+
+        // 6. 深夜時間の計算 (22時〜翌5時)
+        $midnightMinutes = self::calculateNightMinutes($start, $end);
+
+        return [
+            'check_in'         => $start->format('H:i'),
+            'check_out'        => $end->format('H:i'),
+            'actual_minutes'   => (int)$actualWorkMinutes,
+            'actual_hours'     => sprintf('%d:%02d', floor($actualWorkMinutes / 60), $actualWorkMinutes % 60),
+            'midnight_minutes' => (int)$midnightMinutes,
+            'overtime_minutes' => (int)$overtimeMinutes,
+            'basic_minutes'    => (int)$basicWorkMinutes,
+        ];
+    }
+
+    private static function calculateNightMinutes(Carbon $start, Carbon $end): int
+    {
+        $nightMinutes = 0;
+
+        $current = $start->copy()->startOfDay();
+        $lastDay = $end->copy()->startOfDay();
+
+        while ($current <= $lastDay) {
+
+            $nightStart = $current->copy()->setTime(22, 0);
+            $nightEnd = $current->copy()->addDay()->setTime(5, 0);
+
+            $overlapStart = $start->greaterThan($nightStart) ? $start : $nightStart;
+            $overlapEnd = $end->lessThan($nightEnd) ? $end : $nightEnd;
+
+            if ($overlapStart < $overlapEnd) {
+                $nightMinutes += $overlapStart->diffInMinutes($overlapEnd);
+            }
+
+            $current->addDay();
+        }
+
+        return $nightMinutes;
     }
 }

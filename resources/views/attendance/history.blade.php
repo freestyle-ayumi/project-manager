@@ -91,6 +91,7 @@
                                             {{ $records['check_out'] ?? '---' }}
                                         </td>
                                         <td class="px-2 py-1 whitespace-nowrap {{ ($records['work_hours'] ?? '---') === '---' ? 'text-gray-200' : 'text-indigo-500 font-bold' }}">
+                                            {{-- $records['work_hours'] が work_minutes から変換された値であることを確認 --}}
                                             {{ $records['work_hours'] ?? '---' }}
                                         </td>
                                 </tr>

@@ -14,7 +14,8 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'type' => 'required|in:in,out,break_start,break_end,business_trip_start,business_trip_end',
+            // break_30, break_60 を許可リストに追加
+            'type' => 'required|in:in,out,break_start,break_end,business_trip_start,business_trip_end,break_30,break_60',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ];
@@ -39,7 +40,20 @@ class AttendanceController extends Controller
         $today = now()->format('Y-m-d');
         $isBusinessTripDay = false;
 
-        if ($type === 'business_trip_start') {
+        if ($type === 'break_30') {
+            $message = '30分休憩を記録しました';
+            $dbType = 'break_30';
+            // 固定休憩は出張中かどうかにかかわらず有効とするため、現在の状態を引き継ぐ
+            $latest = $user->attendanceRecords()->where('is_valid', true)->latest('timestamp')->first();
+            $isBusinessTripDay = $latest ? $latest->is_business_trip : false;
+
+        } elseif ($type === 'break_60') {
+            $message = '1時間休憩を記録しました';
+            $dbType = 'break_60';
+            $latest = $user->attendanceRecords()->where('is_valid', true)->latest('timestamp')->first();
+            $isBusinessTripDay = $latest ? $latest->is_business_trip : false;
+
+        } elseif($type === 'business_trip_start') {
             if (empty($note)) {
                 return response()->json(['success' => false, 'message' => '出張時はメモを入力してください'], 422);
             }
@@ -136,14 +150,18 @@ class AttendanceController extends Controller
 
         // 勤務時間計算
         if (in_array($dbType, ['check_out', 'business_trip_end'])) {
-            $workHours = AttendanceRecord::calculateDailyWorkHours($today, $user->id);
+            // 【新ロジック】モデルに追加した統一計算メソッドを呼び出す
+            $summary = AttendanceRecord::getUnifiedCalculation($today, $user->id);
 
-            if ($workHours !== '0:00' && $workHours !== '---') {
-                $parts = explode(':', $workHours);
-                $totalMinutes = ((int)$parts[0] * 60) + (int)$parts[1];
-                $createdRecord->work_minutes = $totalMinutes;
-                $createdRecord->save();
-                Log::info("勤務時間を保存しました: ID={$createdRecord->id}, 分={$totalMinutes}");
+            if ($summary) {
+                // SQLで追加した3つのカラムにそれぞれ値を保存
+                $createdRecord->update([
+                    'work_minutes'     => $summary['actual_minutes'],   // 通常＋深夜の合計
+                    'night_minutes'    => $summary['midnight_minutes'], // 深夜分
+                    'overtime_minutes' => $summary['overtime_minutes'], // 8時間超え分
+                ]);
+                
+                Log::info("勤務集計を保存しました: ID={$createdRecord->id}, 実働={$summary['actual_minutes']}分, 深夜={$summary['midnight_minutes']}分, 残業={$summary['overtime_minutes']}分");
             }
         }
 
@@ -251,7 +269,7 @@ class AttendanceController extends Controller
                 'break_start' => $breakStart ? $breakStart->timestamp->format('H:i') : '---',
                 'break_end' => $breakEnd ? $breakEnd->timestamp->format('H:i') : '---',
                 'check_out' => $checkOut ? $checkOut->timestamp->format('H:i') : '---',
-                'work_hours' => AttendanceRecord::calculateDailyWorkHours($date, $user->id),
+                'work_hours' => ($calc = AttendanceRecord::getUnifiedCalculation($date, $user->id)) ? $calc['actual_hours'] : '---',
                 // 有効なレコードがない場合は location を null にする
                 'location' => $mainRecord ? $mainRecord->display_location : null,
                 'is_business_trip' => $mainRecord ? (bool)$mainRecord->is_business_trip : false,
@@ -294,7 +312,7 @@ class AttendanceController extends Controller
         ]);
 
         // 勤務時間の再計算
-        AttendanceRecord::calculateDailyWorkHours($oldRecord->timestamp->format('Y-m-d'), Auth::id());
+        AttendanceRecord::getUnifiedCalculation($oldRecord->timestamp->format('Y-m-d'), Auth::id());
 
         return response()->json(['success' => true]);
     }

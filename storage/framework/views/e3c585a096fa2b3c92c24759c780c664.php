@@ -48,8 +48,14 @@
                                 <?php echo e($data['name']); ?>
 
                             </td>
-                            <td class="px-2 py-2 whitespace-nowrap"><?php echo e($data['days_worked']); ?> 日</td>
-                            <td class="px-2 py-2 whitespace-nowrap font-bold text-indigo-500"><?php echo e($data['total_hours']); ?></td>
+                            <td class="px-2 py-2 whitespace-nowrap">
+                                <?php echo e($data['days_worked']); ?> 日
+                            </td>
+                            
+                            <td class="px-2 py-2 whitespace-nowrap font-bold text-indigo-500">
+                                <?php echo e($data['total_work_hours'] ?? '0:00'); ?>
+
+                            </td>
                             <td class="px-2 py-2 whitespace-nowrap text-center">
                                 <div class="flex justify-center gap-1">
                                     

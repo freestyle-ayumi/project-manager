@@ -45,7 +45,19 @@
                                     戻り
                                 </button>
                             </div>
-
+                            <!-- 休憩 -->
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <button id="break-30-btn" onclick="submitAttendance('break_30')" 
+                                    {{ (!$todayClockedIn || $todayClockedOut || $isBusinessTrip || $needsFix) ? 'disabled' : '' }}
+                                    class="{{ (!$todayClockedIn || $todayClockedOut || $isBusinessTrip || $needsFix) ? 'opacity-50 cursor-not-allowed' : '' }} text-center py-3 text-slate-500 text-xs bg-slate-50 border border-slate-300 hover:bg-slate-400 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                    休憩30分
+                                </button>
+                                <button id="break-60-btn" onclick="submitAttendance('break_60')" 
+                                    {{ (!$todayClockedIn || $todayClockedOut || $isBusinessTrip || $needsFix) ? 'disabled' : '' }}
+                                    class="{{ (!$todayClockedIn || $todayClockedOut || $isBusinessTrip || $needsFix) ? 'opacity-50 cursor-not-allowed' : '' }} text-center py-3 text-slate-500 text-xs bg-slate-50 border border-slate-300 hover:bg-slate-400 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                    休憩1時間
+                                </button>
+                            </div>
                             <!-- 退勤 -->
                             <button id="check-out-btn" 
                                     class="text-center py-3 text-indigo-600 text-xs bg-white border border-gray-200 hover:bg-indigo-600 hover:text-white transition rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -376,18 +388,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('打刻スクリプト読み込み完了');
 
-        // 出張状態（Bladeから渡す）
+        // --- 1. 変数のセット(今日の出勤・退勤済み) ---
         let isBusinessTrip = {{ $isBusinessTrip ? 'true' : 'false' }};
-
-        // 今日の出勤・退勤済みフラグ（Bladeから渡す）
         const todayClockedIn = {{ $todayClockedIn ? 'true' : 'false' }};
         const todayClockedOut = {{ $todayClockedOut ? 'true' : 'false' }};
+        const todayHasTakenBreak = {{ $todayHasTakenBreak ? 'true' : 'false' }};
 
         console.log('isBusinessTrip:', isBusinessTrip);
         console.log('todayClockedIn:', todayClockedIn);
         console.log('todayClockedOut:', todayClockedOut);
 
-        // ボタン要素
+        // --- 2. ボタン要素の取得 ---
         const checkInBtn = document.getElementById('check-in-btn');
         const checkOutBtn = document.getElementById('check-out-btn');
         const breakStartBtn = document.getElementById('break-start-btn');
@@ -400,7 +411,7 @@
         const confirmBusiness = document.getElementById('confirm-business');
         const cancelBusiness = document.getElementById('cancel-business');
 
-        // 履歴読み込み関数（一番上に定義）
+        // --- 3. 履歴読み込み関数 ---
         async function loadRecentLogs() {
             console.log('履歴読み込み開始');
             try {
@@ -459,30 +470,60 @@
             }
         }
 
-        // ボタン制御関数
+        // --- 4. ボタン制御関数 ---
         function updateButtons() {
             console.log('updateButtons called', { isBusinessTrip, todayClockedIn, todayClockedOut });
 
-            const normalButtons = [checkInBtn, checkOutBtn, breakStartBtn, breakEndBtn].filter(btn => btn !== null);
+            const needsFixStatus = {{ $needsFix ? 'true' : 'false' }};
+            
+            // 「現在仕事中か」の判定：出勤済み かつ まだ退勤していない
+            const isWorking = todayClockedIn && !todayClockedOut;
 
-            // 出張中 → 通常打刻を無効（出勤ボタンは許可）
-            normalButtons.forEach(btn => btn.disabled = isBusinessTrip && btn !== checkInBtn);
+            const btns = {
+                checkIn: document.getElementById('check-in-btn'),
+                checkOut: document.getElementById('check-out-btn'),
+                breakStart: document.getElementById('break-start-btn'),
+                breakEnd: document.getElementById('break-end-btn'),
+                tripStart: document.getElementById('business-trip-start-btn'),
+                tripEnd: document.getElementById('business-trip-end-btn'),
+                break30: document.getElementById('break-30-btn'),
+                break60: document.getElementById('break-60-btn')
+            };
 
-            // 出勤ボタン → 出勤済みまたは出張中なら無効
-            if (checkInBtn) checkInBtn.disabled = todayClockedIn || isBusinessTrip;
+            const setBtnState = (btn, isDisabled) => {
+                if (!btn) return;
+                const finalDisabled = needsFixStatus ? true : isDisabled;
+                btn.disabled = finalDisabled;
+                if (finalDisabled) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                }
+            };
 
-            // 中抜け・戻り → 出勤済みかつ退勤済みでないなら有効
-            if (breakStartBtn) breakStartBtn.disabled = !todayClockedIn || todayClockedOut;
-            if (breakEndBtn) breakEndBtn.disabled = !todayClockedIn || todayClockedOut;
+            // 1. 全ボタンを一旦ロック
+            Object.values(btns).forEach(btn => setBtnState(btn, true));
 
-            // 退勤ボタン → 退勤済みまたは出勤前なら無効
-            if (checkOutBtn) checkOutBtn.disabled = todayClockedOut || !todayClockedIn;
+            // 2. 解放ロジック
+            if (!needsFixStatus) {
+                if (!todayClockedIn && !isBusinessTrip) {
+                    setBtnState(btns.checkIn, false);
+                    setBtnState(btns.tripStart, false);
+                } 
+                else if (isWorking && !isBusinessTrip) {
+                    setBtnState(btns.checkOut, false);
+                    setBtnState(btns.breakStart, false);
+                    setBtnState(btns.breakEnd, false);
 
-            // 出張開始ボタン → 出張中または出勤済みなら無効
-            if (businessTripStartBtn) businessTripStartBtn.disabled = isBusinessTrip || todayClockedIn;
-
-            // 出張終了ボタン → 出張中でないなら無効
-            if (businessTripEndBtn) businessTripEndBtn.disabled = !isBusinessTrip;
+                    // ★休憩ボタンの制御ロジック
+                    const canTakeBreak = !todayHasTakenBreak;
+                    setBtnState(btns.break30, !canTakeBreak);
+                    setBtnState(btns.break60, !canTakeBreak);
+                } 
+                else if (isBusinessTrip) {
+                    setBtnState(btns.tripEnd, false);
+                }
+            }
         }
 
         // 初期状態でボタン制御
@@ -531,19 +572,15 @@
 
                         const data = await response.json();
 
-                        // --- ここから修正 ---
                         if (data.success) {
-                            // 判定が OK の場合のみリロードして画面を更新
                             statusMessage.innerHTML = `<span class="text-green-600">${data.message || '打刻成功！'}</span>`;
                             setTimeout(() => {
                                 location.reload();
-                            }, 1000); // メッセージを見せるために1秒待つ
+                            }, 1000);
                         } else {
-                            // 判定が NG (範囲外) の場合はリロードさせず、赤いエラーメッセージを表示し続ける
                             statusMessage.innerHTML = `<span class="text-red-600 font-bold">【打刻失敗】${data.message || '範囲外です'}</span>`;
-                            btn.disabled = false; // 再試行できるようにボタンを戻す
+                            btn.disabled = false;
                         }
-                        // --- ここまで修正 ---
 
                     } catch (error) {
                         statusMessage.innerHTML = `<span class="text-red-600">通信エラー: ${error.message}</span>`;
@@ -742,5 +779,48 @@
         // ページ読み込み時に履歴表示
         loadRecentLogs();
     });
+    // --- 休憩ボタン用の実行関数 ---
+    window.submitAttendance = async function(type) {
+        const btn30 = document.getElementById('break-30-btn');
+        const btn60 = document.getElementById('break-60-btn');
+        const statusMsg = document.getElementById('status-message');
+
+        if(btn30) btn30.disabled = true;
+        if(btn60) btn60.disabled = true;
+        
+        statusMsg.innerHTML = '休憩を記録中...';
+
+        try {
+            const response = await fetch('{{ route("attendance.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    type: type // break_30 または break_60 をそのまま送信
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                statusMsg.innerHTML = `<span class="text-green-600">${data.message || '休憩を記録しました'}</span>`;
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+            } else {
+                statusMsg.innerHTML = `<span class="text-red-600">【失敗】${data.message}</span>`;
+                if(btn30) btn30.disabled = false;
+                if(btn60) btn60.disabled = false;
+            }
+        } catch (error) {
+            console.error('休憩打刻エラー:', error);
+            statusMsg.innerHTML = '<span class="text-red-600">通信エラーが発生しました</span>';
+            if(btn30) btn30.disabled = false;
+            if(btn60) btn60.disabled = false;
+        }
+    };
     </script>
 </x-app-layout>
